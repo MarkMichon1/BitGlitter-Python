@@ -130,7 +130,7 @@ class Decoder:
         if self.pixelWidth == False:
             return False
 
-        self.frameHandler = FrameHandler.someNewMethod() #todo multiple perhaps, we'll see
+        self.frameHandler = FrameHandler.someNewMethod() #todo multiple perhaps
 
 
     def _frameValidation(self, paletteType):
