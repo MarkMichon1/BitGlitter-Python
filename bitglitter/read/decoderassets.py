@@ -7,6 +7,11 @@ from bitglitter.protocols.protocolhandler import protocolHandler
 
 def minimumBlockCheckpoint(blockHeightOverride, blockWidthOverride, activeFrameSizeWidth,
                            activeFrameSizeHeight):
+    '''If blockHeightOverride and blockWidthOverride have been entered, this checks those values against the height and
+    width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that is
+    finest detail you can have with an image), any values beyond that are invalid, and stopped here.
+    '''
+
     if blockHeightOverride and blockWidthOverride:
         if activeFrameSizeWidth < blockWidthOverride or activeFrameSizeHeight < \
                 blockHeightOverride:
@@ -56,7 +61,8 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
     emergency stop the read if any of the conditions are met:  If the read checksum differs from the calculated
     checksum, if the read protocol version isn't supported by this BitGlitter version, if the readBlockHeight or
     readBlockWidth differ from what frameLockOn() read, or if the palette ID for the header is unknown (ie, a custom
-    color which has not been integrated yet).  Returns protocolVersion and headerPalette object.'''
+    color which has not been integrated yet).  Returns protocolVersion and headerPalette object.
+    '''
 
     # First, we're verifying the initializer is not corrupted by comparing its read checksum with a calculated one from
     # it's contents.  If they match, we continue.  If not, this frame aborts.
@@ -138,14 +144,20 @@ def readFrameHeader(bitStream):
 
 
 def validatePayload(payloadBits, readFrameSHA):
+    '''Taking all of the frame bits after the frame header, this takes the SHA-256 hash of them, and compares it against
+    the frame SHA written in the frame header.  This is the primary mechanism that validates frame data, which either
+    allows it to be passed through to the assembler, or discarded.'''
+
     shaHasher = hashlib.sha256()
     shaHasher.update(payloadBits.tobytes())
     stringOutput = shaHasher.hexdigest()
     logging.debug(f'length of payloadBits: {payloadBits.len}')
+
     if stringOutput != readFrameSHA:
         logging.warning('validatePayload: readFrameSHA does not match calculated one.  Aborting...')
         logging.debug(f'Read from frameHeader: {readFrameSHA}\nCalculated just now: {stringOutput}')
         return False
+
     logging.debug('Payload validated this frame.')
     return True
 
@@ -165,7 +177,4 @@ def returnStreamPalette(streamPaletteID, isCustom, customColorName, customColorD
     else:
         pass
     #first, we see if the palette exists.  if not, we'll go through the process of making it.
-    #todo do
-
-
-#todo, look at all of this.... some of it may not be needed in light of partialsave functionality
+    #todo: maybe this can go into palette utilities?
