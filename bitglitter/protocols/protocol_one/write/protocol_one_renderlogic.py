@@ -11,7 +11,7 @@ class EncodeFrame:
 
         logging.debug('EncodeFrame initializing...')
 
-        self.protocolVersion = 1
+        self.PROTOCOL_VERSION = 1
 
         self.activePath = None
         self.passThrough = None
@@ -34,23 +34,18 @@ class EncodeFrame:
 
         self.streamSHA = None
 
+        # Stream header data to encode
         self.sizeInBytes = None
         self.totalFrames = None
         self.compressionEnabled = None
         self.encryptionEnabled = None
         self.fileMaskEnabled = None
         self.dateCreated = None
-
         self.streamName = None
         self.streamDescription = None
-        self.encryptionSalt = None
         self.postEncryptionHash = None
 
-
-        self.includeInitializer = None
-
-        self.framePosition = 1
-        self.totalFrames = 0 #todo integrate into renderloop?
+        self.totalFrames = 0
 
 
     def beginSessionProcess(self,
@@ -119,14 +114,14 @@ class EncodeFrame:
                                                 self.streamPalette, self.headerPalette, self.outputMode)
 
         self.remainderBlocks, self.imageOutputPath, self.frameNumberFormatted = renderLoop(self.blockHeight,
-                                                self.blockWidth, self.pixelWidth, self.protocolVersion,
-                                                self.initializerPalette, self.headerPalette, self.streamPalette,
-                                                self.outputMode, self.streamOutputPath, self.activePath,
-                                                self.passThrough, self.sizeInBytes, self.totalFrames,
-                                                self.compressionEnabled, self.encryptionEnabled, self.fileMaskEnabled,
-                                                self.dateCreated, self.asciiCompressed, self.streamSHA,
-                                                self.initializerPaletteDict, self.headerPaletteDict,
-                                                self.streamPaletteDict)
+                                                                                           self.blockWidth, self.pixelWidth, self.PROTOCOL_VERSION,
+                                                                                           self.initializerPalette, self.headerPalette, self.streamPalette,
+                                                                                           self.outputMode, self.streamOutputPath, self.activePath,
+                                                                                           self.passThrough, self.sizeInBytes, self.totalFrames,
+                                                                                           self.compressionEnabled, self.encryptionEnabled, self.fileMaskEnabled,
+                                                                                           self.dateCreated, self.asciiCompressed, self.streamSHA,
+                                                                                           self.initializerPaletteDict, self.headerPaletteDict,
+                                                                                           self.streamPaletteDict)
 
         if outputMode == 'video':
             renderVideo(self.streamOutputPath, self.dateCreated, self.imageOutputPath, self.frameNumberFormatted,

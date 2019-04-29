@@ -138,4 +138,4 @@ def formatFileList(fileString):
     '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''
     brokenApart = fileString.split('|')[1:]
     for position in range(int(len(brokenApart) / 2)):
-        print(f"{brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B") #todo checker
+        print(f"{brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")

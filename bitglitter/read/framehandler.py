@@ -9,36 +9,39 @@ from bitglitter.config.config import config
 
 class FrameHandler:
     '''FrameHandler object is what traverses the actual frame, and returns bit data.  It's designed as an easy to use
-    API, making this step of read easy to use.
+    API, hiding much of the moving parts behind the scenes of a frame scan.
     '''
 
-    def __init__(self):
+    def __init__(self, initializerPalette, initializerPaletteDict):
 
+        # Setup
         self.image = None
-        self.isFirstFrame = None
-        self.initializerPaletteDict = None
-        self.initializerPalette = None
-
         self.blockHeight = None
         self.blockWidth = None
         self.pixelWidth = None
 
-        self.headerPaletteDict = None
+        # Palette Variables
+        self.initializerPalette = initializerPalette
+        self.initializerPaletteDict = initializerPaletteDict
         self.headerPalette = None
-        self.headerPaletteBitLength = None
-        self.streamPaletteDict = None
+        self.headerPaletteDict = None
         self.streamPalette = None
-        self.streamPaletteBitLength = None
+        self.streamPaletteDict = None
+        self.primaryPalette = None
+        self.primaryPaletteDict = None
 
-        self.primaryPaletteBitLength = None
-
+        # Dictionaries
+        self.paletteDict = {'initializerPalette': self.initializerPalette,
+                            'primaryPalette': self.primaryPalette,
+                            'headerPalette': self.headerPalette,
+                            'streamPalette': self.streamPalette}
         self.paletteConversionDict = {'initializerPalette' : self.initializerPaletteDict,
-                                'headerPalette' : self.headerPaletteDict,
-                                'streamPalette' : self.streamPaletteDict}
-        self.paletteDict = {'initializerPalette' : self.initializerPalette,
-                                'headerPalette' : self.headerPalette,
-                                'streamPalette' : self.streamPalette}
+                                      'primaryPalette': self.primaryPaletteDict,
+                                      'headerPalette' : self.headerPaletteDict,
+                                      'streamPalette' : self.streamPaletteDict}
 
+        # Scan State
+        self.isFirstFrame = True
         self.nonCalibratorBlocks = 0
         self.nextBlock = 0
         self.blockPosition = 0
@@ -52,6 +55,8 @@ class FrameHandler:
         for yBlock in range(self.blockHeight - int(self.isFirstFrame)):
             for xBlock in range(self.blockWidth - int(self.isFirstFrame)):
                 yield xBlock + int(self.isFirstFrame), yBlock + int(self.isFirstFrame)
+
+        self.isFirstFrame = False
 
 
     def _blocksToBits(self, howMany, paletteType):
@@ -91,9 +96,12 @@ class FrameHandler:
         # always 608 bits, plus whatever remainder bits that may be present in the final block.  Protocol v1 only!
         if paletteType != 'streamPalette' and paletteType != 'headerPalette' and paletteType != 'primaryPalette':
             raise ValueError("FrameHandler.returnFrameHeader: invalid paletteType argument.")
+
         fullBlockData = self._blocksToBits(math.ceil(608 / self.paletteDict[paletteType].bitLength), f'{paletteType}')
         carryOverBits = BitStream()
+
         if fullBlockData.len > 608:
+
             fullBlockData.pos = 608
             carryOverBits.append(fullBlockData.read(f'bits : {fullBlockData.len - 608}'))
             fullBlockData.pos = 0
@@ -125,6 +133,9 @@ class FrameHandler:
         self.blockHeight = blockHeight
         self.blockWidth = blockWidth
         self.pixelWidth = pixelWidth
+
+        self.nonCalibratorBlocks = (self.blockHeight - int(self.isFirstFrame)) * \
+                                   (self.blockWidth - int(self.isFirstFrame))
 
 
     def updateDictionaries(self, paletteType, paletteDict, palette):
@@ -162,5 +173,8 @@ class FrameHandler:
 
         self.image = image
         self.nextBlock = self._setupFrameGrid()
-        self.nonCalibratorBlocks = (self.blockHeight - int(hasInitializer)) * (self.blockWidth - int(hasInitializer))
+
+        if self.isFirstFrame == False:
+            self.nonCalibratorBlocks = (self.blockHeight - int(hasInitializer)) * \
+                                       (self.blockWidth - int(hasInitializer))
         config.statsHandler.framesRead += 1

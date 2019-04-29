@@ -19,8 +19,12 @@ class Decoder:
     def __init__(self, isVideo, configObject, scryptN, scryptR, scryptP, blockHeightOverride, blockWidthOverride,
                  outputPath, encryptionKey):
 
+        # Misc Setup
         self.isVideo = isVideo
         self.frameNumber = 0
+        self.activeFrame = None
+        self.checkpointPassed = True
+        self.streamHeaderCleared = False
 
         # Input arguments
         self.blockHeightOverride = blockHeightOverride
@@ -36,41 +40,27 @@ class Decoder:
         self.blockHeight = None
         self.blockWidth = None
         self.protocolVersion = None
-        self.headerPalette = None
-        self.framePalette = None
-        self.blocksToRead = None
 
         # Palette Variables
-
-
-        # Misc Setup
         self.initializerPalette = _paletteGrabber('1')
-        self.initializerPaletteColorSet = self.initializerPalette.colorSet
-        self.initializerPaletteDict = ColorsToValue(_paletteGrabber('1'))
-        self.headerPaletteDict = None
+        self.initializerPaletteDict = ColorsToValue(self.initializerPalette)
+        self.primaryPalette = None
         self.primaryPaletteDict = None
-        self.headerPaletteColorSet = None
-        self.primaryPaletteColorSet = None
-        self.streamPaletteColorSet = None
+        self.headerPalette = None
+        self.headerPaletteDict = None
         self.streamPalette = None
         self.streamPaletteDict = None
 
-        self.activeFrame = None
-        self.frameHandler = None
-        self.checkpointPassed = True
-
-        self.framePayload = None
-        self.streamHeaderBinaryPreamble = BitStream()
-        self.carryOverBits = None
-
-        # Frame Metadata
-        self.bgVersion = None
+        # Frame Data
         self.streamSHA = None
         self.frameSHA = None
+        self.framePayload = None
+        self.carryOverBits = None
+        self.blocksToRead = None
 
         # Auxiliary Components
         self.configObject = configObject
-        self.frameHandler = FrameHandler()
+        self.frameHandler = FrameHandler(self.initializerPalette, self.initializerPaletteDict)
 
 
 
@@ -108,15 +98,26 @@ class Decoder:
         self.frameHandler.loadNewFrame(self.activeFrame, True)
 
         if self.frameNumber == 1:
+
             if self._firstFrameSetup() == False:
                 return False
+            if self._videoFirstFrameSetup() == False:
+                return False
+
         else:
-            self._attemptStreamPaletteLoad()
 
-        if self._frameValidation() == False:
-            return False
+            if self.streamHeaderCleared == False:
+                self._attemptStreamPaletteLoad()
 
-        self._payloadProcess() #todo this will be tied into the whole palette thing.
+        if self.streamHeaderCleared == False: # We are still on headerPalette frames.
+
+            if self._frameValidation('headerPalette') == False or self._payloadProcess('headerPalette') == False:
+                return False
+
+        else: # It has switched to streamPalette frames.
+
+            if self._frameValidation('streamPalette') == False or self._payloadProcess('streamPalette') == False:
+                return False
 
 
     def _firstFrameSetup(self):
@@ -138,14 +139,6 @@ class Decoder:
             return False
 
         self.frameHandler.updateScanGeometry(self.blockHeight, self.blockWidth, self.pixelWidth)
-
-        self.protocolVersion, self.framePalette = readInitializer(self.frameHandler.returnInitializer(),
-                                                                  self.blockHeight, self.blockWidth,
-                                                                  self.configObject.colorHandler.customPaletteList,
-                                                                  self.configObject.colorHandler.defaultPaletteList)
-        if self.protocolVersion == False:
-            return False
-        logging.debug(f'framePalette ID loaded: {self.framePalette.id}')
 
 
     def _frameValidation(self, paletteType):
@@ -192,12 +185,21 @@ class Decoder:
         class attributes.
         '''
 
-        pass #todo this will be frame 2 ran and on until its loaded.
+         # calls assembler to see if ascii has been read from self.streamHeaderComplete in partialSave.  if true,
+        '''return true, otherwise return false.
+        
+        if true, this signifies the final stream header frame has beeen read.  this means we can now switch over to
+        streamPalette'''
+
+        if True:
+            self.streamHeaderCleared = True
+            self.streamPalette = _paletteGrabber('PLACEHOLDER')
+            self.streamPaletteDict = ColorsToValue(self.streamPalette)
 
 
     def _imageFrameSetup(self):
         '''This method validates the initializer bit string, as well as loads the primary palette into memory.  The
-        reason why this must be a separate methof from _videoFirstFrameSetup is because both images and videos handle
+        reason why this must be a separate method from _videoFirstFrameSetup is because both images and videos handle
         palettes differently.  Images only need to worry about the "primary palette" or the palette that is being used
         on that particular frame, while videos must intelligently switch between the header palette and the stream
         palette.
@@ -232,5 +234,4 @@ class Decoder:
         # Now with headerPalette loaded, we can get its color set as well as generate its ColorsToValue dictionary,
         # As well as propagate these values to frameHandler.
         self.headerPaletteDict = ColorsToValue(self.headerPalette)
-        self.frameHandler.headerPaletteBitLength = self.headerPalette.bitLength
         self.frameHandler.updateDictionaries('headerPalette', self.headerPaletteDict, self.headerPalette.colorSet)

@@ -3,6 +3,7 @@ import shutil
 
 from bitglitter.read.partialsave import PartialSave
 
+
 class Assembler:
     '''This object holds PartialSave objects, which holds the state of the file being read until it is fully assembled
     and complete, which then purges the record.
@@ -16,7 +17,7 @@ class Assembler:
 
     def __str__(self):
         '''This is used by outputStats() in configfunctions to output a nice formatted text file showing usage
-        statistics.
+        statistics. #todo
         '''
 
     def checkIfFrameNeeded(self, streamSHA, frameNumber):
@@ -27,7 +28,7 @@ class Assembler:
             if self.saveDict[streamSHA].isFrameNeeded(frameNumber) == False:
                 logging.info('This frame is already saved!  Skipping...')
             else:
-                return True #todo- correct?
+                return True
         return False
 
 
@@ -36,18 +37,10 @@ class Assembler:
                                                encryptionKey)
 
 
-    def inputBinaryPreamble(self, sizeInBytes, totalFrames, compressionEnabled, encryptionEnabled, fileMaskingEnabled,
-                            customPaletteEnabled):
-        pass #todo del?
-
-    def inputStreamHeaderASCII(self, bgVersion, streamName, streamDescription):
-        pass #todo del?
-
-
-
     def saveFrameIntoPartialSave(self, streamSHA, payload, frameNumber):
         logging.debug(payload.len)
         self.saveDict[streamSHA].loadFrame(payload, frameNumber)
+
 
     def acceptFrame(self, streamSHA, payload, frameNumber, scryptN, scryptR, scryptP, outputPath, encryptionKey):
         '''This method accepts a validated frame.'''
@@ -73,11 +66,11 @@ class Assembler:
 
         self.activeSessionHashes = []
 
+
     def attemptAssembly(self, streamSHA):
         # postProcessor = PostProcessor()
 
         self.activeSessionHashes = []
-
 
 
     def removePartialSave(self, streamSHA):
@@ -102,4 +95,9 @@ class Assembler:
     def clearActiveHashes(self):
         self.activeSessionHashes = []
         #todo save?  or later on at higher level?
+
+
+    def updatePartialSaveProperties(self, attemptAssembly = True):
+        '''This method '''
+        pass
 

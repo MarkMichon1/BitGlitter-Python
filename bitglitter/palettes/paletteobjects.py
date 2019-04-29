@@ -23,7 +23,7 @@ class AbstractPalette:
 
 
 class DefaultPalette(AbstractPalette):
-    '''These are palettes that come default with BitGlitter.'''
+    '''These are palettes that come default with BitGlitter.  They cannot be changed or removed.'''
 
     def __init__(self, name, description, colorSet, colorDistance, id):
 
@@ -67,6 +67,7 @@ class TwentyFourBitPalette:
     are no colors in colorSet.  There is only one object that can exist of this class, because of the specific values
     needed.  This object is what represents the 24 bit color set.
     '''
+
     def __init__(self):
         self.name = "24 bit default"
         self.description = "EXPERIMENTAL!  ~16.7 million colors.  This will only work in lossless" \
