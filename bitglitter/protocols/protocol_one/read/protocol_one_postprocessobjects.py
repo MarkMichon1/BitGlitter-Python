@@ -1,14 +1,14 @@
 import logging
 import os
 
-
 from bitglitter.filepackager.filepackager import unpackage
 from bitglitter.utilities.filemanipulation import decryptFile, returnHashFromFile, decompressFile
 
 
 class Decryptor:
-    def __init__(self, workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR,
-                 scryptP, streamSHA):
+
+    def __init__(self, workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR, scryptP, streamSHA):
+
         inputFile = workingFolder + '\\assembled.bin'
         self.passThrough = inputFile
         self.isSatisfied = False
@@ -29,18 +29,22 @@ class Decryptor:
                     self.isSatisfied = True
 
                 else:
+
                     logging.info("Password incorrect, cannot continue.")
+                    os.remove(self.passThrough)
 
             else:
+
                 logging.warning(f'Decryption key missing from input argument, cannot continue.')
-                os.remove(self.passThrough)
 
         else:
+
             logging.info('Encryption was not enabled on this stream.  Skipping step...')
             self.isSatisfied = True
 
 
 class Decompressor:
+
     def __init__(self, workingFolder, passThrough, compressionEnabled):
 
         self.passThrough = passThrough
