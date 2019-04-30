@@ -38,7 +38,8 @@ def decompressFile(inputFile, outputFile, removeInput = True):
 def encryptFile(inputFile, outputFile, encryptionKey, scryptN = 14, scryptR = 8, scryptP = 1,
                 removeInput = True):
     '''Taking an input file as well as the ASCII encryption key, the file is encrypted with AES-256, and outputted to
-    outputFile.  The input file is removed by default.'''
+    outputFile.  The input file is removed by default.
+    '''
 
     backend = default_backend()
     initializationVectorAES = os.urandom(AES.block_size // 8)
@@ -72,7 +73,8 @@ def decryptFile(inputFile, outputFile, encryptionKey, scryptN = 14, scryptR = 8,
 
 def _encryptBytes(key, initializationVector, data, backend):
     '''This is an internal function used in encryptFile(), and for future functionality of this program.  It returns
-    32 bytes of encrypted data.'''
+    32 bytes of encrypted data.
+    '''
 
     cipher = Cipher(AES(key), modes.CBC(initializationVector), backend=backend)
     padder = PKCS7(AES.block_size).padder()
@@ -82,7 +84,9 @@ def _encryptBytes(key, initializationVector, data, backend):
 
 def _decryptBytes(key, initializationVectorAES, data, backend):
     '''This is an internal function used in dercryptFile(), and for future functionality of this program.  It returns
-        32 bytes of decrypted data.'''
+    32 bytes of decrypted data.
+    '''
+
     cipher = Cipher(AES(key), modes.CBC(initializationVectorAES), backend=backend)
     unpadder = PKCS7(AES.block_size).unpadder()
     decryptor = cipher.decryptor()
@@ -101,6 +105,7 @@ def _deriveKey(password, salt, scryptN, scryptR, scryptP, backend):
 
 def returnHashFromFile(passThrough):
     '''Taking in a path to a file as an argument, it returns the SHA-256 hash of the file via a string.'''
+
     sha256 = hashlib.sha256()
     with open(passThrough, 'rb') as fileToHash:
         buffer = fileToHash.read(100000)
@@ -136,6 +141,7 @@ def returnFileSize(passThrough):
 
 def formatFileList(fileString):
     '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''
+
     brokenApart = fileString.split('|')[1:]
     for position in range(int(len(brokenApart) / 2)):
-        print(f"{brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
+        print(f"    {brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")

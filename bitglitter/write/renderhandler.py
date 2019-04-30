@@ -35,7 +35,6 @@ class RenderHandler:
         logging.debug('RenderHandler initializing...')
 
         self.protocol = protocol
-        self.protocolVersion = self.protocol.protocolVersion
         self.blockHeight = blockHeight
         self.blockWidth = blockWidth
 

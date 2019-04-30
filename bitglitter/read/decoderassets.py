@@ -80,6 +80,7 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
 
     bitStream.pos = 0
     protocolVersion = bitStream.read('uint : 4')
+    logging.debug(f'Protocol version: {protocolVersion}')
     if str(protocolVersion) not in protocolHandler.availableProtocols:
         logging.warning(f'Protocol v{str(protocolVersion)} not supported in this version of BitGlitter.  Please update '
                         f'to fix.  Aborting...')

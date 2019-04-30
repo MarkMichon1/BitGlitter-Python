@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2019 Mark Michon
+# Copyright (c) 2019 - ∞ Mark Michon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# ===============================================================================
+#
 # Official project page:
 # https://github.com/MarkMichon1/BitGlitter
 #
@@ -27,23 +29,28 @@
 # https://github.com/MarkMichon1/BitGlitter/wiki
 #
 # Discord channel:
-# TBA
+# https://discord.gg/t9uv2pZ
 #
 # Have fun! :)
+#
+# ===============================================================================
 
-
-# BASIC USES
-from bitglitter.read.read import read
+# CORE USES
 from bitglitter.write.write import write
+from bitglitter.read.read import read
+
+
+# GENERAL CONFIGURATION
+from bitglitter.config.configfunctions import clearSession, clearStats, outputStats
+
+
+# PARTIAL SAVE CONTROL
+from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList, removePartialSave, updatePartialSave
 
 
 # CUSTOM PALETTE
 from bitglitter.palettes.palettefunctions import addCustomPalette, editNicknameToCustomPalette, clearAllCustomPalettes,\
     clearCustomPaletteNicknames, printFullPaletteList, removeCustomPalette, removeCustomPaletteNickname
-
-
-# GENERAL CONFIGURATION
-from bitglitter.config.configfunctions import clearSession, clearStats, outputStats
 
 
 # MISCELLANEOUS UTILITIES

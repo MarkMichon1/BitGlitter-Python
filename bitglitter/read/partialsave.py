@@ -3,7 +3,6 @@ import logging
 import os
 
 from bitglitter.utilities.filemanipulation import returnHashFromFile
-from bitglitter.utilities.generalverifyfunctions import isIntOverZero, isValidDirectory, properStringSyntax
 from bitglitter.read.assemblerassets import formatFileList, readStreamHeaderASCIICompressed, \
     readStreamHeaderBinaryPreamble
 from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
@@ -24,7 +23,10 @@ class PartialSave:
         self.streamHeaderComplete = False
         self.streamHeaderBuffer = None
         self.activeThisSession = True
-        self.isAssembled = False
+        self.isAssembled = False # Did the frames successfully merge into a single binary?
+        self.postProcessorDecrypted = False # Was the stream successfully decrypted?
+        self.postProcessorComplete = False # Did PostProcess run to completion?  This triggers partialsave removal.
+        self.postProcessorPassthrough = None # If PostProcess stops halfway, this is the file path to pick up from.
 
         # Stream Header - Binary Preamble
         self.sizeInBytes = None
@@ -34,7 +36,7 @@ class PartialSave:
         self.maskingEnabled = None
         self.customPaletteUsed = None
         self.dateCreated = None
-        self.streamPalette = None
+        self.streamPaletteID = None
         self.asciiHeaderByteSize = None
 
         # Stream Metadata
@@ -62,16 +64,10 @@ class PartialSave:
         os.mkdir(self.saveFolder)
         logging.info(f'New partial save! Stream SHA-256: {self.streamSHA}')
 
-    #Returns the status of the object
-    def __str__(self):
-        return False #todo ???
 
-    '''After being validated in the decoder, this method blindly accepts the data as a piece, saving it within the
-    appropriate folder, and adding the frame number to the list.
-    '''
     def loadFrame(self, frameData, frameNumber):
-        '''After being validated in the decoder, this method blindly accepts the frameData as a piece, saving it within the
-        appropriate folder, and adding the frame number to the list.
+        '''After being validated in the decoder, this method blindly accepts the frameData as a piece, saving it within
+        the appropriate folder, and adding the frame number to the list.
         '''
 
         if self.streamHeaderComplete == False:
@@ -83,8 +79,8 @@ class PartialSave:
         logging.debug(f"Frame {frameNumber} for stream {self.streamSHA} successfully saved!")
 
 
-    def updateMetaData(self, sizeInBytes, totalFrames, compressionEnabled, encryptionEnabled, fileMaskingEnabled,
-                       customPaletteUsed):
+    def binaryPreambleUpdate(self, sizeInBytes, totalFrames, compressionEnabled, encryptionEnabled, fileMaskingEnabled,
+                             customPaletteUsed):
 
         self.sizeInBytes = sizeInBytes
         self.totalFrames = totalFrames
@@ -94,81 +90,79 @@ class PartialSave:
             makeFile.write(byteFile)
         self.compressionEnabled = compressionEnabled
         self.encryptionEnabled = encryptionEnabled
+
+        if self.encryptionEnabled == False:
+            self.postProcessorDecrypted = True
+
         self.maskingEnabled = fileMaskingEnabled
         self.customPaletteUsed = customPaletteUsed
 
 
 
-    def updateUserInput(self, passwordUpdate=None, scryptOverrideN=None, scryptOverrideR=None, scryptOverrideP=None,
-                        changeOutputPath=None): #todo may put none's on higher level? configObject?
+    def userInputUpdate(self, passwordUpdate, scryptN, scryptR, scryptP, changeOutputPath):
         '''This method changes user related configurations such as password, scrypt parameters, and save location.
-        These actions are deliberately separated from updateMetaData, which should remain static.
+        These arguments are blindly accepted from updatePartialSave() in savedfilefunctions, as the inputs are validated
+        there.
         '''
+
         if passwordUpdate:
-            properStringSyntax('passwordUpdate', passwordUpdate) #todo update argument once its a function
+            self.encryptionKey = passwordUpdate
 
-        if scryptOverrideN:
-            isIntOverZero('scryptOverrideN', scryptOverrideN)
-
-        if scryptOverrideR:
-            isIntOverZero('scryptOverrideR', scryptOverrideR)
-
-        if scryptOverrideP:
-            isIntOverZero('scryptOverrideP', scryptOverrideP)
+        if scryptN:
+            self.scryptN = scryptN
+        if scryptR:
+            self.scryptR = scryptR
+        if scryptP:
+            self.scryptP = scryptP
 
         if changeOutputPath:
-            isValidDirectory('changeOutputPath', changeOutputPath)
-
-        self.encryptionKey = passwordUpdate
-        self.scryptN = scryptOverrideN
-        self.scryptR = scryptOverrideR
-        self.scryptP = scryptOverrideP
-        self.outputPath = changeOutputPath
-
-#todo feed in user arguments somewhere
+            self.outputPath = changeOutputPath
 
     # If all pieces are present, we will then decrypt and decompress if needed, and then post-process the final files.
     def _attemptAssembly(self):
-        #todo- does something belong here if crypto password failed?
 
-        if self.totalFrames == self.framesIngested:
+        if self.isAssembled == False:
 
-            logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
-            dataLeft = self.sizeInBytes * 8
-            assembledPath = f'{self.saveFolder}\\assembled.bin'
-            with open(assembledPath, 'ab') as assemblePackage:
+            if self.totalFrames == self.framesIngested:
 
-                for frameNumber in range(self.totalFrames):
-                    activeFrame = self._readFile(f'frame{frameNumber + 1}')
+                logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
+                dataLeft = self.sizeInBytes * 8
+                assembledPath = f'{self.saveFolder}\\assembled.bin'
+                with open(assembledPath, 'ab') as assemblePackage:
 
-                    if frameNumber + 1 != self.totalFrames: # All frames except the last one.
-                        pass #todo
+                    for frameNumber in range(self.totalFrames):
+                        activeFrame = self._readFile(f'frame{frameNumber + 1}')
 
-                    else: #This is the last frame
-                        dataHolder = activeFrame.read(f'bits : {dataLeft}')
-                        toByteType = dataHolder.tobytes()
-                        assemblePackage.write(toByteType)
+                        if frameNumber + 1 != self.totalFrames: # All frames except the last one.
+                            pass #todo
 
-            if returnHashFromFile(assembledPath) != self.assembledSHA:
+                        else: #This is the last frame
+                            dataHolder = activeFrame.read(f'bits : {dataLeft}')
+                            toByteType = dataHolder.tobytes()
+                            assemblePackage.write(toByteType)
 
-                logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
+                if returnHashFromFile(assembledPath) != self.assembledSHA:
+
+                    logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
+                    return False
+
+                logging.debug(f'Successfully assembled.')
+                self.isAssembled = True
+
+            else:
+                logging.info('All frames have not been loaded yet, cannot assemble.')
                 return False
+                #todo replace validatedpiecelist with binary file checking
 
-            logging.debug(f'Successfully assembled.')
-            self.isAssembled = True
+        postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
+                                           self.encryptionEnabled, self.encryptionKey, self.scryptN,
+                                           self.scryptR, self.scryptP, self.compressionEnabled)
 
-            postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
-                                               self.encryptionEnabled, self.encryptionKey, self.scryptN,
-                                               self.scryptR, self.scryptP, self.compressionEnabled)
-            #todo add something here if there is no pass
-
-        else:
-
+        # Did all three stages of PostProcess successfully run?
+        if postProcessAttempt.FullyAssembled != True:
             return False
-            #todo replace validatedpiecelist with binary file checking
 
-
-            # destroy palette if selfDestruct
+        return True
 
 
     def _createFrameReferenceTable(self):
@@ -261,7 +255,7 @@ class PartialSave:
         self.streamHeaderBuffer = BitStream()
 
         if self.maskingEnabled == True:
-            self.fileList = "Cannot display, masking enabled!"
+            self.fileList = "Cannot display, file masking enabled for this stream!"
         else:
             self.fileList = formatFileList(self.fileList)
 
@@ -281,6 +275,7 @@ class PartialSave:
             logging.info(f'\n\nPost-compression hash: {self.postCompressionSHA}')
             self.assembledSHA = self.postCompressionSHA
 
+
     def isFrameNeeded(self, frameNumber):
         if self.isAssembled == True:
             return False #todo add binary table check stuff
@@ -291,4 +286,42 @@ class PartialSave:
     def _closeSession(self):
         '''Called by the Assembler object, this will flush self.frameReferenceTable back to disk, as well as flag it as
         an inactive session.'''
-        self.activeThisSession = False #todo still finish the other part
+        self.activeThisSession = False #todo still finish the other part, saving and compressing the bit thing to disk
+
+
+    def returnStatus(self, debugData):
+        '''This is used in printFullSaveList in savedfunctions module; it returns the state of the object, as well as
+        various information read from the reader.  __str__ is not used, as debugData controls what level of data is
+        returned, whether for end users, or debugging purposes.'''
+
+        tempHolder = f"{'*' * 8} {self.streamSHA} {'*' * 8}" \
+            f"\n\n{self.framesIngested} / {self.totalFrames} frames saved" \
+            f"\n\nStream header complete: {self.streamHeaderComplete}" \
+            f"\nIs assembled: {self.isAssembled}" \
+            f"\n\nStream name: {self.streamName}" \
+            f"\nStream Description: {self.streamDescription}" \
+            f"\nDate Created: {self.dateCreated}" \
+            f"\nSize in bytes: {self.sizeInBytes} B" \
+            f"\nCompression enabled: {self.compressionEnabled}" \
+            f"\nEncryption enabled: {self.encryptionEnabled}" \
+            f"\nFile masking enabled: {self.maskingEnabled}" \
+            f"\n\nEncryption key: {self.encryptionKey} " \
+            f"\nScrypt N: {self.scryptN}" \
+            f"\nScrypt R: {self.scryptR}" \
+            f"\nScrypt P: {self.scryptP}" \
+            f"\nOutput path upon assembly: {self.outputPath}" \
+            f"\n\nFile list: {self.fileList}"
+
+        if debugData == True:
+            tempHolder += f"\n\n{'*' * 3} {'DEBUG'} {'*' * 3}" \
+                f"\nBG version: {self.bgVersion}" \
+                f"\nASCII header byte size: {self.asciiHeaderByteSize}" \
+                f"\nPost compression SHA: {self.postCompressionSHA}" \
+                f"\nStream Palette ID: {self.streamPaletteID}" \
+                f"\n\nCustom color data (if applicable)" \
+                f"\nCustom color name: {self.customColorName}" \
+                f"\nCustom color description: {self.customColorDescription}" \
+                f"\nCustom color date created: {self.customColorDateCreated}" \
+                f"\nCustom color palette: {self.customColorPalette}"
+
+        return tempHolder

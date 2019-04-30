@@ -15,11 +15,6 @@ class Assembler:
         self.activeSessionHashes = []
 
 
-    def __str__(self):
-        '''This is used by outputStats() in configfunctions to output a nice formatted text file showing usage
-        statistics. #todo
-        '''
-
     def checkIfFrameNeeded(self, streamSHA, frameNumber):
 
         if streamSHA not in self.saveDict:
@@ -77,6 +72,7 @@ class Assembler:
         '''Removes PartialSave from dictionary.  Is used either through direct user argument, or by read() once a stream
         is successfully converted back into a file.
         '''
+
         del self.saveDict[streamSHA]
         shutil.rmtree(self.workingFolder + f'\\{streamSHA}')
         logging.debug(f'Temporary files successfully removed.')

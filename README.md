@@ -5,6 +5,7 @@ For a complete guide on BitGlitter please go here: TBD
 # The basics
 
 ![BitGlitter Sample Frame](https://i.imgur.com/RO0YsuI.png)
+#todo- video gif here ###################
 
 
 BitGlitter is an easy to use script that allows you to embed data inside of ordinary pictures or video.  Store and host
@@ -15,12 +16,11 @@ any files wherever images or videos can be hosted.
 Whether it's barcodes at the store or QR codes you can scan with your phone- they both work on the same principle.  Data
 is encoded into the black and white.  You each think of each color as an abstraction for a binary value, so then when
 those colors are read in sequence, you can pull meaningful data from the image.  I wondered how this concept could be
-improved upon.  And hence BitGlitter was born.
+improved upon.  BitGlitter was born.
 
 Conventional barcodes are severely limited in application, in terms of their data density.  Much capability is gained 
-when you extend it's original concept.  BitGlitter is in a class of it's own in several ways:
+when you maximize the original concept.  BitGlitter is in a class of it's own in several ways:
 
-+ **The only
 + **Color Palettes:**  By removing the constraint of only using black and white, the amount of data you can hold in a
 given "block" on the frame skyrockets.  Your regular two color setup holds one bit per block.  Four colors holds two 
 bits (2x), sixty four colors holds six bits (6x), and lossless ~16.7M color palette holds 24 bits (24x improvement over 
@@ -49,7 +49,7 @@ Put simply, you can now make videos that can hold large volumes of data inside o
 interesting applications that can come out of this.
 
 # Features
- PROTOCOL VERSION!!!
+
 ### Data
 
 + **Compression Added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
@@ -61,11 +61,11 @@ the stream (and decrypt it if applicable) will know of its contents.
 
 ### Video
 
-In addition 
+You can choose between either outputting all of your frames as a series of images (.png), or as a single .mp4.
 
 + **Customizable resolution:** You have complete control of the size of the outputted frames, whether they are 480p or
 8K.
-+ **Customizable Framerate:** Currently supports 30 and 60 FPS, custom values coming soon.
++ **Customizable Framerate:** Currently supports 30 and 60 FPS, custom values are coming soon.
 
 ![Custom Color Showcase](https://i.imgur.com/4uQTxwT.png)
 
@@ -83,8 +83,24 @@ palette.  This gives your file resistance against format changes, codecs, or fil
 well as each frame.  The data must match what is expected to be accepted.  Damaged or corrupt files will not be blindly
 passed on to you.
 
+### Design
+
++ **Easy to understand:** Whether you're learning about Python and want to understand how it works, or you're looking to
+contribute, docstrings and notes are throughout the library.
+
++ **Built in future-proofing:** As of now, BitGlitter has a single protocol (Protocol 1), which is a specific set of
+  procedures around how data is handled, and the components of a frame, as well as their layout.  Each protocol has its
+  own unique ID to identify it with.  This ID is added in the  header during the write process, and is picked up at 
+  read.  As new protocols get created, older versions of BitGlitter that don't have these included will notify the user
+  to update their version in order for it to be read.  All older protocol versions are saved in future library
+  iterations, so no matter how old the protocol version is used on the stream, it will always be able to be read.
+
++ **Fully modular design:** Do you have a specialized use case?  Adapting this library to your own needs is quite easy.
+  I've built BitGlitter to be easy to modify and expand upon.  Rather than worrying about the lower-level functionality,
+  achieve your goal with the modular components I've created.
+
 ### Applications
-TBD.  This will be updated as time progresses.
+To be determined.  This will be updated as time progresses.
 
 
 ### Practical Limits
@@ -125,6 +141,9 @@ I put together a google doc sheet.  new programmers, etc #todo no
 
 This is all you need to know to get up and running.  There is additional functionality as well, 
 [and here is the link.](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
+
+###Use BitGlitter in 60 seconds
+`tba`
 
 ###Base Usage
 `write()` is the function that inputs files and turns them into a BitGlitter stream.  There are quite a few arguments
@@ -205,7 +224,9 @@ add here
 
 In addition to downloading the code from Github, you can also grab it directly from PyPI:
 
-`pip install bitglitter`  `TBD!!`
+`pip install bitglitter`
+
+#todo- ffmpeg exe figure out
 
 ## Required Third Party Libraries
 
@@ -223,7 +244,7 @@ Whether you're a seasoned programmer or brand new, there's plenty of things you 
 Join our discord server, and check out all of the information I posted in the "Information" category.  Thank you for
 your interest!
 
-https://discord.gg/kFHzm8c
+https://discord.gg/t9uv2pZ
 
 Also, be sure to check out the 
 [contributing master page](https://github.com/MarkMichon1/BitGlitter/wiki/Contributing-Master-Page).  It contains a lot
@@ -243,10 +264,14 @@ Paypal address: [https://www.paypal.me/markmichon7](https://www.paypal.me/markmi
 ![Splitter](https://i.imgur.com/qIygifj.png)
 
 # MIT License
-© 2019 Mark Michon
+© 2019 - ∞ Mark Michon
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the 
+Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

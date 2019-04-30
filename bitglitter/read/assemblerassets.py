@@ -54,8 +54,9 @@ def readStreamHeaderBinaryPreamble(bitStream):
 
 def formatFileList(fileString):
     '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''
+
     brokenApart = fileString.split('|')[1:]
     formattedString = ''
     for position in range(int(len(brokenApart) / 2)):
-        formattedString +=(f"\n{brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
+        formattedString +=(f"\n    {brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
     return formattedString

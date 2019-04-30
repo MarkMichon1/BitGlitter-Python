@@ -5,9 +5,9 @@ from bitglitter.config.config import config
 from bitglitter.utilities.generalverifyfunctions import properStringSyntax
 from bitglitter.palettes.paletteutilities import _addCustomPaletteDirect, colorDistance, returnPaletteID
 
+# All of these functions are for end users except for _dictPopper.
 
-
-def dictPopper(idOrNick):
+def _dictPopper(idOrNick):
     '''This is an internal function used for removeCustomPalette(), addNicknameToCustomPalette(), and
     removeCustomPaletteNicknames().  Since a user can either either the palette ID OR it's nickname as an argument,
     first we must check whether that key exists.  If it does, it will check both dictionaries in the ColorHandler object
@@ -81,7 +81,7 @@ def addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname
 
 def removeCustomPalette(idOrNick):
     '''Removes custom palette completely from the config file.'''
-    dictPopper(idOrNick)
+    _dictPopper(idOrNick)
     config.saveSession()
 
 
@@ -92,7 +92,7 @@ def editNicknameToCustomPalette(idOrNick, newName):
             and newName not in config.colorHandler.customPaletteNicknameList \
             and newName not in config.colorHandler.defaultPaletteList:
 
-        tempHolder = dictPopper(idOrNick)
+        tempHolder = _dictPopper(idOrNick)
         tempHolder.nickname = newName
         config.colorHandler.customPaletteList[tempHolder.id] = tempHolder
         config.colorHandler.customPaletteNicknameList[tempHolder.nickname] = tempHolder
@@ -108,7 +108,7 @@ def removeCustomPaletteNickname(idOrNick):
     nickname.
     '''
 
-    tempHolder = dictPopper(idOrNick)
+    tempHolder = _dictPopper(idOrNick)
     tempHolder.nickname = ""
     config.colorHandler.customPaletteList[tempHolder.id] = tempHolder
     config.saveSession()
@@ -132,7 +132,7 @@ def printFullPaletteList(path):
     '''Writes a text file to a file path outlining available color palettes.'''
     activePath = os.path.join(os.getcwd(), path)
 
-    with open(activePath + '\\Palette List.txt', 'w') as writer:
+    with open(activePath + '\\BitGlitter Palette List.txt', 'w') as writer:
         writer.write('*' * 21 + '\nDefault Palettes\n' + '*' * 21 + '\n')
 
         for someKey in config.colorHandler.defaultPaletteList:

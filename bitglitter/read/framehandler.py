@@ -140,7 +140,8 @@ class FrameHandler:
 
     def updateDictionaries(self, paletteType, paletteDict, palette):
         '''As the stream is setting up, its not possible to instantiate this object with everything at once.  This
-        method allows for an easy way to inject new palette objects into the dictionaries used for retrieving values.'''
+        method allows for an easy way to inject new palette objects into the dictionaries used for retrieving values.
+        '''
 
         if paletteType == 'headerPalette':
             self.paletteConversionDict['headerPalette'] = paletteDict
