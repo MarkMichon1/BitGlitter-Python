@@ -71,3 +71,9 @@ def beginAssembly(streamSHA):
     if config.assembler.saveDict[streamSHA]._attemptAssembly() == True:
         config.assembler.removePartialSave(streamSHA)
     config.saveSession()
+
+
+def removeAllPartialSaves():
+    '''This removes all partial save objects saved, as well as any temporary data.'''
+
+    config.assembler.clearPartialSaves()

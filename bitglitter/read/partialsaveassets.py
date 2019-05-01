@@ -10,6 +10,7 @@ def readStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEna
     postCompressionSHA = None
 
     toBytes = bitstream.tobytes()
+    logging.debug(f'ASCII header byte size inputted to read function: {int(len(bitstream) / 8)} B')
     uncompressedString = zlib.decompress(toBytes).decode()
     stringBrokenIntoParts = uncompressedString.split('\\\\')[1:-1]
     bgVersion = stringBrokenIntoParts[0]

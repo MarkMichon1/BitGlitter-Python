@@ -25,7 +25,7 @@ def write(   # Basic setup
              #protocolVersion = '1' # Currently disabled, will enable once multiple choices of protocols are available.
              headerPaletteID = HEADER_PALETTE_ID,
              streamPaletteID = STREAM_PALETTE_ID,
-             pixelWidth = PIXEL_WIDTH, #todo check this works on testing
+             pixelWidth = PIXEL_WIDTH,
              blockHeight = BLOCK_HEIGHT,
              blockWidth = BLOCK_WIDTH,
 

@@ -86,6 +86,7 @@ class ColorsToValue:
 
 def _paletteGrabber(idOrNick):
     '''Goes through each of the dictionaries to return the color object.'''
+
     if idOrNick in config.colorHandler.defaultPaletteList:
         return config.colorHandler.defaultPaletteList[idOrNick]
     elif idOrNick in config.colorHandler.customPaletteList:
@@ -100,6 +101,7 @@ def _validateAndAddPalette(paletteName, paletteDescription, dateCreated, colorSe
     '''This is solely to input custom palettes without all of the other prompts.  Returns True if validated and added,
     and false if it isn't.
     '''
+
     distance = colorDistance(colorSet)
     if distance == 0:
         return False
@@ -132,6 +134,7 @@ def colorDistance(palette):
 
 def returnPaletteID(name, description, dateCreated, colorSet):
     '''Taking in the various parameters, this creates a unique ID for the object.'''
+
     set = str(colorSet)
     hasher = hashlib.sha256(str(name + description + dateCreated + set).encode())
     return(hasher.hexdigest())

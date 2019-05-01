@@ -45,7 +45,8 @@ from bitglitter.config.configfunctions import clearSession, clearStats, outputSt
 
 
 # PARTIAL SAVE CONTROL
-from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList, removePartialSave, updatePartialSave
+from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList, removePartialSave, updatePartialSave, \
+    removeAllPartialSaves
 
 
 # CUSTOM PALETTE

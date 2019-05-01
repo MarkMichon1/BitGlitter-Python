@@ -14,7 +14,7 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
     readRoot = os.path.join(os.getcwd(), activePath)
     workingFolder = readRoot + '\\Working Folder'
     if os.path.isdir(workingFolder):
-        shutil.rmtree(workingFolder) #todo this may all be unneccessary
+        shutil.rmtree(workingFolder)
     os.makedirs(workingFolder)
     configObject.assembler.workingFolder = readRoot
 
@@ -49,7 +49,6 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
             decoder.decodeVideoFrame(activeFrame)
             videoFramePuller.removePreviousFrame()
 
-    #todo have var for next frame --- still needed?  I don't think
     else:
         logging.info("Processing image...")
         checkpointPassed = decoder.decodeImage(fileToInput)

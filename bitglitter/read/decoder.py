@@ -51,6 +51,12 @@ class Decoder:
         self.streamPalette = None
         self.streamPaletteDict = None
 
+        self.customColorName = None
+        self.customColorDescription = None
+        self.customColorDateCreated = None
+        self.customColorColorSet = None
+
+
         # Frame Data
         self.streamSHA = None
         self.frameSHA = None
@@ -80,7 +86,7 @@ class Decoder:
             return False
 
         if self._payloadProcess('primaryPalette') == False:
-            return False #todo revisit?
+            return False
 
 
 
@@ -90,7 +96,6 @@ class Decoder:
         '''
 
         self.frameNumber += 1
-        self.streamSHA = None
         self.frameSHA = None
         self.framePayload = None
 
@@ -191,7 +196,10 @@ class Decoder:
         if true, this signifies the final stream header frame has beeen read.  this means we can now switch over to
         streamPalette'''
 
-        if True:
+        saveObject = self.configObject.assembler.saveDict[self.streamSHA].returnStreamHeaderID()
+
+        if saveObject.streamPaletteID == True and saveObject.customPaletteUsed == False:
+
             self.streamHeaderCleared = True
             self.streamPalette = _paletteGrabber('PLACEHOLDER')
             self.streamPaletteDict = ColorsToValue(self.streamPalette)
@@ -234,4 +242,4 @@ class Decoder:
         # Now with headerPalette loaded, we can get its color set as well as generate its ColorsToValue dictionary,
         # As well as propagate these values to frameHandler.
         self.headerPaletteDict = ColorsToValue(self.headerPalette)
-        self.frameHandler.updateDictionaries('headerPalette', self.headerPaletteDict, self.headerPalette.colorSet)
+        self.frameHandler.updateDictionaries('headerPalette', self.headerPaletteDict, self.headerPalette)

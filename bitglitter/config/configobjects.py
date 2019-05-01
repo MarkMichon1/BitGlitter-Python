@@ -8,11 +8,11 @@ class Config:
     '''This is the master object that holds all session data.'''
 
     def __init__(self):
-        #todo remove existing folder for save stuff if it exists.  try
 
         self.colorHandler = PaletteHandler()
         self.statsHandler = Statistics()
         self.assembler = Assembler()
+        self.assembler.clearPartialSaves() # Deleting old folder if new config object must be made.
 
         self.saveSession()
 
@@ -41,6 +41,7 @@ class Statistics:
         '''This is used by outputStats() in configfunctions to output a nice formatted text file showing usage
         statistics.
         '''
+
         return('*' * 21 + '\nStatistics\n' + '*' * 21 + f'\n\nTotal Blocks Wrote: {self.blocksWrote}'
                                                                 f'\nTotal Frames Wrote: {self.framesWrote}'
                                                                 f'\nTotal Data Wrote: {int(self.dataWrote / 8)} B'
@@ -72,6 +73,7 @@ class PaletteHandler:
     All functions available in palettefunctions module that deal with custom palettes are interfacing with dictionaries
     customPaletteList and customPaletteNicknameList in this object.
     '''
+
     def __init__(self):
         self.defaultPaletteList = {'1' : DefaultPalette("1 bit default",
                             "Two colors, black and white.  While it has the lowest density of one bit of data per "
@@ -113,4 +115,3 @@ class PaletteHandler:
 
         self.customPaletteList = {}
         self.customPaletteNicknameList = {}
-
