@@ -41,22 +41,20 @@ class FrameHandler:
                                       'streamPalette' : self.streamPaletteDict}
 
         # Scan State
-        self.isFirstFrame = True
+        self.isFirstFrame = True #todo
         self.nonCalibratorBlocks = 0
         self.nextBlock = 0
         self.blockPosition = 0
 
 
-    def _setupFrameGrid(self):
+    def _setupFrameGrid(self, hasInitializer):
         '''Ran on initialization, this creates a generator that outputs the correct block coordinates for scanBlock
         to utilize.  This depends on whether an initializer is used in this frame or not.
         '''
 
-        for yBlock in range(self.blockHeight - int(self.isFirstFrame)):
-            for xBlock in range(self.blockWidth - int(self.isFirstFrame)):
-                yield xBlock + int(self.isFirstFrame), yBlock + int(self.isFirstFrame)
-
-        self.isFirstFrame = False
+        for yBlock in range(self.blockHeight - int(hasInitializer)):
+            for xBlock in range(self.blockWidth - int(hasInitializer)):
+                yield xBlock + int(hasInitializer), yBlock + int(hasInitializer)
 
 
     def _blocksToBits(self, howMany, paletteType):
@@ -69,6 +67,7 @@ class FrameHandler:
 
         for block in range(howMany):
             blockCoords = next(self.nextBlock)
+            #logging.debug(blockCoords) #todo
             rawRGB = scanBlock(self.image, self.pixelWidth, blockCoords[0], blockCoords[1])
             if activeColorSet:
                 bitString.append(activePaletteDict.getValue(colorSnap(rawRGB, activeColorSet)))
@@ -162,20 +161,27 @@ class FrameHandler:
         as it is instructed to in pieces.
         '''
 
-        if blocksToRead > 0:
-            self.nonCalibratorBlocks = blocksToRead
+
+        if blocksToRead <= self.nonCalibratorBlocks:
             logging.debug(f'Last frame detected, {blocksToRead} to scan.')
         else:
             logging.debug('Full frame detected.')
+
+        self.nonCalibratorBlocks = blocksToRead
 
 
     def loadNewFrame(self, image, hasInitializer):
         '''This method loads in the new image, as well as resets the parameters from the previous frame.'''
 
         self.image = image
-        self.nextBlock = self._setupFrameGrid()
+        self.isFirstFrame = hasInitializer
+        self.nextBlock = self._setupFrameGrid(hasInitializer)
 
-        if self.isFirstFrame == False:
+        # This will only fail once, as geometry is not immediately known on the loading of the first frame.
+        try:
             self.nonCalibratorBlocks = (self.blockHeight - int(hasInitializer)) * \
                                        (self.blockWidth - int(hasInitializer))
+        except:
+            pass
+
         config.statsHandler.framesRead += 1

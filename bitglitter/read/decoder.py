@@ -2,7 +2,7 @@ import logging
 
 from bitstring import BitStream
 
-from bitglitter.palettes.paletteutilities import _paletteGrabber, ColorsToValue
+from bitglitter.palettes.paletteutilities import _paletteGrabber, ColorsToValue, _validateAndAddPalette
 from bitglitter.read.framehandler import FrameHandler
 from bitglitter.read.framelockon import frameLockOn
 from bitglitter.read.decoderassets import minimumBlockCheckpoint, readFrameHeader, readInitializer, \
@@ -24,6 +24,7 @@ class Decoder:
         self.frameNumber = 0
         self.activeFrame = None
         self.checkpointPassed = True
+        self.fatalCheckpoint = True # Non-recoverable errors that require an immediate break from the loop. #todo
         self.streamHeaderCleared = False
 
         # Input arguments
@@ -100,9 +101,10 @@ class Decoder:
         self.framePayload = None
 
         self.activeFrame = Image.open(fileToInput)
-        self.frameHandler.loadNewFrame(self.activeFrame, True)
 
         if self.frameNumber == 1:
+
+            self.frameHandler.loadNewFrame(self.activeFrame, True)
 
             if self._firstFrameSetup() == False:
                 return False
@@ -111,17 +113,26 @@ class Decoder:
 
         else:
 
+            self.frameHandler.loadNewFrame(self.activeFrame, False)
+
             if self.streamHeaderCleared == False:
                 self._attemptStreamPaletteLoad()
 
+                if self.fatalCheckpoint == False:
+                    return False
+
         if self.streamHeaderCleared == False: # We are still on headerPalette frames.
 
-            if self._frameValidation('headerPalette') == False or self._payloadProcess('headerPalette') == False:
+            if self._frameValidation('headerPalette') == False:
+                return False
+            if self._payloadProcess('headerPalette') == False:
                 return False
 
         else: # It has switched to streamPalette frames.
 
-            if self._frameValidation('streamPalette') == False or self._payloadProcess('streamPalette') == False:
+            if self._frameValidation('streamPalette') == False:
+                return False
+            if self._payloadProcess('streamPalette') == False:
                 return False
 
 
@@ -198,10 +209,26 @@ class Decoder:
 
         saveObject = self.configObject.assembler.saveDict[self.streamSHA].returnStreamHeaderID()
 
-        if saveObject.streamPaletteID == True and saveObject.customPaletteUsed == False:
+        if saveObject[0] == True:
 
             self.streamHeaderCleared = True
-            self.streamPalette = _paletteGrabber('PLACEHOLDER')
+
+            # Does stream palette already exist as a custom or default color?
+            if saveObject[1] in self.configObject.colorHandler.customPaletteList or saveObject[1] in \
+                    self.configObject.colorHandler.defaultPaletteList:
+
+                self.streamPalette = _paletteGrabber(saveObject[1])
+                logging.info(f'Palette ID {saveObject[1]} already saved in system... successfully loaded!')
+
+            # This is a new palette which will now be instantiation as a custom palette object.
+            else:
+
+                self.fatalCheckpoint =_validateAndAddPalette(saveObject[2], saveObject[3], saveObject[4], saveObject[5])
+                if self.fatalCheckpoint == False:
+                    return False
+
+
+
             self.streamPaletteDict = ColorsToValue(self.streamPalette)
 
 

@@ -48,6 +48,7 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
             activeFrame = videoFramePuller.nextFrame()
             decoder.decodeVideoFrame(activeFrame)
             videoFramePuller.removePreviousFrame()
+            configObject.saveSession()
 
     else:
         logging.info("Processing image...")

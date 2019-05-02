@@ -347,9 +347,10 @@ class PartialSave:
                 # Frame reference table is not in memory and must be loaded.
                 if self.frameReferenceTable == False:
 
-                    self.frameReferenceTable = self._readFile('\\frameReferenceTable', toDecompress=True)
+                    self.frameReferenceTable = BitStream(self._readFile('\\frameReferenceTable', toDecompress=True))
 
-                isFrameLoaded = self.frameReferenceTable.read(f'bool : {frameNumber - 1}')
+                self.frameReferenceTable.bitpos = frameNumber - 1
+                isFrameLoaded = self.frameReferenceTable.read('bool')
                 return not isFrameLoaded
 
 
@@ -406,5 +407,5 @@ class PartialSave:
         create the palette.
         '''
 
-        return self.streamHeaderASCIIComplete, self.customColorName, self.customColorDescription, \
+        return self.streamHeaderASCIIComplete, self.streamPaletteID, self.customColorName, self.customColorDescription,\
                self.customColorDateCreated, self.customColorPalette

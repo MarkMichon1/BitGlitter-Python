@@ -51,6 +51,7 @@ class ColorsToValue:
     '''This class does the exact opposite as ValuesToColor.  This first generates a dictionary linking colors to
     specific bit values, and then getValue() accomplishes that.
     '''
+
     def __init__(self, palette):
         self.palette = palette
 
