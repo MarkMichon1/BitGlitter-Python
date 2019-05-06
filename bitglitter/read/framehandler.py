@@ -118,6 +118,7 @@ class FrameHandler:
         if paletteType != 'streamPalette' and paletteType != 'headerPalette' and paletteType != 'primaryPalette':
             raise ValueError("FrameHandler.returnRemainderPayload: invalid paletteType argument.")
 
+        logging.debug(f'FFF {self.nonCalibratorBlocks} {self.blockPosition}')
         remainderPayload = self._blocksToBits(self.nonCalibratorBlocks - self.blockPosition, f'{paletteType}')
         config.statsHandler.dataRead += remainderPayload.len
 
@@ -162,7 +163,7 @@ class FrameHandler:
         '''
 
 
-        if blocksToRead <= self.nonCalibratorBlocks:
+        if blocksToRead < self.nonCalibratorBlocks:
             logging.debug(f'Last frame detected, {blocksToRead} to scan.')
         else:
             logging.debug('Full frame detected.')
@@ -176,6 +177,7 @@ class FrameHandler:
         self.image = image
         self.isFirstFrame = hasInitializer
         self.nextBlock = self._setupFrameGrid(hasInitializer)
+        self.blockPosition = 0
 
         # This will only fail once, as geometry is not immediately known on the loading of the first frame.
         try:

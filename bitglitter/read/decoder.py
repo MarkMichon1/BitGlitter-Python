@@ -21,7 +21,7 @@ class Decoder:
 
         # Misc Setup
         self.isVideo = isVideo
-        self.frameNumber = 0
+        self.frameNumberofVideo = 0
         self.activeFrame = None
         self.checkpointPassed = True
         self.fatalCheckpoint = True # Non-recoverable errors that require an immediate break from the loop. #todo
@@ -61,6 +61,8 @@ class Decoder:
         # Frame Data
         self.streamSHA = None
         self.frameSHA = None
+        self.streamSHAFromLastFrame = None
+        self.frameNumberofStream = None
         self.framePayload = None
         self.carryOverBits = None
         self.blocksToRead = None
@@ -96,13 +98,15 @@ class Decoder:
         the Assembler object for further processing.
         '''
 
-        self.frameNumber += 1
+        self.frameNumberofVideo += 1
+        self.frameNumberofStream = None
         self.frameSHA = None
         self.framePayload = None
+        self.carryOverBits = None
 
         self.activeFrame = Image.open(fileToInput)
 
-        if self.frameNumber == 1:
+        if self.frameNumberofVideo == 1:
 
             self.frameHandler.loadNewFrame(self.activeFrame, True)
 
@@ -141,6 +145,8 @@ class Decoder:
         locked onto, and the initializer from the frame is validated and loaded.
         '''
 
+        logging.warning(f'THIS RAN!!!!!!!!!!!!!!!!! FRAME SETUP {self.frameNumberofVideo}')
+
         self.checkpointPassed = minimumBlockCheckpoint(self.blockHeightOverride, self.blockWidthOverride,
                                                        self.activeFrame.size[0], self.activeFrame.size[1])
         if self.checkpointPassed == False:
@@ -164,15 +170,16 @@ class Decoder:
 
         self.frameHeaderBits, self.carryOverBits = self.frameHandler.returnFrameHeader(paletteType)
 
-        self.streamSHA, self.frameSHA, self.frameNumber, self.blocksToRead = \
+        self.streamSHA, self.frameSHA, self.frameNumberofStream, self.blocksToRead = \
             readFrameHeader(self.frameHeaderBits)
-
-        self.frameHandler.updateBlocksToRead(self.blocksToRead)
 
         if self.streamSHA == False:
             return False
 
-        if self.configObject.assembler.checkIfFrameNeeded(self.streamSHA, self.frameNumber) == False:
+        self.streamSHAFromLastFrame = self.streamSHA
+        self.frameHandler.updateBlocksToRead(self.blocksToRead)
+
+        if self.configObject.assembler.checkIfFrameNeeded(self.streamSHA, self.frameNumberofStream) == False:
             return False
 
 
@@ -183,12 +190,11 @@ class Decoder:
 
         self.carryOverBits.append(self.frameHandler.returnRemainderPayload(paletteType))
         self.framePayload = self.carryOverBits
-        self.carryOverBits = BitStream()
 
         if validatePayload(self.framePayload, self.frameSHA) == False:
             return False
 
-        self.configObject.assembler.acceptFrame(self.streamSHA, self.framePayload, self.frameNumber, self.scryptN,
+        self.configObject.assembler.acceptFrame(self.streamSHA, self.framePayload, self.frameNumberofStream, self.scryptN,
                                                 self.scryptR, self.scryptP, self.outputPath, self.encryptionKey)
 
 
@@ -207,7 +213,7 @@ class Decoder:
         if true, this signifies the final stream header frame has beeen read.  this means we can now switch over to
         streamPalette'''
 
-        saveObject = self.configObject.assembler.saveDict[self.streamSHA].returnStreamHeaderID()
+        saveObject = self.configObject.assembler.saveDict[self.streamSHAFromLastFrame].returnStreamHeaderID()
 
         if saveObject[0] == True:
 

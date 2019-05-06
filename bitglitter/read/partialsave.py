@@ -145,7 +145,7 @@ class PartialSave:
                 self.isAssembled = True
 
             else:
-                logging.info('All frames have not been loaded yet, cannot assemble.')
+                logging.info(f'All frames have not been loaded yet for {self.streamSHA}, cannot assemble.')
                 return False
 
         postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
