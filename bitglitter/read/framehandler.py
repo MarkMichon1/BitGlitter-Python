@@ -118,7 +118,6 @@ class FrameHandler:
         if paletteType != 'streamPalette' and paletteType != 'headerPalette' and paletteType != 'primaryPalette':
             raise ValueError("FrameHandler.returnRemainderPayload: invalid paletteType argument.")
 
-        logging.debug(f'FFF {self.nonCalibratorBlocks} {self.blockPosition}')
         remainderPayload = self._blocksToBits(self.nonCalibratorBlocks - self.blockPosition, f'{paletteType}')
         config.statsHandler.dataRead += remainderPayload.len
 

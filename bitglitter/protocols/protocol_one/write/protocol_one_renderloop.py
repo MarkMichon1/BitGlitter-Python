@@ -158,7 +158,7 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
         #On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
         #cleanly fits into the block.
         if lastFrame == True:
-            remainderBits = activePalette.bitLength - (combinedFrameLength % activePalette.bitLength)
+            remainderBits = combinedFrameLength % activePalette.bitLength
             bitsToPad = BitStream(bin=f"{'0' * remainderBits}")
             frameHashableBits.append(bitsToPad)
 

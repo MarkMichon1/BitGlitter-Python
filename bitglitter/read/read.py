@@ -44,8 +44,8 @@ def read(fileToInput,
     if checkpointPassed == False:
         return False
 
-    # Now that all frames have been scanned, we'll have the configObject check to see if any files are ready for
+    # Now that all frames have been scanned, we'll have the config object check to see if any files are ready for
     # assembly.  If there are, they will be put together and outputted, as well as removed/flushed from partialSaves.
     config.assembler.reviewActiveSessions()
     config.saveSession()
-
+    return True

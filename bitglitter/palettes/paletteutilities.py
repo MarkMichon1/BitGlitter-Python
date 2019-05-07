@@ -104,8 +104,10 @@ def _validateAndAddPalette(paletteName, paletteDescription, dateCreated, colorSe
     '''
 
     distance = colorDistance(colorSet)
+
     if distance == 0:
         return False
+
     if len(colorSet) % 2 != 0 or len(colorSet) < 2:
         return False
 

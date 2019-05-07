@@ -24,8 +24,9 @@ class Decoder:
         self.frameNumberofVideo = 0
         self.activeFrame = None
         self.checkpointPassed = True
-        self.fatalCheckpoint = True # Non-recoverable errors that require an immediate break from the loop. #todo
+        self.fatalCheckpoint = True # Non-recoverable errors that require an immediate break from the loop.
         self.streamHeaderCleared = False
+        self.duplicateFrameRead = False
 
         # Input arguments
         self.blockHeightOverride = blockHeightOverride
@@ -103,6 +104,7 @@ class Decoder:
         self.frameSHA = None
         self.framePayload = None
         self.carryOverBits = None
+        self.duplicateFrameRead = False
 
         self.activeFrame = Image.open(fileToInput)
 
@@ -145,8 +147,6 @@ class Decoder:
         locked onto, and the initializer from the frame is validated and loaded.
         '''
 
-        logging.warning(f'THIS RAN!!!!!!!!!!!!!!!!! FRAME SETUP {self.frameNumberofVideo}')
-
         self.checkpointPassed = minimumBlockCheckpoint(self.blockHeightOverride, self.blockWidthOverride,
                                                        self.activeFrame.size[0], self.activeFrame.size[1])
         if self.checkpointPassed == False:
@@ -180,6 +180,7 @@ class Decoder:
         self.frameHandler.updateBlocksToRead(self.blocksToRead)
 
         if self.configObject.assembler.checkIfFrameNeeded(self.streamSHA, self.frameNumberofStream) == False:
+            self.duplicateFrameRead = True
             return False
 
 
@@ -207,17 +208,13 @@ class Decoder:
         class attributes.
         '''
 
-         # calls assembler to see if ascii has been read from self.streamHeaderComplete in partialSave.  if true,
-        '''return true, otherwise return false.
-        
-        if true, this signifies the final stream header frame has beeen read.  this means we can now switch over to
-        streamPalette'''
-
+        logging.debug('Attempting stream palette load...')
         saveObject = self.configObject.assembler.saveDict[self.streamSHAFromLastFrame].returnStreamHeaderID()
 
         if saveObject[0] == True:
 
             self.streamHeaderCleared = True
+
 
             # Does stream palette already exist as a custom or default color?
             if saveObject[1] in self.configObject.colorHandler.customPaletteList or saveObject[1] in \
@@ -230,12 +227,16 @@ class Decoder:
             else:
 
                 self.fatalCheckpoint =_validateAndAddPalette(saveObject[2], saveObject[3], saveObject[4], saveObject[5])
+
                 if self.fatalCheckpoint == False:
+                    logging.critical('Palette for this stream cannot be loaded!  This could only be caused by data '
+                                     'corrupted during the streams write.  Aborting...')
                     return False
 
-
+                self.streamPalette = _paletteGrabber(saveObject[1])
 
             self.streamPaletteDict = ColorsToValue(self.streamPalette)
+            self.frameHandler.updateDictionaries('streamPalette', self.streamPaletteDict, self.streamPalette)
 
 
     def _imageFrameSetup(self):

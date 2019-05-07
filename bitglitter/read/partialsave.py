@@ -3,8 +3,8 @@ import logging
 import os
 
 from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
-from bitglitter.read.partialsaveassets import formatFileList, readStreamHeaderASCIICompressed, \
-    readStreamHeaderBinaryPreamble
+from bitglitter.read.partialsaveassets import formatFileList, decodeStreamHeaderASCIICompressed, \
+    decodeStreamHeaderBinaryPreamble
 from bitglitter.utilities.filemanipulation import compressFile, decompressFile, returnHashFromFile
 
 from bitstring import BitStream
@@ -72,7 +72,7 @@ class PartialSave:
         the appropriate folder, and adding the frame number to the list.
         '''
 
-        if self.streamHeaderASCIIComplete == False:
+        if self.streamHeaderASCIIComplete == False and frameNumber == self.nextStreamHeaderSequentialFrame:
             frameData = self._streamHeaderAssembly(frameData, frameNumber)
 
         if frameData.len > 0:
@@ -120,22 +120,41 @@ class PartialSave:
                 logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
                 dataLeft = self.sizeInBytes * 8
                 assembledPath = f'{self.saveFolder}\\assembled.bin'
+                interFrameByteBuffer = BitStream()
+
                 with open(assembledPath, 'ab') as assemblePackage:
 
-                    logging.debug(f'ASDASD {self.totalFrames} {self.payloadBeginsThisFrame}')
                     for frame in range(self.totalFrames - self.payloadBeginsThisFrame + 1):
 
                         frameNumber = frame + self.payloadBeginsThisFrame
+                        logging.debug(f'FRAME NUMBER {frameNumber}')
                         activeFrame = self._readFile(f'frame{frameNumber}')
 
                         if frameNumber != self.totalFrames: # All frames except the last one.
-                            pass
 
-                        else: #This is the last frame
-                            dataHolder = activeFrame.read(f'bits : {dataLeft}')
+                            logging.debug(f'type(interFrameByteBuffer.len) {type(interFrameByteBuffer.len)}')
+                            logging.debug(f' TEST{activeFrame.len} {interFrameByteBuffer.len}')
+                            dataHolder = interFrameByteBuffer + activeFrame.read(f'bits : '
+                                                f'{activeFrame.len + interFrameByteBuffer.len - (activeFrame.len % 8)}')
+
+                            if activeFrame.len % 8 > 0:
+                                interFrameByteBuffer = activeFrame.read(f'bits : {activeFrame.len % 8}')
+                            else:
+                                interFrameByteBuffer = BitStream()
+
+                            logging.debug(f'FRAME LENGTH {dataHolder.len}')
                             toByteType = dataHolder.tobytes()
                             assemblePackage.write(toByteType)
+                            dataLeft -= activeFrame.len
 
+                        else: #This is the last frame
+                            dataHolder = interFrameByteBuffer + activeFrame.read(f'bits : {dataLeft}')
+                            logging.debug(dataHolder.bin)
+                            logging.debug(f'FRAME LENGTH {dataHolder.len}')
+                            toByteType = dataHolder.tobytes()
+                            logging.debug(f'final {dataHolder.len}')
+                            assemblePackage.write(toByteType)
+                logging.debug(f'dataLeft {dataLeft}')
                 if returnHashFromFile(assembledPath) != self.assembledSHA:
 
                     logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
@@ -145,7 +164,8 @@ class PartialSave:
                 self.isAssembled = True
 
             else:
-                logging.info(f'All frames have not been loaded yet for {self.streamSHA}, cannot assemble.')
+                logging.info(f'{self.framesIngested} / {self.totalFrames}  frames have been loaded for '
+                             f'{self.streamSHA}\n so far, cannot assemble yet.')
                 return False
 
         postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
@@ -173,52 +193,56 @@ class PartialSave:
 
 
     def _streamHeaderAssembly(self, frameData, frameNumber):
-        '''Stream headers may span over '''
+        '''Stream headers may span over ''' #todo
 
         logging.debug('_streamHeaderAssembly running...')
+        self.nextStreamHeaderSequentialFrame += 1
 
-        if frameNumber == 1 and frameNumber == self.nextStreamHeaderSequentialFrame:
+        if self.streamHeaderPreambleComplete == False:
 
-            self.nextStreamHeaderSequentialFrame += 1
+            # Preamble header uses all of this frame.
+            if 422 - self.streamHeaderPreambleBuffer.len >= frameData.len:
 
-            # The entire binary preamble can be read first frame.
-            if frameData.len >= 422:
+                logging.debug('Preamble header uses all of this frame.')
+                readLength = frameData.len
 
-                logging.debug('Able to extract streamHeader binary preamble from first frame.')
-                self.streamHeaderPreambleBuffer = frameData.read('bits:422')
+            # Preamble terminates on this frame.
+            else:
+
+                logging.debug('Preamble terminates on this frame.')
+                readLength = 422 - self.streamHeaderPreambleBuffer.len
+
+            self.streamHeaderPreambleBuffer.append(frameData.read(f'bits:{readLength}'))
+
+            if self.streamHeaderPreambleBuffer.len == 422:
                 self.readStreamHeaderBinaryPreamble()
 
-                # The entire ASCII stream header can be read on first frame.
-                if frameData.len - frameData.bitpos >= self.asciiHeaderByteSize * 8:
+        if self.streamHeaderASCIIComplete == False and frameData.len - frameData.bitpos > 0:
 
-                    self.streamHeaderASCIIBuffer = frameData.read(f'bits:{self.asciiHeaderByteSize * 8}')
-                    self.readStreamHeaderASCIICompressed()
-                    payloadData = frameData.read(f'bits:{frameData.len - frameData.bitpos}')
-                    self.payloadBeginsThisFrame = frameNumber
-                    return payloadData
+            # ASCII header rolls over to the next frame.
+            if self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len >= frameData.len \
+                    - frameData.bitpos:
 
-                # The ASCII stream header cannot be read on this first frame.
-                else:
+                logging.debug('ASCII header rolls over to another frame.') #todo here
+                readLength = frameData.len - frameData.bitpos
+                logging.debug(f'LOCO {frameData.len} {frameData.bitpos} {self.asciiHeaderByteSize * 8} {self.streamHeaderASCIIBuffer.len}')
 
-                    self.streamHeaderASCIIBuffer.append(frameData.read(f'bits:{frameData.len - frameData.bitpos}'))
+            # ASCII header terminates on this frame.
+            else:
 
-            else: # The binary preamble will continue on into subsequent frames.
+                logging.debug('ASCII header terminates on this frame.')
+                readLength = self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len
 
-                self.streamHeaderPreambleBuffer = frameData.read(f'bits:{frameData.len}')
-                return BitStream()
+            self.streamHeaderASCIIBuffer.append(frameData.read(f'bits:{readLength}'))
 
-        # Frames 2 and over.
-        elif frameNumber > 1 and frameNumber == self.nextStreamHeaderSequentialFrame:
-            self.nextStreamHeaderSequentialFrame += 1
+            if self.streamHeaderASCIIBuffer.len == self.asciiHeaderByteSize * 8:
+                self.payloadBeginsThisFrame = frameNumber
+                self.readStreamHeaderASCIICompressed()
 
-            if self.streamHeaderPreambleComplete:
-                pass
+            if frameData.len - frameData.bitpos > 0:
+                return frameData.read(f'bits:{frameData.len - frameData.bitpos}')
 
-            if self.streamHeaderASCIIComplete:
-                pass
-
-        # If the frame isn't the next sequential one, it simply gets returned unmodified
-        return frameData
+        return BitStream()
 
 
     def _writeFile(self, data, fileName, toCompress=False):
@@ -279,7 +303,7 @@ class PartialSave:
 
         self.sizeInBytes, self.totalFrames, self.compressionEnabled, self.encryptionEnabled, self.maskingEnabled, \
         self.customPaletteUsed, self.dateCreated, self.streamPaletteID, self.asciiHeaderByteSize = \
-            readStreamHeaderBinaryPreamble(self.streamHeaderPreambleBuffer)
+            decodeStreamHeaderBinaryPreamble(self.streamHeaderPreambleBuffer)
         self.streamHeaderPreambleBuffer = None
         self.dateCreated = datetime.datetime.fromtimestamp(int(self.dateCreated)).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -298,7 +322,7 @@ class PartialSave:
 
         self.bgVersion, self.streamName, self.streamDescription, self.fileList, self.customColorName, \
         self.customColorDescription, self.customColorDateCreated, self.customColorPalette, self.postCompressionSHA = \
-           readStreamHeaderASCIICompressed(self.streamHeaderASCIIBuffer, self.customPaletteUsed, self.encryptionEnabled)
+           decodeStreamHeaderASCIICompressed(self.streamHeaderASCIIBuffer, self.customPaletteUsed, self.encryptionEnabled)
         self.streamHeaderASCIIBuffer = None
 
         if self.maskingEnabled == True:
@@ -307,9 +331,6 @@ class PartialSave:
         else:
             self.fileList = formatFileList(self.fileList)
 
-        if self.customColorDateCreated is not None:
-            self.customColorDateCreated = datetime.datetime.fromtimestamp(int(self.customColorDateCreated))\
-                .strftime('%Y-%m-%d %H:%M:%S')
 
         logging.info(f'*** Part 2/2 of header decoded for {self.streamSHA}: ***\nProgram version of sender: '
                      f'v{self.bgVersion}\nStream name: {self.streamName}\nStream description: {self.streamDescription}'
@@ -345,7 +366,7 @@ class PartialSave:
             else:
 
                 # Frame reference table is not in memory and must be loaded.
-                if self.frameReferenceTable == False:
+                if self.frameReferenceTable == None:
 
                     self.frameReferenceTable = BitStream(self._readFile('\\frameReferenceTable', toDecompress=True))
 

@@ -52,19 +52,24 @@ class Assembler:
 
     def reviewActiveSessions(self):
         '''This method will go over all streamSHA's that were read in this read session, and will check to see if
-        check if framesIngested == totalFrames AND the table has all trues
+        check if framesIngested == totalFrames AND the frame reference table is displaying all frames are present.  This
+        only runs if there is at least one active session.
         '''
 
-        for partialSave in self.activeSessionHashes:
+        if self.activeSessionHashes:
+            logging.info('Reviewing active sessions and attempting assembly...')
+            for partialSave in self.activeSessionHashes:
 
-            if self.saveDict[partialSave]._attemptAssembly() == False: # False = not ready to be assembled this session.
-                self.saveDict[partialSave]._closeSession()
+                # Not ready to be assembled this session.
+                if self.saveDict[partialSave]._attemptAssembly() == False:
+                    self.saveDict[partialSave]._closeSession()
 
-            else: # Assembled, temporary files pending deletion.
-                logging.info(f'{partialSave} fully read!  Deleting temporary files...')
-                self.removePartialSave(partialSave)
+                # Assembled, temporary files pending deletion.
+                else:
+                    logging.info(f'{partialSave} fully read!  Deleting temporary files...')
+                    self.removePartialSave(partialSave)
 
-        self.activeSessionHashes = []
+            self.activeSessionHashes = []
 
 
     def removePartialSave(self, streamSHA):
