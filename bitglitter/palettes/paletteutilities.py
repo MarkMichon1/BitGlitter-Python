@@ -138,8 +138,8 @@ def colorDistance(palette):
 def returnPaletteID(name, description, dateCreated, colorSet):
     '''Taking in the various parameters, this creates a unique ID for the object.'''
 
-    set = str(colorSet)
-    hasher = hashlib.sha256(str(name + description + dateCreated + set).encode())
+    colorSetString = str(colorSet)
+    hasher = hashlib.sha256(str(name + description + dateCreated + colorSetString).encode())
     return(hasher.hexdigest())
 
 
