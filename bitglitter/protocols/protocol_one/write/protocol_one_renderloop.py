@@ -2,11 +2,11 @@ import logging
 import math
 import time
 
-from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import renderCalibrator, generateInitializer, \
-    generateFrameHeader, generateStreamHeaderBinaryPreamble, loopGenerator
-
 from bitstring import BitStream, ConstBitStream
 from PIL import Image, ImageDraw
+
+from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import renderCalibrator, generateInitializer, \
+    generateFrameHeader, generateStreamHeaderBinaryPreamble, loopGenerator
 
 
 def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializerPalette, headerPalette, streamPalette,
@@ -14,7 +14,8 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                encryptionEnabled, fileMaskEnabled, dateCreated, asciiCompressed, streamSHA, initializerPaletteDict,
                headerPaletteDict, streamPaletteDict):
     '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
-    # comments in this function that describe what each part is doing, to follow along.'''
+    # comments in this function that describe what each part is doing, to follow along.
+    '''
 
     logging.debug('Entering renderLoop...')
 
@@ -22,8 +23,10 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
     if outputMode == 'image':
         if streamOutputPath:
             imageOutputPath = streamOutputPath + '\\'
+
         else:
             imageOutputPath = ""
+
     if outputMode == 'video':
         imageOutputPath = activePath + '\\'
 
@@ -50,6 +53,7 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
     # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
     while activePayload.bitpos != activePayload.length:
+
         logging.info(f'Rendering frame {frameNumber} of {totalFrames} ...')
 
         # Setting up frame to draw on.
@@ -78,7 +82,6 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
         # initializer is on or not.
         initializerHolder = BitStream()
         if frameNumber == 1 or outputMode == 'image':
-
             image = renderCalibrator(image, blockHeight, blockWidth, pixelWidth)
             initializerHolder = generateInitializer(blockHeight, blockWidth, protocolVersion, activePalette)
             initializerPaletteBlocksUsed += INITIALIZER_DATA_BITS
@@ -107,7 +110,6 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
             # This frame has more bits left for the streamHeader than capacity.
             if len(streamHeaderCombined) - streamHeaderCombined.bitpos > bitsLeftThisFrame:
-
                 streamHeaderChunk = streamHeaderCombined.read(bitsLeftThisFrame)
                 streamHeaderBlocksUsed = math.ceil(len(streamHeaderChunk + FRAME_HEADER_OVERHEAD)
                                                    / activePalette.bitLength)
@@ -206,6 +208,7 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
         if outputMode == 'video':
             fileName = frameNumberToString.zfill(math.ceil(math.log(totalFrames + 1, 10)))
+
         else:
             fileName = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(dateCreated)) + ' - ' + str(frameNumber)
 

@@ -1,8 +1,8 @@
+import logging
+
 from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import asciiHeaderProcess, howManyFrames
 from bitglitter.protocols.protocol_one.write.protocol_one_renderloop import renderLoop
 from bitglitter.write.rendervideo import renderVideo
-
-import logging
 
 class EncodeFrame:
     '''This object takes what has already been processed from preProcessing, renders that data into images.'''
@@ -108,20 +108,18 @@ class EncodeFrame:
 
         self.asciiCompressed = asciiHeaderProcess(self.fileMaskEnabled, self.activePath,
                                                   self.streamPalette, self.bgVersion, self.streamName,
-                                                  self.streamDescription, self.postEncryptionHash, self.encryptionEnabled)
+                                                self.streamDescription, self.postEncryptionHash, self.encryptionEnabled)
 
         self.totalFrames = howManyFrames(self.blockHeight, self.blockWidth, len(self.asciiCompressed), self.sizeInBytes,
                                                 self.streamPalette, self.headerPalette, self.outputMode)
 
         self.remainderBlocks, self.imageOutputPath, self.frameNumberFormatted = renderLoop(self.blockHeight,
-                                                                                           self.blockWidth, self.pixelWidth, self.PROTOCOL_VERSION,
-                                                                                           self.initializerPalette, self.headerPalette, self.streamPalette,
-                                                                                           self.outputMode, self.streamOutputPath, self.activePath,
-                                                                                           self.passThrough, self.sizeInBytes, self.totalFrames,
-                                                                                           self.compressionEnabled, self.encryptionEnabled, self.fileMaskEnabled,
-                                                                                           self.dateCreated, self.asciiCompressed, self.streamSHA,
-                                                                                           self.initializerPaletteDict, self.headerPaletteDict,
-                                                                                           self.streamPaletteDict)
+                            self.blockWidth, self.pixelWidth, self.PROTOCOL_VERSION, self.initializerPalette,
+                            self.headerPalette, self.streamPalette, self.outputMode, self.streamOutputPath,
+                            self.activePath, self.passThrough, self.sizeInBytes, self.totalFrames,
+                            self.compressionEnabled, self.encryptionEnabled, self.fileMaskEnabled, self.dateCreated,
+                            self.asciiCompressed, self.streamSHA, self.initializerPaletteDict, self.headerPaletteDict,
+                            self.streamPaletteDict)
 
         if outputMode == 'video':
             renderVideo(self.streamOutputPath, self.dateCreated, self.imageOutputPath, self.frameNumberFormatted,

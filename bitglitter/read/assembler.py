@@ -22,7 +22,8 @@ class Assembler:
             return True
         else:
             if self.saveDict[streamSHA].isFrameNeeded(frameNumber) == False:
-                logging.info('This frame is already saved!  Skipping...')
+                logging.info(f'Frame # {frameNumber} / {self.saveDict[streamSHA].totalFrames} for stream SHA '
+                             f'{streamSHA} is already saved!  Skipping...')
             else:
                 return True
         return False
@@ -34,7 +35,8 @@ class Assembler:
 
 
     def saveFrameIntoPartialSave(self, streamSHA, payload, frameNumber):
-        logging.debug(payload.len)
+        logging.info(f'Frame # {frameNumber} / {self.saveDict[streamSHA].totalFrames} for stream SHA {streamSHA} '
+                     f'saved!')
         self.saveDict[streamSHA].loadFrameData(payload, frameNumber)
 
 
@@ -91,4 +93,3 @@ class Assembler:
             pass
 
         self.saveDict = {}
-

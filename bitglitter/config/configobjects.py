@@ -87,7 +87,7 @@ class PaletteHandler:
 
                                    '22': DefaultPalette("2 bit alternate", "Four colors; black, magenta, cyan, yellow.",
                                                        ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255,
-                                                        2),
+                                                        22),
 
                                    '3' : DefaultPalette("3 bit default",
                             "Eight colors.", ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255),

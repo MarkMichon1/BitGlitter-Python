@@ -1,6 +1,6 @@
-from bitglitter.config.loggingset import _loggingSetter
 from bitglitter.config.constants import READ_PATH, BAD_FRAME_STRIKES, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, \
     SCRYPT_P_DEFAULT
+from bitglitter.config.loggingset import loggingSetter
 from bitglitter.read.verifyreadparameters import verifyReadParameters
 
 def read(fileToInput,
@@ -22,21 +22,21 @@ def read(fileToInput,
          loggingScreenOutput = True,
          loggingSaveOutput = False
          ):
+    '''This is the high level function that decodes BitGlitter encoded images and video back into the files/folders
+    contained within them.  This along with write() are the two primary functions of this library.
+    '''
 
     # Logging initializing.
-    _loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
+    loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
     from bitglitter.read.fileslicer import fileSlicer
     from bitglitter.config.config import config
-
 
     # Are all parameters acceptable?
     verifyReadParameters(fileToInput, outputPath, encryptionKey, scryptN, scryptR, scryptP, blockWidthOverride,
                          blockWidthOverride)
 
-
     # This sets the name of the temporary folder while screened data from partial saves is being written.
     activePath = READ_PATH
-
 
     # Pull valid frame data from the inputted file.
     checkpointPassed = fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWidthOverride,

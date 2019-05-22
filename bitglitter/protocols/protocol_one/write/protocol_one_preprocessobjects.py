@@ -4,6 +4,7 @@ import os
 from bitglitter.filepackager.filepackager import Folder, File, package
 from bitglitter.utilities.filemanipulation import compressFile, encryptFile
 
+
 class Packager:
     '''Packager object takes all files and folders from argument fileList in write, and begins assembling them into a
     single package.dat file.  All arguments that aren't a file or folder are automatically discarded.
@@ -28,6 +29,7 @@ class Packager:
                 logging.debug(f"Adding folder: {item}")
                 rootFolder + Folder(filePath=item)
                 invalidInput = True
+
         if invalidInput == False:
             raise ValueError("No valid files or folders were found from your fileList tuple in write()")
 
@@ -67,17 +69,11 @@ class Encryptor:
         self.passThrough = passThrough
         self._cryptoKey = encryptionKey
 
-
-        self.generatedSalt = None
-
-
         if len(encryptionKey) == 0:
-
             logging.info('Skipping encryption.')
             self.encryptionEnabled = False
 
         else:
-
             newName = activeFolder + '\\encrypted.dat'
             logging.info('Encrypting package...')
             encryptFile(self.passThrough, newName, encryptionKey, scryptOverrideN, scryptOverrideR, scryptOverrideP)

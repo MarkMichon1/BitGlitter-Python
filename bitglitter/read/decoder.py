@@ -1,14 +1,12 @@
 import logging
 
-from bitstring import BitStream
+from PIL import Image
 
-from bitglitter.palettes.paletteutilities import _paletteGrabber, ColorsToValue, _validateAndAddPalette
+from bitglitter.palettes.paletteutilities import paletteGrabber, ColorsToValue, _validateAndAddPalette
+from bitglitter.read.decoderassets import minimumBlockCheckpoint, readFrameHeader, readInitializer, validatePayload
 from bitglitter.read.framehandler import FrameHandler
 from bitglitter.read.framelockon import frameLockOn
-from bitglitter.read.decoderassets import minimumBlockCheckpoint, readFrameHeader, readInitializer, \
-    returnStreamPalette, validatePayload
 
-from PIL import Image
 
 class Decoder:
     '''The Decoder object is what ultimately handles all higher level processing of each BitGlitter frame, orchestrating
@@ -44,7 +42,7 @@ class Decoder:
         self.protocolVersion = None
 
         # Palette Variables
-        self.initializerPalette = _paletteGrabber('1')
+        self.initializerPalette = paletteGrabber('1')
         self.initializerPaletteDict = ColorsToValue(self.initializerPalette)
         self.primaryPalette = None
         self.primaryPaletteDict = None
@@ -53,11 +51,11 @@ class Decoder:
         self.streamPalette = None
         self.streamPaletteDict = None
 
+        # Custom color data used in instantiating new palette
         self.customColorName = None
         self.customColorDescription = None
         self.customColorDateCreated = None
         self.customColorColorSet = None
-
 
         # Frame Data
         self.streamSHA = None
@@ -71,7 +69,6 @@ class Decoder:
         # Auxiliary Components
         self.configObject = configObject
         self.frameHandler = FrameHandler(self.initializerPalette, self.initializerPaletteDict)
-
 
 
     def decodeImage(self, fileToInput):
@@ -92,6 +89,9 @@ class Decoder:
         if self._payloadProcess('primaryPalette') == False:
             return False
 
+        if self.configObject.assembler.saveDict[self.streamSHA].streamHeaderASCIIComplete == True \
+                and self.configObject.assembler.saveDict[self.streamSHA].streamPaletteRead == False:
+            self._attemptStreamPaletteLoad()
 
 
     def decodeVideoFrame(self, fileToInput):
@@ -109,16 +109,15 @@ class Decoder:
         self.activeFrame = Image.open(fileToInput)
 
         if self.frameNumberofVideo == 1:
-
             self.frameHandler.loadNewFrame(self.activeFrame, True)
 
             if self._firstFrameSetup() == False:
                 return False
+
             if self._videoFirstFrameSetup() == False:
                 return False
 
         else:
-
             self.frameHandler.loadNewFrame(self.activeFrame, False)
 
             if self.streamHeaderCleared == False:
@@ -128,16 +127,16 @@ class Decoder:
                     return False
 
         if self.streamHeaderCleared == False: # We are still on headerPalette frames.
-
             if self._frameValidation('headerPalette') == False:
                 return False
+
             if self._payloadProcess('headerPalette') == False:
                 return False
 
         else: # It has switched to streamPalette frames.
-
             if self._frameValidation('streamPalette') == False:
                 return False
+
             if self._payloadProcess('streamPalette') == False:
                 return False
 
@@ -195,8 +194,9 @@ class Decoder:
         if validatePayload(self.framePayload, self.frameSHA) == False:
             return False
 
-        self.configObject.assembler.acceptFrame(self.streamSHA, self.framePayload, self.frameNumberofStream, self.scryptN,
-                                                self.scryptR, self.scryptP, self.outputPath, self.encryptionKey)
+        self.configObject.assembler.acceptFrame(self.streamSHA, self.framePayload, self.frameNumberofStream,
+                                                self.scryptN, self.scryptR, self.scryptP, self.outputPath,
+                                                self.encryptionKey)
 
 
     def _attemptStreamPaletteLoad(self):
@@ -215,12 +215,11 @@ class Decoder:
 
             self.streamHeaderCleared = True
 
-
             # Does stream palette already exist as a custom or default color?
             if saveObject[1] in self.configObject.colorHandler.customPaletteList or saveObject[1] in \
                     self.configObject.colorHandler.defaultPaletteList:
 
-                self.streamPalette = _paletteGrabber(saveObject[1])
+                self.streamPalette = paletteGrabber(saveObject[1])
                 logging.info(f'Palette ID {saveObject[1]} already saved in system... successfully loaded!')
 
             # This is a new palette which will now be instantiation as a custom palette object.
@@ -233,10 +232,15 @@ class Decoder:
                                      'corrupted during the streams write.  Aborting...')
                     return False
 
-                self.streamPalette = _paletteGrabber(saveObject[1])
+                logging.debug('Custom palette successfully instantiated.')
+                self.streamPalette = paletteGrabber(saveObject[1])
 
             self.streamPaletteDict = ColorsToValue(self.streamPalette)
             self.frameHandler.updateDictionaries('streamPalette', self.streamPaletteDict, self.streamPalette)
+            self.configObject.assembler.saveDict[self.streamSHA].streamPaletteRead = True
+
+        else:
+            logging.debug('Attempt failed this frame.')
 
 
     def _imageFrameSetup(self):

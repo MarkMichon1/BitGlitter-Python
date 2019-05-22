@@ -7,10 +7,15 @@ from bitglitter.utilities.generalverifyfunctions import isValidDirectory, isIntO
 
 def verifyReadParameters(fileToInput, outputPath, encryptionKey, scryptN, scryptR, scryptP, blockHeightOverride,
                          blockWidthOverride):
+    '''This function verifies the arguments going into read() to ensure they comform with the required format for
+    processing.
+    '''
+
     logging.info("Verifying read parameters...")
 
     if not os.path.isfile(fileToInput):
         raise ValueError(f'fileToInput argument {fileToInput} must be a file.')
+
     if os.path.splitext(fileToInput)[1] not in VALID_VIDEO_FORMATS and \
             os.path.splitext(fileToInput)[1] not in VALID_IMAGE_FORMATS:
         raise ValueError(f'fileToInput argument {fileToInput} is not a valid format.  Only the following are allowed: '

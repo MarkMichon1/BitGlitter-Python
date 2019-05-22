@@ -2,7 +2,7 @@ import logging
 import shutil
 
 from bitglitter.config.config import config
-from bitglitter.palettes.paletteutilities import _paletteGrabber, ValuesToColor
+from bitglitter.palettes.paletteutilities import paletteGrabber, ValuesToColor
 
 
 class RenderHandler:
@@ -59,9 +59,9 @@ class RenderHandler:
         self.activePath = activeFolder
         self.passThrough = passThrough
 
-        self.headerPalette = _paletteGrabber(headerPaletteID)
-        self.streamPalette = _paletteGrabber(streamPaletteID)
-        self.initializerPalette = _paletteGrabber('1')
+        self.headerPalette = paletteGrabber(headerPaletteID)
+        self.streamPalette = paletteGrabber(streamPaletteID)
+        self.initializerPalette = paletteGrabber('1')
 
         self.headerPaletteDict = ValuesToColor(self.headerPalette, 'headerPalette')
         self.streamPaletteDict = ValuesToColor(self.streamPalette, 'streamPalette')

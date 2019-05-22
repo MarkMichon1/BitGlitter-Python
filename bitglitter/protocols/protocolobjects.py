@@ -5,7 +5,6 @@ class Protocol:
 
     def __init__(self,
 
-
                  # Required values; it's lookup key, how data is converted, and how frames are decoded back into data.
                  versionNumber,
                  frameProcessor,

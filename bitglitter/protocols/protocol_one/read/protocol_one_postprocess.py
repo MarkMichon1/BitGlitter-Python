@@ -17,6 +17,7 @@ class PostProcessor:
         self.isDecrypted = decryptor
 
         if decryptor.isSatisfied == True:
+
             decompressor = Decompressor(workingFolder, decryptor.passThrough, compressionEnabled)
             unpackager = Unpackager(decompressor.passThrough, outputPath, streamSHA)
             self.FullyAssembled = True

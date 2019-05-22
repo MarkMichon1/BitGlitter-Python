@@ -1,4 +1,3 @@
-import os
 import pickle
 
 from bitglitter.config.configobjects import Config
@@ -7,5 +6,6 @@ from bitglitter.config.configobjects import Config
 try:
     with open ('config.pickle', 'rb') as pickleLoad:
         config = pickle.load(pickleLoad)
+
 except:
     config = Config()

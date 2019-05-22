@@ -6,6 +6,9 @@ from bitglitter.utilities.filemanipulation import decryptFile, returnHashFromFil
 
 
 class Decryptor:
+    '''This is the first step of the post-processing once assembly is complete.  This will take the assembled binary,
+    and, if encryption was enabled on this stream, will attempt to decrypt it with the AES key provided.
+    '''
 
     def __init__(self, workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR, scryptP, streamSHA):
 
@@ -44,10 +47,12 @@ class Decryptor:
 
 
 class Decompressor:
+    '''If compression was enabled on this stream, this object will decompress it.'''
 
     def __init__(self, workingFolder, passThrough, compressionEnabled):
 
         self.passThrough = passThrough
+
         if compressionEnabled:
             newPath = workingFolder + "\\decompressed.dat"
             logging.info('Decompressing file...')
@@ -60,13 +65,16 @@ class Decompressor:
 
 
 class Unpackager:
+    '''This object takes the decompressed binary and 'unpackages' it into the files and/or folders embedded in it.'''
 
     def __init__(self, passThrough, outputPath, streamSHA):
 
         if outputPath == None:
             printedSaveLocation = 'program run folder'
+
         else:
             printedSaveLocation = outputPath
+
         logging.info(f'Unpackaging file(s) at {printedSaveLocation}...')
 
         unpackage(passThrough, outputPath, streamSHA)

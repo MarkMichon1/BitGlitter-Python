@@ -2,7 +2,12 @@ import ast
 import logging
 import zlib
 
+
 def decodeStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEnabled):
+    '''This function encodes the raw bit string taken from the frame(s) back into ASCII, and returns the split
+    components inside of it.
+    '''
+
     logging.debug('Reading stream header...')
     customColorName = None
     customColorDescription = None
@@ -31,11 +36,14 @@ def decodeStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionE
         postCompressionSHA = stringBrokenIntoParts[4 + indexBump]
 
     logging.debug('Stream header ASCII part successfully read.')
+
     return bgVersion,streamName,streamDescription,fileList,customColorName,customColorDescription,\
            customColorDateCreated,customColorPalette, postCompressionSHA
 
 
 def decodeStreamHeaderBinaryPreamble(bitStream):
+    '''This function takes the raw bit string taken from the frame(s) and extracts stream data from it.'''
+
     sizeInBytes = bitStream.read('uint : 64')
     totalFrames = bitStream.read('uint : 32')
     compressionEnabled = bitStream.read('bool')
@@ -46,6 +54,7 @@ def decodeStreamHeaderBinaryPreamble(bitStream):
 
     if isCustomPalette == False:
         streamPaletteID = str(bitStream.read('uint : 256'))
+
     else:
         streamPaletteID = str(bitStream.read('hex : 256'))
 
@@ -59,6 +68,8 @@ def formatFileList(fileString):
 
     brokenApart = fileString.split('|')[1:]
     formattedString = ''
+
     for position in range(int(len(brokenApart) / 2)):
         formattedString +=(f"\n    {brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
+
     return formattedString

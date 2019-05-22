@@ -9,6 +9,7 @@ def paletteVerify(headerType, bitLength, blockWidth, blockHeight, outputType, fp
     returns a number between 0-100%, for what percentage the overhead occupies.  The lower the value, the higher the
     frame efficiency.
     '''
+
     totalBlocks = blockWidth * blockHeight
 
     blockOverhead = blockHeight + blockWidth + 323
@@ -18,6 +19,7 @@ def paletteVerify(headerType, bitLength, blockWidth, blockHeight, outputType, fp
 
     if headerType == 'headerPalette' or outputType == 'image':
         blocksNeeded += blockOverhead
+
     bitsAvailable = (totalBlocks - blocksNeeded) * bitLength
     bitsAvailable -= frameHeaderInBits
     occupiedBlocks = blocksNeeded + ceil(frameHeaderInBits / bitLength)
@@ -40,6 +42,7 @@ def verifyWriteParameters(fileList, streamName, streamDescription, streamOutputP
     invalid arguments from proceeding through the process, potentially breaking the stream (or causing BitGlitter to
     crash).
     '''
+
     logging.info("Verifying write parameters...")
 
     if not fileList:

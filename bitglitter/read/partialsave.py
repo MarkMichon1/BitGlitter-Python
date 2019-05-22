@@ -2,15 +2,19 @@ import datetime
 import logging
 import os
 
+from bitstring import BitStream
+
 from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
 from bitglitter.read.partialsaveassets import formatFileList, decodeStreamHeaderASCIICompressed, \
     decodeStreamHeaderBinaryPreamble
 from bitglitter.utilities.filemanipulation import compressFile, decompressFile, returnHashFromFile
 
-from bitstring import BitStream
-
 
 class PartialSave:
+    '''PartialSave objects are essentially containers for the state of streams as they are being read, frame by frame.
+    This mainly interacts through the Assembler object.  All of the functionality needed to convert raw frame data back
+    into the original package is done through it's contained methods.
+    '''
 
     def __init__(self, streamSHA, workingFolder, scryptN, scryptR, scryptP, outputPath, encryptionKey):
 
@@ -30,11 +34,12 @@ class PartialSave:
         self.postProcessorDecrypted = False # Was the stream successfully decrypted?
         self.frameReferenceTable = None
         self.framesPriorToBinaryPreamble = []
+        self.streamPaletteRead = False
 
 
         # Stream Header - Binary Preamble
         self.sizeInBytes = None
-        self.totalFrames = None
+        self.totalFrames = '???'
         self.compressionEnabled = None
         self.encryptionEnabled = None
         self.maskingEnabled = None
@@ -110,53 +115,54 @@ class PartialSave:
             self.outputPath = changeOutputPath
 
 
-    # If all pieces are present, we will then decrypt and decompress if needed, and then post-process the final files.
     def _attemptAssembly(self):
+        '''This method will check to see if all frames for the stream have been read.  If so, they will be assembled
+        into a single binary, it's hash will be validated, and then it will be ran through post-processing,
+        which is what ultimately yields the original files encoded in the stream.
+        '''
 
         if self.isAssembled == False: # If false, assembly will be attempted.  Otherwise, we skip to postprocessing.
 
             if self.totalFrames == self.framesIngested:
-
                 logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
                 dataLeft = self.sizeInBytes * 8
                 assembledPath = f'{self.saveFolder}\\assembled.bin'
-                interFrameByteBuffer = BitStream()
+                interFrameBitBuffer = BitStream()
 
                 with open(assembledPath, 'ab') as assemblePackage:
 
                     for frame in range(self.totalFrames - self.payloadBeginsThisFrame + 1):
 
                         frameNumber = frame + self.payloadBeginsThisFrame
-                        logging.debug(f'FRAME NUMBER {frameNumber}')
+                        logging.debug(f'Assembling {frameNumber}/{self.totalFrames}')
                         activeFrame = self._readFile(f'frame{frameNumber}')
 
                         if frameNumber != self.totalFrames: # All frames except the last one.
+                            bitMerge = BitStream(interFrameBitBuffer + activeFrame)
+                            dataHolder = bitMerge.read(f'bytes: {bitMerge.len // 8}')
 
-                            logging.debug(f'type(interFrameByteBuffer.len) {type(interFrameByteBuffer.len)}')
-                            logging.debug(f' TEST{activeFrame.len} {interFrameByteBuffer.len}')
-                            dataHolder = interFrameByteBuffer + activeFrame.read(f'bits : '
-                                                f'{activeFrame.len + interFrameByteBuffer.len - (activeFrame.len % 8)}')
+                            if bitMerge.len - bitMerge.pos > 0:
+                                interFrameBitBuffer = bitMerge.read(f'bits : {bitMerge.len - bitMerge.pos}')
 
-                            if activeFrame.len % 8 > 0:
-                                interFrameByteBuffer = activeFrame.read(f'bits : {activeFrame.len % 8}')
                             else:
-                                interFrameByteBuffer = BitStream()
+                                interFrameBitBuffer = BitStream()
 
-                            logging.debug(f'FRAME LENGTH {dataHolder.len}')
-                            toByteType = dataHolder.tobytes()
-                            assemblePackage.write(toByteType)
+                            if isinstance(dataHolder, bytes):
+                                logging.debug('was bytes this frame!')
+                                assemblePackage.write(dataHolder)
+
+                            else:
+                                logging.debug('bits to bytes this frame')
+                                toByteType = dataHolder.tobytes()
+                                assemblePackage.write(toByteType)
                             dataLeft -= activeFrame.len
 
                         else: #This is the last frame
-                            dataHolder = interFrameByteBuffer + activeFrame.read(f'bits : {dataLeft}')
-                            logging.debug(dataHolder.bin)
-                            logging.debug(f'FRAME LENGTH {dataHolder.len}')
-                            toByteType = dataHolder.tobytes()
-                            logging.debug(f'final {dataHolder.len}')
+                            bitMerge = interFrameBitBuffer + activeFrame.read(f'bits : {dataLeft}')
+                            toByteType = bitMerge.tobytes()
                             assemblePackage.write(toByteType)
-                logging.debug(f'dataLeft {dataLeft}')
-                if returnHashFromFile(assembledPath) != self.assembledSHA:
 
+                if returnHashFromFile(assembledPath) != self.assembledSHA:
                     logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
                     return False
 
@@ -193,7 +199,9 @@ class PartialSave:
 
 
     def _streamHeaderAssembly(self, frameData, frameNumber):
-        '''Stream headers may span over ''' #todo
+        '''Stream headers may span over numerous frames, and could be read non-sequentially.  This function manages this
+        aspect.  Both stream headers are stripped from the raw frame data, returning payload data (if applicable).
+        '''
 
         logging.debug('_streamHeaderAssembly running...')
         self.nextStreamHeaderSequentialFrame += 1
@@ -218,18 +226,15 @@ class PartialSave:
                 self.readStreamHeaderBinaryPreamble()
 
         if self.streamHeaderASCIIComplete == False and frameData.len - frameData.bitpos > 0:
-
             # ASCII header rolls over to the next frame.
             if self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len >= frameData.len \
                     - frameData.bitpos:
 
-                logging.debug('ASCII header rolls over to another frame.') #todo here
+                logging.debug('ASCII header rolls over to another frame.')
                 readLength = frameData.len - frameData.bitpos
-                logging.debug(f'LOCO {frameData.len} {frameData.bitpos} {self.asciiHeaderByteSize * 8} {self.streamHeaderASCIIBuffer.len}')
 
             # ASCII header terminates on this frame.
             else:
-
                 logging.debug('ASCII header terminates on this frame.')
                 readLength = self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len
 
@@ -256,7 +261,6 @@ class PartialSave:
         dataToBytes = data.tobytes()
 
         if toCompress == True:
-
             tempName = self.saveFolder + '\\temp.bin'
             with open(tempName, 'wb') as writeData:
                 writeData.write(bitsAppendageToBytes)
@@ -265,7 +269,6 @@ class PartialSave:
             compressFile(tempName, self.saveFolder + f'\\{fileName}.bin')
 
         else:
-
             with open(self.saveFolder + f'\\{fileName}.bin', 'wb') as writeData:
                 writeData.write(bitsAppendageToBytes)
                 writeData.write(dataToBytes)
@@ -279,7 +282,6 @@ class PartialSave:
         filePath = self.saveFolder + f'\\{fileName}.bin'
 
         if toDecompress == False:
-
             with open(filePath, 'rb') as readData:
                 fileToBits = BitStream(readData)
                 bitsToRead = fileToBits.read('uint:40')
@@ -287,7 +289,6 @@ class PartialSave:
             os.remove(filePath)
 
         else:
-
             decompressFile(filePath, self.saveFolder + '\\temp.bin')
             with open(self.saveFolder + '\\temp.bin', 'rb') as readData:
                 fileToBits = BitStream(readData)
@@ -299,7 +300,7 @@ class PartialSave:
 
 
     def readStreamHeaderBinaryPreamble(self):
-        '''This is a method because it was taking up needless space in this module, and it's used multiple times.'''
+        '''This method converts the raw full binary preamble into the various PartialSave attributes.'''
 
         self.sizeInBytes, self.totalFrames, self.compressionEnabled, self.encryptionEnabled, self.maskingEnabled, \
         self.customPaletteUsed, self.dateCreated, self.streamPaletteID, self.asciiHeaderByteSize = \
@@ -319,10 +320,11 @@ class PartialSave:
 
 
     def readStreamHeaderASCIICompressed(self):
+        '''This method converts the raw full ASCII stream header into the various PartialSave attributes.'''
 
         self.bgVersion, self.streamName, self.streamDescription, self.fileList, self.customColorName, \
         self.customColorDescription, self.customColorDateCreated, self.customColorPalette, self.postCompressionSHA = \
-           decodeStreamHeaderASCIICompressed(self.streamHeaderASCIIBuffer, self.customPaletteUsed, self.encryptionEnabled)
+         decodeStreamHeaderASCIICompressed(self.streamHeaderASCIIBuffer, self.customPaletteUsed, self.encryptionEnabled)
         self.streamHeaderASCIIBuffer = None
 
         if self.maskingEnabled == True:
@@ -331,14 +333,14 @@ class PartialSave:
         else:
             self.fileList = formatFileList(self.fileList)
 
-
         logging.info(f'*** Part 2/2 of header decoded for {self.streamSHA}: ***\nProgram version of sender: '
                      f'v{self.bgVersion}\nStream name: {self.streamName}\nStream description: {self.streamDescription}'
                      f'\nFile list: {self.fileList}')
 
         if self.customPaletteUsed == True:
-            logging.info(f'\n\nCustom color name: {self.customColorName}\nCustom color description: '
-                         f'{self.customColorDescription}\nCustom color date created: {self.customColorDateCreated}'
+            logging.info(f'\nCustom color name: {self.customColorName}\nCustom color description: '
+                         f'{self.customColorDescription}\nCustom color date created: '
+                    f'{datetime.datetime.fromtimestamp(int(self.customColorDateCreated)).strftime("%Y-%m-%d %H:%M:%S")}'
                          f'\nCustom color palette: {self.customColorPalette}')
 
         if self.encryptionEnabled == True:
@@ -349,18 +351,24 @@ class PartialSave:
 
 
     def isFrameNeeded(self, frameNumber):
+        '''This determines whether a given frame is needed for this stream or not.'''
 
         # Is the stream already assembled?  If so, no more frames need to be accepted.
         if self.isAssembled == True:
-
             return False
 
         # The stream is not assembled.
         else:
 
-            # If the stream header binary preamble isn't loaded yet, then by default we accept the frame.
+            # If the stream header binary preamble isn't loaded yet, then by default we accept the frame, unless that
+            # frame number is already in self.framesPriorToBinaryPreamble, which is a list of processed frames prior to
+            # the binary preamble being read.
             if self.streamHeaderPreambleComplete == False:
-                return True
+                if frameNumber not in self.framesPriorToBinaryPreamble:
+                    return True
+
+                else:
+                    return False
 
             # The preamble has been loaded, checking the reference table.
             else:
@@ -377,9 +385,11 @@ class PartialSave:
 
     def _closeSession(self):
         '''Called by the Assembler object, this will flush self.frameReferenceTable back to disk, as well as flag it as
-        an inactive session.'''
+        an inactive session.
+        '''
 
         self.activeThisSession = False
+
         if self.streamHeaderPreambleComplete == True:
             self._writeFile(self.frameReferenceTable, '\\frameReferenceTable', toCompress=True)
         self.frameReferenceTable = None
@@ -388,7 +398,8 @@ class PartialSave:
     def returnStatus(self, debugData):
         '''This is used in printFullSaveList in savedfunctions module; it returns the state of the object, as well as
         various information read from the reader.  __str__ is not used, as debugData controls what level of data is
-        returned, whether for end users, or debugging purposes.'''
+        returned, whether for end users, or debugging purposes.
+        '''
 
         tempHolder = f"{'*' * 8} {self.streamSHA} {'*' * 8}" \
             f"\n\n{self.framesIngested} / {self.totalFrames} frames saved" \

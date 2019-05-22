@@ -7,6 +7,7 @@ from bitglitter.read.coloranalysis import colorSnap
 from bitglitter.read.decoderassets import scanBlock
 from bitglitter.config.config import config
 
+
 class FrameHandler:
     '''FrameHandler object is what traverses the actual frame, and returns bit data.  It's designed as an easy to use
     API, hiding much of the moving parts behind the scenes of a frame scan.
@@ -41,7 +42,7 @@ class FrameHandler:
                                       'streamPalette' : self.streamPaletteDict}
 
         # Scan State
-        self.isFirstFrame = True #todo
+        self.isFirstFrame = True
         self.nonCalibratorBlocks = 0
         self.nextBlock = 0
         self.blockPosition = 0
@@ -59,7 +60,8 @@ class FrameHandler:
 
     def _blocksToBits(self, howMany, paletteType):
         '''This is an internal method that, based on how many blocks it was told to scan as well as the palette type
-        used, will scan that amount on the image and return those converted bits.'''
+        used, will scan that amount on the image and return those converted bits.
+        '''
 
         bitString = BitStream()
         activeColorSet = self.paletteDict[paletteType].colorSet
@@ -67,14 +69,13 @@ class FrameHandler:
 
         for block in range(howMany):
             blockCoords = next(self.nextBlock)
-            #logging.debug(blockCoords) #todo
             rawRGB = scanBlock(self.image, self.pixelWidth, blockCoords[0], blockCoords[1])
             if activeColorSet:
                 bitString.append(activePaletteDict.getValue(colorSnap(rawRGB, activeColorSet)))
+
             else:
                 bitString.append(activePaletteDict.getValue(rawRGB))
 
-        #logging.debug(f'blocksToBits ran, {howMany} blocks advanced for {paletteType}')
         self.blockPosition += howMany
         config.statsHandler.blocksRead += howMany
 

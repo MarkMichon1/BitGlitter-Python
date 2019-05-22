@@ -2,7 +2,8 @@ import datetime
 import logging
 import os
 
-def _loggingSetter(loggingLevel, loggingPrint, loggingSaveOutput):
+
+def loggingSetter(loggingLevel, loggingPrint, loggingSaveOutput):
     '''This is what the logging level and output during the write operation.  It's worth nothing that this is the ONLY
     function that checks parameters outside of verifyWriteParameters, because that function's logging outputs hinge in
     the configuration for logging.
@@ -36,6 +37,7 @@ def _loggingSetter(loggingLevel, loggingPrint, loggingSaveOutput):
         outputLog.setLevel(loggingLevelDict[loggingLevel])
 
     if loggingPrint:
+
         printLog = logging.getLogger()
         printLogHandler = logging.StreamHandler()
         printLogFormatter = logging.Formatter("%(asctime)s.%(msecs)03d %(levelname)s %(message)s", "%H:%M:%S")

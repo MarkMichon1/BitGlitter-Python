@@ -204,7 +204,7 @@ Currently, 30fps and 60fps are accepted.
 There is a few more arguments to control what level gets logged or printed out on the screen, check out the Wiki pages
 to learn more about them.
 
-
+# default values work at 81KB/s
 ---
 
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.

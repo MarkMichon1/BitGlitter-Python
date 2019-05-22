@@ -54,6 +54,7 @@ class CustomPalette(AbstractPalette):
 
 
     def __str__(self):
+
         return (f"Name: {self.name}\nIdentification Code: {str(self.id)}\nNickname: {self.nickname}\nDescription: "
         f"{self.description}"
         f"\nDate Created: {datetime.datetime.fromtimestamp(self.dateCreated).strftime('%A, %B %d, %Y - %I:%M:%S %p')}"
@@ -69,6 +70,7 @@ class TwentyFourBitPalette:
     '''
 
     def __init__(self):
+
         self.name = "24 bit default"
         self.description = "EXPERIMENTAL!  ~16.7 million colors.  This will only work in lossless" \
          " environments, any sort of compression will corrupt the data."
@@ -81,6 +83,7 @@ class TwentyFourBitPalette:
 
 
     def __str__(self):
+
         return (f'Name: {self.name}\nIdentification Code: {str(self.id)}\nDescription: {self.description}\nBit Length: '
                 f'{str(self.bitLength)}\nNumber of Colors: {str(self.numberOfColors)}\nColor Set: Too many '
                 f'to list (see directly above)\nColor Distance: {str(self.colorDistance)}\n')

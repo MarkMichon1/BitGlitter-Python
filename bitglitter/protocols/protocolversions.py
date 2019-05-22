@@ -3,7 +3,7 @@ import bitglitter.protocols.protocol_one.write.protocol_one_renderlogic as proto
 import bitglitter.protocols.protocol_one.write.protocol_one_verifywriteparameters as protocol_one_verifywriteparameters
 from bitglitter.protocols.protocolobjects import Protocol
 
-'''This is where protocol objects get instantiated from the various components it comprises of.'''
+#This is where protocol objects get instantiated from the various components it comprises of.
 protocolOne = Protocol('1',
                        protocol_one_renderlogic.EncodeFrame,
                        "decoder",

@@ -1,6 +1,6 @@
 from bitglitter.config.constants import BG_VERSION, WRITE_PATH, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, SCRYPT_P_DEFAULT, \
-    HEADER_PALETTE_ID, STREAM_PALETTE_ID, PIXEL_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH
-from bitglitter.config.loggingset import _loggingSetter
+    HEADER_PALETTE_ID, STREAM_PALETTE_ID, PIXEL_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH, FRAMES_PER_SECOND
+from bitglitter.config.loggingset import loggingSetter
 from bitglitter.write.renderhandler import RenderHandler
 
 
@@ -30,7 +30,7 @@ def write(   # Basic setup
              blockWidth = BLOCK_WIDTH,
 
              # Video rendering
-             framesPerSecond = 30,
+             framesPerSecond = FRAMES_PER_SECOND,
 
              # Logging
              loggingLevel ='info',
@@ -42,7 +42,7 @@ def write(   # Basic setup
     '''
 
     # Logging initializing.
-    _loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
+    loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
 
 
     # Loading write protocol.  This import function is here deliberately because of logging.

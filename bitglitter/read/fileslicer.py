@@ -6,8 +6,13 @@ from bitglitter.config.constants import VALID_VIDEO_FORMATS
 from bitglitter.read.decoder import Decoder
 from bitglitter.read.videoframepuller import VideoFramePuller
 
+
 def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWidthOverride,
                encryptionKey, scryptN, scryptR, scryptP, configObject, badFrameStrikes):
+    '''This function is responsible for handling the 'physical' frames of the stream, and feeding them into the Decoder
+    object.  It also checks to see if various checkpoints are passed, and will abort out of read if critical errors in
+    the stream are found.
+    '''
 
     # Sets up workspace
     readRoot = os.path.join(os.getcwd(), activePath)
@@ -44,7 +49,6 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
                 activeFrame = videoFramePuller.nextFrame()
 
                 if decoder.decodeVideoFrame(activeFrame) == False:
-
                     if decoder.duplicateFrameRead == False:
                         badFramesThisSession +=1
                         logging.warning(f'Bad frame strike {badFramesThisSession} / {badFrameStrikes}')
@@ -66,4 +70,6 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
             logging.debug('Breaking out of fileSlicer(), checkpointPassed == False')
             return False
 
-    return False
+        configObject.saveSession()
+        logging.info("Image successfully processed.")
+        return True

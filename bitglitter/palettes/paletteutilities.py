@@ -8,6 +8,7 @@ from bitstring import BitArray, ConstBitStream
 from bitglitter.config.config import config
 from bitglitter.palettes.paletteobjects import CustomPalette
 
+
 class ValuesToColor:
     '''This generates a dictionary linking a string binary value to an RGB value.  This is how binary data gets directly
     converted to colors.  This step required more than a dictionary, as additional logic was required to switch between
@@ -16,6 +17,7 @@ class ValuesToColor:
     '''
 
     def __init__(self, palette, type):
+
         logging.debug(f'Generating binary : color dictionary for {type}...')
         self.palette = palette
         self.bitLength = self.palette.bitLength
@@ -25,6 +27,7 @@ class ValuesToColor:
     def generateDictionary(self):
 
         def twentyFourBitValues(value):
+
             redChannel = value.read('uint : 8')
             greenChannel = value.read('uint : 8')
             blueChannel = value.read('uint : 8')
@@ -32,32 +35,42 @@ class ValuesToColor:
 
         colorDict = {}
         if self.palette.bitLength != 24:
+
             for value in range(len(self.palette.colorSet)):
+
                 tempBinHolder = str(BitArray(uint=value, length=self.palette.bitLength))
                 tempBinHolder = ConstBitStream(tempBinHolder)
                 colorDict[tempBinHolder] = self.palette.colorSet[value]
+
             return colorDict
+
         else:
+
             return twentyFourBitValues
 
     def getColor(self, value):
+
         if self.bitLength != 24:
             return self.returnValue[value]
+
         else:
             return self.returnValue(value)
 
 
 class ColorsToValue:
     '''This class does the exact opposite as ValuesToColor.  This first generates a dictionary linking colors to
-    specific bit values, and then getValue() accomplishes that.
+    specific bit values, and then getValue() accomplishes that.  It is worth noting that 24 bit color functions
+    differently than the other color palettes, in that it doesn't use a dictionary, but rather converts each byte into
+    an unsigned integer for each of it's three color channels, and then returns that color.
     '''
 
     def __init__(self, palette):
-        self.palette = palette
 
+        self.palette = palette
         self.returnValue = self.generateDictionary()
 
     def generateDictionary(self):
+
 
         def twentyFourBitValues(color):
 
@@ -78,6 +91,7 @@ class ColorsToValue:
         else:
             return twentyFourBitValues
 
+
     def getValue(self, color):
         if self.palette.bitLength != 24:
             return self.returnValue[color]
@@ -85,7 +99,7 @@ class ColorsToValue:
             return self.returnValue(color)
 
 
-def _paletteGrabber(idOrNick):
+def paletteGrabber(idOrNick):
     '''Goes through each of the dictionaries to return the color object.'''
 
     if idOrNick in config.colorHandler.defaultPaletteList:

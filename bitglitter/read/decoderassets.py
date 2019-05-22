@@ -2,8 +2,9 @@ import hashlib
 import logging
 import zlib
 
-from bitglitter.palettes.paletteutilities import _paletteGrabber
+from bitglitter.palettes.paletteutilities import paletteGrabber
 from bitglitter.protocols.protocolhandler import protocolHandler
+
 
 def minimumBlockCheckpoint(blockHeightOverride, blockWidthOverride, activeFrameSizeWidth,
                            activeFrameSizeHeight):
@@ -18,6 +19,7 @@ def minimumBlockCheckpoint(blockHeightOverride, blockWidthOverride, activeFrameS
             logging.warning("Block override parameters are too large for a file of these dimensions.  "
                             "Aborting...")
             return False
+
     return True
 
 
@@ -66,7 +68,6 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
 
     # First, we're verifying the initializer is not corrupted by comparing its read checksum with a calculated one from
     # it's contents.  If they match, we continue.  If not, this frame aborts.
-
     logging.debug('readInitializer running...')
 
     bitStream.pos = 0
@@ -92,22 +93,25 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
         logging.warning('readInitializer: Geometry assertion failure.  Aborting...')
         logging.debug(f'readBlockHeight: {readBlockHeight}\n blockHeight {blockHeight}'
                       f'\n readBlockWidth {readBlockWidth}\n blockWidth {blockWidth}')
+
         return False, False
 
-    bitStream.pos += 248
-    framePaletteID = bitStream.read('uint : 8')
+    bitStream.pos += 232
+    framePaletteID = bitStream.read('uint : 24')
 
     if framePaletteID > 100:
 
         bitStream.pos -= 256
         framePaletteID = bitStream.read('hex : 256')
         framePaletteID.lower()
+        logging.debug(f'Custom palette ID: {framePaletteID}')
 
         if framePaletteID not in customPaletteList:
 
             logging.warning('readInitializer: This header palette is unknown, reader cannot proceed.  This can occur'
                             ' if the creator of the stream uses a non-default palette.\nAborting...')
             return False, False
+
     else:
 
         if str(framePaletteID) not in defaultPaletteList:
@@ -115,15 +119,16 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
                             "could be the case if you're using an older version.  Aborting...")
             logging.debug(f'framePaletteID: {framePaletteID}\ndefaultPaletteList: {defaultPaletteList}')
             return False, False
-    framePalette = _paletteGrabber(str(framePaletteID))
 
+    framePalette = paletteGrabber(str(framePaletteID))
     logging.debug('readInitializer successfully ran.')
     return protocolVersion, framePalette
 
 
 def readFrameHeader(bitStream):
     '''While readInitializer is mostly used for verification of values, this function's purpose is to return values
-    needed for the reading process, once verified.  Returns streamSHA, frameSHA, frameNumber, and blocksToRead.'''
+    needed for the reading process, once verified.  Returns streamSHA, frameSHA, frameNumber, and blocksToRead.
+    '''
 
     logging.debug('readFrameHeader running...')
     fullBitStreamToHash = bitStream.read('bytes : 72')
@@ -147,7 +152,8 @@ def readFrameHeader(bitStream):
 def validatePayload(payloadBits, readFrameSHA):
     '''Taking all of the frame bits after the frame header, this takes the SHA-256 hash of them, and compares it against
     the frame SHA written in the frame header.  This is the primary mechanism that validates frame data, which either
-    allows it to be passed through to the assembler, or discarded.'''
+    allows it to be passed through to the assembler, or discarded.
+    '''
 
     shaHasher = hashlib.sha256()
     shaHasher.update(payloadBits.tobytes())
@@ -161,21 +167,3 @@ def validatePayload(payloadBits, readFrameSHA):
 
     logging.debug('Payload validated this frame.')
     return True
-
-
-def returnStreamPalette(streamPaletteID, isCustom, customColorName, customColorDescription, customColorDateCreated,
-                        customColorPalette):
-    logging.debug('Returning stream palette...')
-    if isCustom == False:
-        try:
-            returnPalette = _paletteGrabber(str(streamPaletteID))
-            logging.debug(f'Default palette ID {streamPaletteID} successfully loaded!')
-            return returnPalette
-        except:
-            logging.warning(f'This version of BitGlitter does not have default palette {streamPaletteID}.  Please update '
-                            f'it to a\nnewer version!')
-
-    else:
-        pass
-    #first, we see if the palette exists.  if not, we'll go through the process of making it.
-    #todo: maybe this can go into palette utilities?
