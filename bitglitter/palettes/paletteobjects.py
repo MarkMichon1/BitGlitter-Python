@@ -19,6 +19,7 @@ class AbstractPalette:
         self.bitLength = int(math.log(self.numberOfColors, 2))
 
     def __getitem__(self, item):
+
         return self.colorSet[item]
 
 
@@ -33,6 +34,7 @@ class DefaultPalette(AbstractPalette):
 
 
     def __str__(self):
+
         return (f'Name: {self.name}\nIdentification Code: {str(self.id)}\nDescription: {self.description}\nBit Length: '
         f'{str(self.bitLength)}\nNumber of Colors: {str(self.numberOfColors)}\nColor Set: {str(self.colorSet)}'
         f'\nColor Distance: {str(self.colorDistance)}\n')

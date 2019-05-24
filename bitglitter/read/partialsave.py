@@ -72,10 +72,15 @@ class PartialSave:
         logging.info(f'New partial save! Stream SHA-256: {self.streamSHA}')
 
 
-    def loadFrameData(self, frameData, frameNumber):
+    def loadFrameData(self, frameData, frameNumber, isRecursive = False):
         '''After being validated in the decoder, this method blindly accepts the frameData as a piece, saving it within
         the appropriate folder, and adding the frame number to the list.
         '''
+
+        # This makes the count increase only when this function isn't ran recursively.  This prevents revisited frames
+        # from increasing the count.
+        if isRecursive == False:
+            self.framesIngested += 1
 
         if self.streamHeaderASCIIComplete == False and frameNumber == self.nextStreamHeaderSequentialFrame:
             frameData = self._streamHeaderAssembly(frameData, frameNumber)
@@ -83,7 +88,6 @@ class PartialSave:
         if frameData.len > 0:
             self._writeFile(frameData, f'frame{frameNumber}')
 
-        self.framesIngested += 1
         self.activeThisSession = True
 
         if self.streamHeaderPreambleComplete == True:
@@ -93,6 +97,11 @@ class PartialSave:
             self.framesPriorToBinaryPreamble.append(frameNumber)
 
         logging.debug(f"Frame {frameNumber} for stream {self.streamSHA} successfully saved!")
+
+        if self.streamHeaderASCIIComplete == False \
+            and self.isFrameNeeded(self.nextStreamHeaderSequentialFrame) == False:
+            frameData = self._readFile(f'frame{self.nextStreamHeaderSequentialFrame}')
+            self.loadFrameData(frameData, self.nextStreamHeaderSequentialFrame, isRecursive = True)
 
 
     def userInputUpdate(self, passwordUpdate, scryptN, scryptR, scryptP, changeOutputPath):
@@ -392,7 +401,9 @@ class PartialSave:
 
         if self.streamHeaderPreambleComplete == True:
             self._writeFile(self.frameReferenceTable, '\\frameReferenceTable', toCompress=True)
+
         self.frameReferenceTable = None
+        logging.debug(f'Closing session for {self.streamSHA}')
 
 
     def returnStatus(self, debugData):

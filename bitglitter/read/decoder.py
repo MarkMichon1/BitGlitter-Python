@@ -180,6 +180,9 @@ class Decoder:
 
         if self.configObject.assembler.checkIfFrameNeeded(self.streamSHA, self.frameNumberofStream) == False:
             self.duplicateFrameRead = True
+            if self.isVideo == False:
+                self.configObject.assembler.saveDict[self.streamSHA]._closeSession()
+
             return False
 
 

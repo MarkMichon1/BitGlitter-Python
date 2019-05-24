@@ -49,6 +49,13 @@ def verifyWriteParameters(fileList, streamName, streamDescription, streamOutputP
         raise FileNotFoundError("A minimum of one file or folder is required for stream creation for argument fileList"
                                 " in write().")
 
+    # TEMPORARY until issue is fixed
+    if outputMode == 'video':
+        if headerPalette == '24' or streamPalette == '24':
+            raise ValueError("24 bit palettes can not be used with videos at this time due to codec issues.  This is"
+                             "\nbeing worked on and will be restored soon!  This palette will still work on images.")
+
+
     properStringSyntax(streamName, 'streamName')
     properStringSyntax(streamDescription, 'streamDescription')
 

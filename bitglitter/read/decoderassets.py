@@ -104,12 +104,12 @@ def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defau
         bitStream.pos -= 256
         framePaletteID = bitStream.read('hex : 256')
         framePaletteID.lower()
-        logging.debug(f'Custom palette ID: {framePaletteID}')
 
         if framePaletteID not in customPaletteList:
 
-            logging.warning('readInitializer: This header palette is unknown, reader cannot proceed.  This can occur'
-                            ' if the creator of the stream uses a non-default palette.\nAborting...')
+            logging.warning('readInitializer: This header palette is unknown, reader cannot proceed until it is learned'
+                            'through a \nstream header.  This can occur if the creator of the stream uses a non-default'
+                            ' palette.  This can also trigger if frames \nare read non-sequentially.  Aborting...')
             return False, False
 
     else:

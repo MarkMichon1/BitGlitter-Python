@@ -44,14 +44,19 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
             if decoder.fatalCheckpoint == False:
                 break
 
-            if badFramesThisSession < badFrameStrikes:
+            if badFramesThisSession < badFrameStrikes or badFrameStrikes == 0:
                 logging.info(f'Processing frame {videoFramePuller.currentFrame} of {videoFramePuller.totalFrames}...')
                 activeFrame = videoFramePuller.nextFrame()
 
                 if decoder.decodeVideoFrame(activeFrame) == False:
                     if decoder.duplicateFrameRead == False:
-                        badFramesThisSession +=1
-                        logging.warning(f'Bad frame strike {badFramesThisSession} / {badFrameStrikes}')
+                        badFramesThisSession += 1
+
+                        if badFrameStrikes > 0:
+                            logging.warning(f'Bad frame strike {badFramesThisSession} / {badFrameStrikes}')
+
+                        else:
+                            logging.warning(f'Bad frame strike # {badFramesThisSession}')
 
                 videoFramePuller.removePreviousFrame()
                 configObject.saveSession()

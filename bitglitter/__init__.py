@@ -52,7 +52,3 @@ from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList,
 # CUSTOM PALETTE
 from bitglitter.palettes.palettefunctions import addCustomPalette, editNicknameToCustomPalette, clearAllCustomPalettes,\
     clearCustomPaletteNicknames, printFullPaletteList, removeCustomPalette, removeCustomPaletteNickname
-
-
-# MISCELLANEOUS UTILITIES
-from bitglitter.protocols.protocol_one.write.protocol_one_verifywriteparameters import paletteVerify

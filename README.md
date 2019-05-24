@@ -4,9 +4,7 @@ For a complete guide on BitGlitter please go here: TBD
 
 # The basics
 
-![BitGlitter Sample Frame](https://i.imgur.com/RO0YsuI.png)
-#todo- video gif here ###################
-
+![BitGlitter Sample GIF](https://i.imgur.com/n7E7lnd.gif)
 
 BitGlitter is an easy to use script that allows you to embed data inside of ordinary pictures or video.  Store and host
 any files wherever images or videos can be hosted.
@@ -21,14 +19,21 @@ improved upon.  BitGlitter was born.
 Conventional barcodes are severely limited in application, in terms of their data density.  Much capability is gained 
 when you maximize the original concept.  BitGlitter is in a class of it's own in several ways:
 
-+ **Color Palettes:**  By removing the constraint of only using black and white, the amount of data you can hold in a
-given "block" on the frame skyrockets.  Your regular two color setup holds one bit per block.  Four colors holds two 
-bits (2x), sixty four colors holds six bits (6x), and lossless ~16.7M color palette holds 24 bits (24x improvement over 
-black & white).
-+ **Multi-Frame Videos:** BitGlitter automatically breaks up larger files into multiple frames.  These frames have
-unique ID's in their headers
-+ **Variable block size:** Each of the blocks in the frame can be set to any size, including one pixel.  Larger block sizes give
-your stream protection in lossy environments, while smaller blocks allow for greater densities mean.
+![BitGlitter Default Palettes](https://i.imgur.com/dSYmq7V.png)
+
++ **Multiple Color Palettes:**  By removing the constraint of only using black and white, the amount of data you can 
+hold in a given "block" (each square) on the frame skyrockets.  The regular two color setup holds one bit per block.  
+Four colors holds two  bits (2x), sixty four colors holds six bits (6x), and lossless ~16.7M color palette holds 24 bits 
+(24x improvement over black & white).  You choose what color palette you'd like to use according to your application.  
+Smaller sets are far resistant to compression and corruption, while larger sets have higher data densities.  You can
+create your own custom palettes as well with whatever colors you'd like to use.  More about that below.
++ **Multi-Frame Videos:** BitGlitter automatically breaks up larger files into multiple frames, with several headers
+built into them.  These include several layers of protection against corruption, as well as metadata about the frame
+as well as the stream itself so the reader can intelligently decide how to handle it.  By stitching these frames
+ together and turning them into a video, you can embed files and folders of arbitrary size into videos and images.  
+You're only limited by your hard drive.
++ **Variable block size:** Each of the blocks in the frame can be set to any size, including one pixel.  Larger block 
+sizes give your stream protection in lossy environments, while smaller blocks allow for greater densities.
 
 ### What this means in practical terms
 
@@ -52,6 +57,8 @@ interesting applications that can come out of this.
 
 ### Data
 
++ **Supports streams up to ~1 EB in size, or ~4.3B frames:**  In other words, there is no practical limit to the
+ stream's size.
 + **Compression Added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
 sending.
 + **Encryption Added:** Optional AES-256 encryption to protect your files.  Passwords are hashed with scrypt, parameters
@@ -59,7 +66,7 @@ can be customized for your needs.
 + **File Masking:**  Optional ability to mask what files are included in the stream.  Only those who successfully grab 
 the stream (and decrypt it if applicable) will know of its contents.
 
-### Video
+### Outputted Files
 
 You can choose between either outputting all of your frames as a series of images (.png), or as a single .mp4.
 
@@ -102,50 +109,22 @@ contribute, docstrings and notes are throughout the library.
 ### Applications
 To be determined.  This will be updated as time progresses.
 
-
-### Practical Limits
-
-It's worth stating the constraints you may face while using this.  While the images and video BitGlitter exports are
-lossless (no compression applied), the "real world" on the internet is much different.  For instance, multimedia 
-uploaded to popular social media sites is regularly compressed in order to save space (and ultimately cut down on 
-expenses).  You are protected *to an extent* with BitGlitter from this.  Write parameters are fully customizable
-primarily for this reason.  
-
-While you can have greater throughput with larger colorsets, smaller blocks, and faster framerates, there may be a
-practical limit to whether it will work depending on the degree their compression reduces quality.  At the expense of
-throughput, larger blocks, slower framerates, and fewer colors used will make the stream *far* more resistant to
-possible corruption.  Approaching the extreme limits of these parameters (tiny block sizes, very fast framerates, very
-large colorsets), in terms of reading it and converting it back into data, requires very precise measurements of
-position and color value; *a codec's purpose is to blur those precise values to reduce it's bitrate, and in turn it's
-file size.*  While BitGlitter will detect corruption and perform an "emergency stop," I know you don't want to deal with
-that, and neither do the people you're sharing with.
-
-In closing, know the environment the video will be used in to ensure success in reading it.
-
-
 Link to wiki.
-
-# How it works
-
-
-Reading- explain colorsnap
-(pythagorean theorem?  check it)
-
-Discuss the implications of it.
-
-I put together a google doc sheet.  new programmers, etc #todo no
-
-```TBD!```
 
 # How to use
 
 This is all you need to know to get up and running.  There is additional functionality as well, 
-[and here is the link.](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
+[here is the link.](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
 
-###Use BitGlitter in 60 seconds
-`tba`
+**BitGlitter in 60 seconds**
+Even though it comes shipped with a lot of functionality, all you need to use it is `write()` (creates the streams) and 
+`read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
+wish to input in string format.
 
-###Base Usage
+###write(), converting files into BitGlitter streams
+
+We'll go a bit more in depth now.
+
 `write()` is the function that inputs files and turns them into a BitGlitter stream.  There are quite a few arguments
 to customize the stream, but there is only one required argument.  Everything else has defaults.
 
@@ -176,57 +155,154 @@ as well as their size) on the screen.
 `encryptionKey=''` optionally encrypts your data with AES-256.  By default, this is disabled.  The stream will not be
 able to be read unless the reader successfully inputs this.
 
-There is a little bit more advanced security functionality which is beyond what most will need, check out the Wiki pages
-to learn more.
+Arguments `scryptN=14`, `scryptR=8` and `scryptP=1` allow you to customize the parameters of the `scrypt` key derivation 
+function.  If you're a casual user, you'll never need to touch these (and shouldn't).  Only change these settings if
+ you're comfortable with cryptography and you know what you're doing!  It's worth noting `scryptN` uses it's argument as
+ 2^n.  Finally, if you're changing these numbers, they MUST be manually inputted during `read()` otherwise decryption
+ will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end users of the
+ stream must know these custom parameters.
 
-`headerPaletteID='4'` sets the palette used in the 'setup' frames in the beginning.  It is strongly recommended you use
+`headerPaletteID='6'` sets the palette used in the 'setup' frames in the beginning.  It is strongly recommended you use
 a default palette here if you don't know what you're doing, because this is where important information regarding the
 stream is read, and by using a custom palette, it will be impossible for anyone to read it who hasn't already 'learned'
 the palette.
 
-`streamPaletteID='4'` sets the palette used for the payload.  By default, the 4 bit default color set is used.  I'll 
+`streamPaletteID='6'` sets the palette used for the payload.  By default, the 4 bit default color set is used.  I'll 
 explain all about palettes below.
 
-`pixelWidth=20` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
+`pixelWidth=24` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
 important value regarding readability.  Having them overly large will make reading them easier, but will result in less
 efficient frames and require substantially longer streams.  Making them very small will greatly increase their
 efficiency, but at the same time a lot more susceptible to read failures if the files are shrunk, or otherwise
 distorted.
 
-`blockHeight=54` sets how many blocks tall the frame will be, by default this is set to 54 (which along with 
+`blockHeight=45` sets how many blocks tall the frame will be, by default this is set to 54 (which along with 
 `blockWidth`, creates a perfect 1080p sized frame).
 
-`blockWidth=96` sets how many blocks wide the frame will be, by default this is set to 96.
+`blockWidth=80` sets how many blocks wide the frame will be, by default this is set to 96.
 
 `framesPerSecond=30` sets how many frames per second the video will play at, assuming argument `outputMode = "video"`.
 Currently, 30fps and 60fps are accepted.
 
-There is a few more arguments to control what level gets logged or printed out on the screen, check out the Wiki pages
-to learn more about them.
+Finally we have several arguments to control logging.
 
-# default values work at 81KB/s
----
+`loggingLevel='info'` determines what level logging messages get outputted.  It accepts three arguments- `info` is
+default and only shows core status data during `read()` and `write()`.  `'debug'`  shows INFO level messages as well as
+lower level messages from the various processes.  Boolean `False` disables logging altogether.
+
+`loggingScreenOutput=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
+Enabled by default.
+
+`loggingSaveOutput=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
+Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved there.
+
+These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to
+corruption.
+
+###read(), converting streams back into data
 
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.
 
+Like with `write()`, the only argument required is the BitGlitter-encoded file, whether that's an image or a video.
+`fileToInput` is the only required argument.  We'll go over the other ones.
+
+`outputPath=None` Is where you can set where this stream will be saved once all frames have been successfully loaded.
+  It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
+  stick with that stream.  This argument requires a strong of a folder path that already exists.
+
+`badFrameStrikes=10` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
+allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
+ iterative over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
+ regardless of the level of corruption.
+
+`blockHeightOverride=False` and `blockWidthOverride=False` allow you to manually input the stream's block height and 
+block width.  Normally you'll never need to use this, as these values are automatically obtained as the frame is locked
+onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
+attempt to lock onto the screen given these parameters.  Both must be filled in order for the override to work.
+
+`encryptionKey=None` is where you add the encryption key to decrypt the stream.  Like argument `outputPath`, you only
+need this argument once, and it will bind to that save.
+
+Arguments `scryptN=14`, `scryptR=8` and `scryptP=1`
+
+`loggingLevel = 'info'`, `loggingScreenOutput = True`, `loggingSaveOutput = False` - Please see the full explanation at
+`write().`
+
 ###Color Palettes
 
-BitGlitter provides a nice selection of default palettes to choose from:
+If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
 
-![BitGlitter Default Palettes](https://i.imgur.com/dSYmq7V.png)
+`addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname = "")`  This function adds custom palettes
+to use.  
 
-add here
+Argument `paletteName` takes a string and is the name of the palette that gets displayed and transmitted. 
 
-###TBD
-```TBD```
+Argument`paletteDescription` takes a string as well, and is the description of the palette, if you wish to add it.  
+
+Argument `colorSet` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
+a simple example of what it would look like using two colors: `colorSet=((0, 255, 0), (0, 0, 255))`.  There are a few
+requirements to these tuples:
++ No two identical values can be added.  For instance, the color black with the same RGB values twice.  Each color used
+must be unique!  The more 'different' the colors are, the better.
++ You must have a minimum of two colors.
++ It must be 2^n colors used, so 2, 4, 8, 16, etc.
+
+Argument `optionalNickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
+  how you select this palette to specifically run on your stream.  Internally, custom palettes have a 64 character ID 
+  code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
+  well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
+
+`editNicknameToCustomPalette(idOrNick, newName)` This function allows you to edit the nickname of your custom palette 
+to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal ID.
+
+`printFullPaletteList(path)` This function outputs a text file to the folder path outlining the palettes available, both
+default palettes and custom.  It shows information such as their name, description, date created, color set, nickname,
+and more.  The required argument is a string of a folder path, which must already exist.  Here's an example of how to
+format it: `C:\Users\Mark\Desktop`
+
+`clearAllCustomPalettes()` This removes all custom palettes from your config.  Please note that the default palettes 
+will not be removed.
+
+`removeCustomPalette(idOrNick)` This function removes the custom palette from your config.  It takes a string argument
+of either it's internal ID, or a nickname you've previously given it.
+
+`removeCustomPaletteNickname(idOrNick)` This function strips any nickname associated with a custom palette.  It takes a
+string argument of either the internal ID or a previous nickname.
+
+`clearCustomPaletteNicknames()`  This removes all nicknames from all custom palettes.
+
+###Partial Save Control
+
+`updatePartialSave`
+
+`beginAssembly`
+
+`printFullSaveList`
+
+`removePartialSave`
+
+`removeAllPartialSaves`
+
+###General Configuration
+
+`outputStats`
+
+`clearStats`
+
+`clearSession`
 
 # Installation
 
 In addition to downloading the code from Github, you can also grab it directly from PyPI:
 
 `pip install bitglitter`
+**IMPORTANT:** The only part you will need to grab manually is a copy of ffmpeg.exe .  Place it in the same folder the 
+code will be running, and you'll be set.  This will be done automatically in the near future.  Get the package here on
+the left side of the screen:
 
-#todo- ffmpeg exe figure out
+[https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+
+ffmpeg.exe is all that is needed.
 
 ## Required Third Party Libraries
 
@@ -234,9 +310,10 @@ In addition to downloading the code from Github, you can also grab it directly f
 + `cryptography` - Cryptographic functions.
 + `ffmpeg-python` - Video rendering and output.
 + `opencv-python` - Video loading and frame manipulation.
-+ `filepackager` - File manipulation for writing and 
-reading.
 + `Pillow` - Frame creation and output, as well as loading images and reading pixel values.
+
+Thanks to Tanmay Mishra for giving me a pre-release version of his upcoming library `filepackager`.  It has been heavily
+modified and stripped down to suit this library.  The code is included with BitGlitter; there is no need to download it.
 
 
 # Contributing
@@ -263,6 +340,25 @@ Paypal address: [https://www.paypal.me/markmichon7](https://www.paypal.me/markmi
 
 ![Splitter](https://i.imgur.com/qIygifj.png)
 
+### Practical Limits
+
+It's worth stating the constraints you may face while using this.  While the images and video BitGlitter exports are
+lossless (no compression applied), the "real world" on the internet is much different.  For instance, multimedia 
+uploaded to popular social media sites is regularly compressed in order to save space (and ultimately cut down on 
+expenses).  You are protected *to an extent* with BitGlitter from this.  Write parameters are fully customizable
+primarily for this reason.  
+
+While you can have greater throughput with larger colorsets, smaller blocks, and faster framerates, there may be a
+practical limit to whether it will work depending on the degree their compression reduces quality.  At the expense of
+throughput, larger blocks, slower framerates, and fewer colors used will make the stream *far* more resistant to
+possible corruption.  Approaching the extreme limits of these parameters (tiny block sizes, very fast framerates, very
+large colorsets), in terms of reading it and converting it back into data, requires very precise measurements of
+position and color value; *a codec's purpose is to blur those precise values to reduce it's bitrate, and in turn it's
+file size.*  While BitGlitter will detect corruption and perform an "emergency stop," I know you don't want to deal with
+that, and neither do the people you're sharing with.
+
+In closing, know the environment the video will be used in to ensure success in reading it.
+
 # MIT License
 © 2019 - ∞ Mark Michon
 
@@ -274,4 +370,7 @@ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the 
 Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

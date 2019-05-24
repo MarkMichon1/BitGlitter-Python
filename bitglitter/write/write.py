@@ -44,26 +44,21 @@ def write(   # Basic setup
     # Logging initializing.
     loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
 
-
     # Loading write protocol.  This import function is here deliberately because of logging.
     from bitglitter.protocols.protocolhandler import protocolHandler
     writeProtocol = protocolHandler.returnWriteProtocol('1')
-
 
     # Are all parameters acceptable?
     writeProtocol.verifyWriteParameters(fileList, streamName, streamDescription, streamOutputPath, outputMode, compressionEnabled,
                           fileMaskEnabled, scryptOverrideN, scryptOverrideR, scryptOverrideP, streamPaletteID,
                                         headerPaletteID, pixelWidth, blockHeight, blockWidth, framesPerSecond)
 
-
     # This sets the name of the temporary folder while the file is being written.
     activePath = WRITE_PATH
-
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     preProcess = writeProtocol.preProcessing(activePath, fileList, encryptionKey, fileMaskEnabled, compressionEnabled,
                                              scryptOverrideN, scryptOverrideR, scryptOverrideP)
-
 
     # After the data is prepared, this is what renders the data into images.
     frameProcessor = writeProtocol.frameProcessor()
