@@ -1,23 +1,24 @@
 ![BitGlitter Logo](https://i.imgur.com/3GJ4bDx.png)
 
-For a complete guide on BitGlitter please go here: TBD
-
 # The basics
 
 ![BitGlitter Sample GIF](https://i.imgur.com/n7E7lnd.gif)
 
-BitGlitter is an easy to use script that allows you to embed data inside of ordinary pictures or video.  Store and host
-any files wherever images or videos can be hosted.
+[Click here](https://www.youtube.com/watch?v=HrY4deFrOoA) for a demo vid of a real stream.
+
+BitGlitter is an easy to use library that allows you to embed data inside of ordinary pictures or video.  Store and host
+files wherever images or videos can be hosted.
 
 ### From physical barcodes to digital data transfer
 
 Whether it's barcodes at the store or QR codes you can scan with your phone- they both work on the same principle.  Data
 is encoded into the black and white.  You each think of each color as an abstraction for a binary value, so then when
 those colors are read in sequence, you can pull meaningful data from the image.  I wondered how this concept could be
-improved upon.  BitGlitter was born.
+improved upon, and I wanted a cool first project as an introduction to programming.  BitGlitter was born.
 
-Conventional barcodes are severely limited in application, in terms of their data density.  Much capability is gained 
-when you maximize the original concept.  BitGlitter is in a class of it's own in several ways:
+Conventional barcodes are severely limited in application, in terms of their data density.  When you maximize the 
+concept and configure it for digital-digital transmission, a lot of capability is gained.  
+BitGlitter is in a class of it's own in several ways:
 
 ![BitGlitter Default Palettes](https://i.imgur.com/dSYmq7V.png)
 
@@ -34,6 +35,10 @@ as well as the stream itself so the reader can intelligently decide how to handl
 You're only limited by your hard drive.
 + **Variable block size:** Each of the blocks in the frame can be set to any size, including one pixel.  Larger block 
 sizes give your stream protection in lossy environments, while smaller blocks allow for greater densities.
++ ****
+
+Currently, BitGlitter is configured to transport files and folders on a computer.  But with minimal modification you can
+use videos or images as a carrier for virtually any kind of binary data.
 
 ### What this means in practical terms
 
@@ -50,7 +55,7 @@ Number of Colors | Bits Per Block | Screen Resolution | Block Size in Pixels | B
 16,777,216 | 24 | 1920 x 1080 (1080p) | 5 | 384 x 216 | 30 | 7.47 MB/s | Yes
 16,777,216 | 24 | 3840 x 2160 (4k) | 5 | 768 x 432 | 60 | 59.7 MB/s | Yes
 
-Put simply, you can now make videos that can hold large volumes of data inside of them.  There may be some pretty
+Put simply, you can now make videos that can hold large amounts of data inside of them.  There may be some pretty
 interesting applications that can come out of this.
 
 # Features
@@ -59,11 +64,11 @@ interesting applications that can come out of this.
 
 + **Supports streams up to ~1 EB in size, or ~4.3B frames:**  In other words, there is no practical limit to the
  stream's size.
-+ **Compression Added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
++ **Compression added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
 sending.
-+ **Encryption Added:** Optional AES-256 encryption to protect your files.  Passwords are hashed with scrypt, parameters
-can be customized for your needs.
-+ **File Masking:**  Optional ability to mask what files are included in the stream.  Only those who successfully grab 
++ **Encryption added:** Optional AES-256 encryption to protect your files.  Passwords are hashed with `scrypt`, 
+parameters can be customized for your needs.
++ **File masking:**  Optional ability to mask what files are included in the stream.  Only those who successfully grab 
 the stream (and decrypt it if applicable) will know of its contents.
 
 ### Outputted Files
@@ -72,25 +77,34 @@ You can choose between either outputting all of your frames as a series of image
 
 + **Customizable resolution:** You have complete control of the size of the outputted frames, whether they are 480p or
 8K.
-+ **Customizable Framerate:** Currently supports 30 and 60 FPS, custom values are coming soon.
++ **Customizable framerate:** Currently supports 30 and 60 FPS, custom values are coming soon.
 
 ![Custom Color Showcase](https://i.imgur.com/4uQTxwT.png)
 
 + **Custom Color Palettes:** The included default palettes are just a starting point.  Make any color palette that you
 want to match the aesthetic where it's being used.  Anyone reading the stream will have the palette automatically saved
-to their machine, so then they can use it as well!
+to their machine, so then they can use it as well!  Functionality is included to output a text file outlining all of the
+color palettes you have available to use, both default and custom.
 
 ### Reading
 
-+ **Colorsnap Error Correction:** BitGlitter protect your file against corruption and artifacts on the image or video.
-After loading the correct palette, whenever it detects an incorrect color, it will "snap" it to the nearest color in the
-palette.  This gives your file resistance against format changes, codecs, or file size reduction.
++ **Error correction against compression or corruption:** BitGlitter protect your file against corruption and artifacts 
+on the image or video. After loading the correct palette, whenever it detects an incorrect color, it will "snap" it to 
+the nearest color in the palette.  This gives your file resistance against format changes, codecs, or file size 
+reduction.  This allows BitGlitter streams to still be read in environments that would otherwise render all existing 
+steganography methods unreadable.
 
-+ **File Integrity Check Mechanisms:** When the stream is created, a hash (SHA-256) is taken of the entire stream, as
++ **Complete file integrity:** When the stream is created, a hash (SHA-256) is taken of the entire stream, as
 well as each frame.  The data must match what is expected to be accepted.  Damaged or corrupt files will not be blindly
 passed on to you.
 
++ **Streamlined frame bypassing:**  If a frame cannot or doesn't need to be read (ie, a duplicate already read), the 
+reader determines this from an initial frame header
+
 ### Design
+
++ **No metadata saved in the file:**  Compress the stream, change formats, upload it somewhere.  All data is encoded in
+the blocks, so you don't have to worry (as much) about rendering the stream unreadable.
 
 + **Easy to understand:** Whether you're learning about Python and want to understand how it works, or you're looking to
 contribute, docstrings and notes are throughout the library.
@@ -107,21 +121,20 @@ contribute, docstrings and notes are throughout the library.
   achieve your goal with the modular components I've created.
 
 ### Applications
-To be determined.  This will be updated as time progresses.
-
-Link to wiki.
+To be determined.  This will be updated as time progresses!
 
 # How to use
 
-This is all you need to know to get up and running.  There is additional functionality as well, 
-[here is the link.](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
+All of the functions to run this library are explained below.  I'm also working on several Wikipedia pages, explaining
+BitGlitter in greater detail (how it works, etc) with some included illustrations.  These are not yet complete, 
+[but here is the link to the project's Wiki if you'd like to see it!](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
 
 **BitGlitter in 60 seconds**
 Even though it comes shipped with a lot of functionality, all you need to use it is `write()` (creates the streams) and 
 `read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
 wish to input in string format.
 
-###write(), converting files into BitGlitter streams
+### write(), converting files into BitGlitter streams
 
 We'll go a bit more in depth now.
 
@@ -199,7 +212,7 @@ Disabled by default.  If set to `True`, a log folder will be created, and text f
 These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to
 corruption.
 
-###read(), converting streams back into data
+### read(), converting streams back into data
 
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.
 
@@ -228,7 +241,7 @@ Arguments `scryptN=14`, `scryptR=8` and `scryptP=1`
 `loggingLevel = 'info'`, `loggingScreenOutput = True`, `loggingSaveOutput = False` - Please see the full explanation at
 `write().`
 
-###Color Palettes
+### Color Palettes
 
 If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
 
@@ -271,25 +284,49 @@ string argument of either the internal ID or a previous nickname.
 
 `clearCustomPaletteNicknames()`  This removes all nicknames from all custom palettes.
 
-###Partial Save Control
+### Partial Save Control
 
-`updatePartialSave`
+Once the first frame of a stream is read, a PartialSave object is created.  This is essentially what manages the binary
+strings, and holds various information on it's state.  These functions help better interface with them.
 
-`beginAssembly`
+`updatePartialSave(streamSHA, reattemptAssembly = True, passwordUpdate = None, scryptN =  None, scryptR = None, 
+scryptP = None, changeOutputPath = None)` This function allows you to update various parameters of the save.  Requires
+a string input for `streamSHA` which is the ID number of the string.  
 
-`printFullSaveList`
+Argument `reattemptAssembly` makes the assembler
+attempt to reassemble the frames, as well as output the embedded files and folders.  This would be used in the case of
+an incorrect password or scrypt parameters, and you'd like to try again.
 
-`removePartialSave`
+Argument `passwordUpdate` takes a string argument, and will add (or replace) the encryption key tied to this stream.
 
-`removeAllPartialSaves`
+Arguments `scryptN, scryptR and scryptP` change the scrypt parameters used to derive the key used for decryption.  If
+the scrypt parameters were left at default during `write()` of the stream, these can be left as is.  Otherwise, the 
+custom values will need to be inputted whether here or in the optional arguments of `read()`.
 
-###General Configuration
+`beginAssembly(streamSHA)` This function exists to initiate assembly of a package at a later time, rather than doing so 
+immediately for whatever reason.
 
-`outputStats`
+`printFullSaveList(path, debugData=False)` This function outputs a text file to the folder path outlining all (if any)
+partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
+itself.  Argument `debugData` is `False` by default, but enabling it to `True` outputs various debug information 
+pertaining to the object as well, which wouldn't serve much utility seeing for someone such as a casual end user.
 
-`clearStats`
+`removePartialSave(streamSHA)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
+remove the object from your config, as well as remove all temporary data associated with it.
 
-`clearSession`
+`removeAllPartialSaves()` All saves are removed from the config object, clearing all temporary data.
+
+### General Configuration
+
+`outputStats(path)` This function gives you a neat bird's eye view of your BitGlitter usage.  During all `read()` and 
+`write()` cycles, the total amount of data transferred, as well as total frames transferred and individual blocks 
+scanned gets added to a running total.  Argument `path` requires a string argument of a folder path that already exists.
+A small text file will be written to this location.
+
+`clearStats()` All statistics will be reset to zero.
+
+`clearSession()` This wipes all inputted data.  Custom colors, statistics, and partial save objects will all be erased,
+as well as any temporary data for the partially read streams.  This is in essence a hard reset.
 
 # Installation
 
