@@ -1,7 +1,13 @@
+import ast
 import logging
 import zlib
 
-def readStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEnabled):
+
+def decodeStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEnabled):
+    '''This function encodes the raw bit string taken from the frame(s) back into ASCII, and returns the split
+    components inside of it.
+    '''
+
     logging.debug('Reading stream header...')
     customColorName = None
     customColorDescription = None
@@ -10,6 +16,7 @@ def readStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEna
     postCompressionSHA = None
 
     toBytes = bitstream.tobytes()
+    logging.debug(f'ASCII header byte size inputted to read function: {int(len(bitstream) / 8)} B')
     uncompressedString = zlib.decompress(toBytes).decode()
     stringBrokenIntoParts = uncompressedString.split('\\\\')[1:-1]
     bgVersion = stringBrokenIntoParts[0]
@@ -22,18 +29,21 @@ def readStreamHeaderASCIICompressed(bitstream, customColorEnabled, encryptionEna
         customColorName = stringBrokenIntoParts[4]
         customColorDescription = stringBrokenIntoParts[5]
         customColorDateCreated = stringBrokenIntoParts[6]
-        customColorPalette = stringBrokenIntoParts[7]
+        customColorPalette = ast.literal_eval(stringBrokenIntoParts[7])
         indexBump += 4
 
     if encryptionEnabled == True:
         postCompressionSHA = stringBrokenIntoParts[4 + indexBump]
 
     logging.debug('Stream header ASCII part successfully read.')
+
     return bgVersion,streamName,streamDescription,fileList,customColorName,customColorDescription,\
            customColorDateCreated,customColorPalette, postCompressionSHA
 
 
-def readStreamHeaderBinaryPreamble(bitStream):
+def decodeStreamHeaderBinaryPreamble(bitStream):
+    '''This function takes the raw bit string taken from the frame(s) and extracts stream data from it.'''
+
     sizeInBytes = bitStream.read('uint : 64')
     totalFrames = bitStream.read('uint : 32')
     compressionEnabled = bitStream.read('bool')
@@ -43,9 +53,10 @@ def readStreamHeaderBinaryPreamble(bitStream):
     dateCreated = bitStream.read('uint : 34')
 
     if isCustomPalette == False:
-        streamPaletteID = bitStream.read('uint : 256')
+        streamPaletteID = str(bitStream.read('uint : 256'))
+
     else:
-        streamPaletteID = bitStream.read('hex : 256')
+        streamPaletteID = str(bitStream.read('hex : 256'))
 
     asciiHeaderCompressedInBytes = bitStream.read('uint : 32')
 
@@ -54,8 +65,11 @@ def readStreamHeaderBinaryPreamble(bitStream):
 
 def formatFileList(fileString):
     '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''
+
     brokenApart = fileString.split('|')[1:]
     formattedString = ''
+
     for position in range(int(len(brokenApart) / 2)):
-        formattedString +=(f"\n{brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
+        formattedString +=(f"\n    {brokenApart[2 * position]} - {brokenApart[2 * position + 1]} B")
+
     return formattedString

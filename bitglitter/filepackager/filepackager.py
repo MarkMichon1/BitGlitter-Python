@@ -387,6 +387,7 @@ def unpackage(fileName, savePath, streamSHA):
                                     pass
                                 outputPath += '/' + streamSHA
                                 logging.debug("Making Folder: " + streamSHA + " and moving into it.")
+                                rootFolderCreated = True
 
                             os.chdir(outputPath)
                             temp = b''

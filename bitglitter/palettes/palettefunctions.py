@@ -2,12 +2,12 @@ import os
 import time
 
 from bitglitter.config.config import config
-from bitglitter.utilities.generalverifyfunctions import properStringSyntax
 from bitglitter.palettes.paletteutilities import _addCustomPaletteDirect, colorDistance, returnPaletteID
+from bitglitter.utilities.generalverifyfunctions import properStringSyntax
 
+# All of these functions are for end users except for _dictPopper.
 
-
-def dictPopper(idOrNick):
+def _dictPopper(idOrNick):
     '''This is an internal function used for removeCustomPalette(), addNicknameToCustomPalette(), and
     removeCustomPaletteNicknames().  Since a user can either either the palette ID OR it's nickname as an argument,
     first we must check whether that key exists.  If it does, it will check both dictionaries in the ColorHandler object
@@ -19,11 +19,13 @@ def dictPopper(idOrNick):
         tempHolder = config.colorHandler.customPaletteNicknameList[idOrNick]
         del config.colorHandler.customPaletteList[tempHolder.id]
         return config.colorHandler.customPaletteNicknameList.pop(idOrNick)
+
     elif idOrNick in config.colorHandler.customPaletteList:
         tempHolder = config.colorHandler.customPaletteList[idOrNick]
         if config.colorHandler.customPaletteNicknameList[tempHolder.nickname]:
             del config.colorHandler.customPaletteNicknameList[tempHolder.nickname]
         return config.colorHandler.customPaletteList.pop(idOrNick)
+
     else:
         raise ValueError(f"'{idOrNick}' does not exist.")
 
@@ -66,7 +68,7 @@ def addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname
     minDistance = colorDistance(colorSet)
     if minDistance == 0:
         raise ValueError("Calculated color distance is 0.  This occurs when you have two identical colors in your"
-              " palette.  This breaks the communication protocol.  See BitGlitter guide for more information.")
+              "\npalette.  This breaks the communication protocol.  See BitGlitter guide for more information.")
 
     '''At this point, assuming no errors were raised, we're ready to instantiate the custom color object.  This function
     creates an identification for the object.  For as long as the palette exists, this is a permanent ID that can be
@@ -75,13 +77,13 @@ def addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname
 
     id = returnPaletteID(nameString, descriptionString, dateCreated, colorSet)
     _addCustomPaletteDirect(nameString, descriptionString, colorSet, minDistance, dateCreated, id, nicknameString)
-
     return id
 
 
 def removeCustomPalette(idOrNick):
     '''Removes custom palette completely from the config file.'''
-    dictPopper(idOrNick)
+
+    _dictPopper(idOrNick)
     config.saveSession()
 
 
@@ -92,14 +94,13 @@ def editNicknameToCustomPalette(idOrNick, newName):
             and newName not in config.colorHandler.customPaletteNicknameList \
             and newName not in config.colorHandler.defaultPaletteList:
 
-        tempHolder = dictPopper(idOrNick)
+        tempHolder = _dictPopper(idOrNick)
         tempHolder.nickname = newName
         config.colorHandler.customPaletteList[tempHolder.id] = tempHolder
         config.colorHandler.customPaletteNicknameList[tempHolder.nickname] = tempHolder
         config.saveSession()
 
     else:
-
         raise ValueError(f"'{newName}' is already being used, please try another.")
 
 
@@ -108,7 +109,7 @@ def removeCustomPaletteNickname(idOrNick):
     nickname.
     '''
 
-    tempHolder = dictPopper(idOrNick)
+    tempHolder = _dictPopper(idOrNick)
     tempHolder.nickname = ""
     config.colorHandler.customPaletteList[tempHolder.id] = tempHolder
     config.saveSession()
@@ -130,9 +131,11 @@ def clearCustomPaletteNicknames():
 
 def printFullPaletteList(path):
     '''Writes a text file to a file path outlining available color palettes.'''
+
     activePath = os.path.join(os.getcwd(), path)
 
-    with open(activePath + '\\Palette List.txt', 'w') as writer:
+    with open(activePath + '\\BitGlitter Palette List.txt', 'w') as writer:
+
         writer.write('*' * 21 + '\nDefault Palettes\n' + '*' * 21 + '\n')
 
         for someKey in config.colorHandler.defaultPaletteList:
@@ -144,12 +147,14 @@ def printFullPaletteList(path):
 
             for someKey in config.colorHandler.customPaletteList:
                 writer.write('\n' + str(config.colorHandler.customPaletteList[someKey]) + '\n')
+
         else:
             writer.write('\nNo custom palettes (yet)')
 
 
 def clearAllCustomPalettes():
     '''Removes all custom palettes from both the ID dictionary and nickname dictionary.'''
+
     config.colorHandler.customPaletteNicknameList = {}
     config.colorHandler.customPaletteList = {}
     config.saveSession()

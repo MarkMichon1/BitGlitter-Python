@@ -1,8 +1,8 @@
 import logging
 import time
 
-from bitglitter.utilities.filemanipulation import refreshWorkingFolder, returnFileSize, returnHashFromFile
 from bitglitter.protocols.protocol_one.write.protocol_one_preprocessobjects import Packager, Compressor, Encryptor
+from bitglitter.utilities.filemanipulation import refreshWorkingFolder, returnFileSize, returnHashFromFile
 
 
 class PreProcessor:
@@ -10,6 +10,7 @@ class PreProcessor:
     After packaging, and optional compression and encryption, it contains some attributes that will be encoded in
     headers during the render process.
     '''
+
     def __init__(self, activePath, fileList, cryptoKey, maskFiles, compressionEnabled, scryptOverrideN, scryptOverrideR,
                  scryptOverrideP):
 
@@ -26,9 +27,11 @@ class PreProcessor:
 
         self.encryptionEnabled = encryptor.encryptionEnabled
         self.postEncryptionHash = None
+
         if cryptoKey:
             self.postEncryptionHash = returnHashFromFile(encryptor.passThrough)
             logging.debug(f'Post-encryption SHA-256: {self.postEncryptionHash}')
+
         self.sizeInBytes = returnFileSize(encryptor.passThrough)
         logging.info(f'Package size: {self.sizeInBytes}B')
         self.passThrough = encryptor.passThrough

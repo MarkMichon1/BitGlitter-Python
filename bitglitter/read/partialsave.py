@@ -2,39 +2,53 @@ import datetime
 import logging
 import os
 
-from bitglitter.utilities.filemanipulation import returnHashFromFile
-from bitglitter.utilities.generalverifyfunctions import isIntOverZero, isValidDirectory, properStringSyntax
-from bitglitter.read.assemblerassets import formatFileList, readStreamHeaderASCIICompressed, \
-    readStreamHeaderBinaryPreamble
-from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
-
 from bitstring import BitStream
+
+from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
+from bitglitter.read.partialsaveassets import formatFileList, decodeStreamHeaderASCIICompressed, \
+    decodeStreamHeaderBinaryPreamble
+from bitglitter.utilities.filemanipulation import compressFile, decompressFile, returnHashFromFile
 
 
 class PartialSave:
+    '''PartialSave objects are essentially containers for the state of streams as they are being read, frame by frame.
+    This mainly interacts through the Assembler object.  All of the functionality needed to convert raw frame data back
+    into the original package is done through it's contained methods.
+    '''
 
-    def __init__(self, streamSHA, workingFolder, scryptN, scryptR, scryptP, outputPath, encryptionKey):
+    def __init__(self, streamSHA, workingFolder, scryptN, scryptR, scryptP, outputPath, encryptionKey, assembleHold):
 
-        # Core object values
+        # Core object state data
         self.saveFolder = workingFolder + f'\\{streamSHA}'
-        self.frameReferenceTableName = self.saveFolder + f'\\frameReferenceTable.bin'
         self.streamSHA = streamSHA
         self.assembledSHA = streamSHA
         self.framesIngested = 0
-        self.streamHeaderComplete = False
-        self.streamHeaderBuffer = None
+
+        self.streamHeaderPreambleComplete = False
+        self.streamHeaderASCIIComplete = False
+        self.streamHeaderPreambleBuffer = BitStream()
+        self.streamHeaderASCIIBuffer = BitStream()
+
+        self.nextStreamHeaderSequentialFrame = 1
+        self.payloadBeginsThisFrame = None
         self.activeThisSession = True
-        self.isAssembled = False
+        self.isAssembled = False # Did the frames successfully merge into a single binary?
+        self.postProcessorDecrypted = False # Was the stream successfully decrypted?
+        self.frameReferenceTable = None
+        self.framesPriorToBinaryPreamble = []
+        self.streamPaletteRead = False
+        self.assembleHold = assembleHold
+
 
         # Stream Header - Binary Preamble
         self.sizeInBytes = None
-        self.totalFrames = None
+        self.totalFrames = '???'
         self.compressionEnabled = None
         self.encryptionEnabled = None
         self.maskingEnabled = None
         self.customPaletteUsed = None
         self.dateCreated = None
-        self.streamPalette = None
+        self.streamPaletteID = None
         self.asciiHeaderByteSize = None
 
         # Stream Metadata
@@ -57,194 +71,253 @@ class PartialSave:
         self.scryptP = scryptP
         self.outputPath = outputPath
 
-        self.framesPriorToBinaryPreamble = []
-
         os.mkdir(self.saveFolder)
         logging.info(f'New partial save! Stream SHA-256: {self.streamSHA}')
 
-    #Returns the status of the object
-    def __str__(self):
-        return False #todo ???
 
-    '''After being validated in the decoder, this method blindly accepts the data as a piece, saving it within the
-    appropriate folder, and adding the frame number to the list.
-    '''
-    def loadFrame(self, frameData, frameNumber):
-        '''After being validated in the decoder, this method blindly accepts the frameData as a piece, saving it within the
-        appropriate folder, and adding the frame number to the list.
+    def loadFrameData(self, frameData, frameNumber, isRecursive = False):
+        '''After being validated in the decoder, this method blindly accepts the frameData as a piece, saving it within
+        the appropriate folder, and adding the frame number to the list.
         '''
 
-        if self.streamHeaderComplete == False:
+        # This makes the count increase only when this function isn't ran recursively.  This prevents revisited frames
+        # from increasing the count.
+        if isRecursive == False:
+            self.framesIngested += 1
+
+        if self.streamHeaderASCIIComplete == False and frameNumber == self.nextStreamHeaderSequentialFrame:
             frameData = self._streamHeaderAssembly(frameData, frameNumber)
 
-        self._writeFile(frameData, f'frame{frameNumber}')
-        self.framesIngested += 1
+        if frameData.len > 0:
+            self._writeFile(frameData, f'frame{frameNumber}')
+
         self.activeThisSession = True
-        logging.debug(f"Frame {frameNumber} for stream {self.streamSHA} successfully saved!")
 
-
-    def updateMetaData(self, sizeInBytes, totalFrames, compressionEnabled, encryptionEnabled, fileMaskingEnabled,
-                       customPaletteUsed):
-
-        self.sizeInBytes = sizeInBytes
-        self.totalFrames = totalFrames
-        with open(self.saveFolder + '\\completionBinary.bin', 'wb') as makeFile:
-            file = BitStream(uint=0, length=totalFrames)
-            byteFile = file.tobytes()
-            makeFile.write(byteFile)
-        self.compressionEnabled = compressionEnabled
-        self.encryptionEnabled = encryptionEnabled
-        self.maskingEnabled = fileMaskingEnabled
-        self.customPaletteUsed = customPaletteUsed
-
-
-
-    def updateUserInput(self, passwordUpdate=None, scryptOverrideN=None, scryptOverrideR=None, scryptOverrideP=None,
-                        changeOutputPath=None): #todo may put none's on higher level? configObject?
-        '''This method changes user related configurations such as password, scrypt parameters, and save location.
-        These actions are deliberately separated from updateMetaData, which should remain static.
-        '''
-        if passwordUpdate:
-            properStringSyntax('passwordUpdate', passwordUpdate) #todo update argument once its a function
-
-        if scryptOverrideN:
-            isIntOverZero('scryptOverrideN', scryptOverrideN)
-
-        if scryptOverrideR:
-            isIntOverZero('scryptOverrideR', scryptOverrideR)
-
-        if scryptOverrideP:
-            isIntOverZero('scryptOverrideP', scryptOverrideP)
-
-        if changeOutputPath:
-            isValidDirectory('changeOutputPath', changeOutputPath)
-
-        self.encryptionKey = passwordUpdate
-        self.scryptN = scryptOverrideN
-        self.scryptR = scryptOverrideR
-        self.scryptP = scryptOverrideP
-        self.outputPath = changeOutputPath
-
-#todo feed in user arguments somewhere
-
-    # If all pieces are present, we will then decrypt and decompress if needed, and then post-process the final files.
-    def _attemptAssembly(self):
-        #todo- does something belong here if crypto password failed?
-
-        if self.totalFrames == self.framesIngested:
-
-            logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
-            dataLeft = self.sizeInBytes * 8
-            assembledPath = f'{self.saveFolder}\\assembled.bin'
-            with open(assembledPath, 'ab') as assemblePackage:
-
-                for frameNumber in range(self.totalFrames):
-                    activeFrame = self._readFile(f'frame{frameNumber + 1}')
-
-                    if frameNumber + 1 != self.totalFrames: # All frames except the last one.
-                        pass #todo
-
-                    else: #This is the last frame
-                        dataHolder = activeFrame.read(f'bits : {dataLeft}')
-                        toByteType = dataHolder.tobytes()
-                        assemblePackage.write(toByteType)
-
-            if returnHashFromFile(assembledPath) != self.assembledSHA:
-
-                logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
-                return False
-
-            logging.debug(f'Successfully assembled.')
-            self.isAssembled = True
-
-            postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
-                                               self.encryptionEnabled, self.encryptionKey, self.scryptN,
-                                               self.scryptR, self.scryptP, self.compressionEnabled)
-            #todo add something here if there is no pass
+        if self.streamHeaderPreambleComplete == True:
+            self.frameReferenceTable.set(True, frameNumber - 1)
 
         else:
+            self.framesPriorToBinaryPreamble.append(frameNumber)
 
+        logging.debug(f"Frame {frameNumber} for stream {self.streamSHA} successfully saved!")
+
+        if self.streamHeaderASCIIComplete == False \
+            and self.isFrameNeeded(self.nextStreamHeaderSequentialFrame) == False:
+            frameData = self._readFile(f'frame{self.nextStreamHeaderSequentialFrame}')
+            self.loadFrameData(frameData, self.nextStreamHeaderSequentialFrame, isRecursive = True)
+
+
+    def userInputUpdate(self, passwordUpdate, scryptN, scryptR, scryptP, changeOutputPath):
+        '''This method changes user related configurations such as password, scrypt parameters, and save location.
+        These arguments are blindly accepted from updatePartialSave() in savedfilefunctions, as the inputs are validated
+        there.
+        '''
+
+        if passwordUpdate:
+            self.encryptionKey = passwordUpdate
+
+        if scryptN:
+            self.scryptN = scryptN
+        if scryptR:
+            self.scryptR = scryptR
+        if scryptP:
+            self.scryptP = scryptP
+
+        if changeOutputPath:
+            self.outputPath = changeOutputPath
+
+
+    def _attemptAssembly(self):
+        '''This method will check to see if all frames for the stream have been read.  If so, they will be assembled
+        into a single binary, it's hash will be validated, and then it will be ran through post-processing,
+        which is what ultimately yields the original files encoded in the stream.
+        '''
+
+        if self.isAssembled == False: # If false, assembly will be attempted.  Otherwise, we skip to postprocessing.
+
+            if self.totalFrames == self.framesIngested:
+                logging.info(f'All frame(s) loaded for {self.streamSHA}, attempting assembly...')
+                dataLeft = self.sizeInBytes * 8
+                assembledPath = f'{self.saveFolder}\\assembled.bin'
+                interFrameBitBuffer = BitStream()
+
+                with open(assembledPath, 'ab') as assemblePackage:
+
+                    for frame in range(self.totalFrames - self.payloadBeginsThisFrame + 1):
+
+                        frameNumber = frame + self.payloadBeginsThisFrame
+                        logging.debug(f'Assembling {frameNumber}/{self.totalFrames}')
+                        activeFrame = self._readFile(f'frame{frameNumber}')
+
+                        if frameNumber != self.totalFrames: # All frames except the last one.
+                            bitMerge = BitStream(interFrameBitBuffer + activeFrame)
+                            dataHolder = bitMerge.read(f'bytes: {bitMerge.len // 8}')
+
+                            if bitMerge.len - bitMerge.pos > 0:
+                                interFrameBitBuffer = bitMerge.read(f'bits : {bitMerge.len - bitMerge.pos}')
+
+                            else:
+                                interFrameBitBuffer = BitStream()
+
+                            if isinstance(dataHolder, bytes):
+                                logging.debug('was bytes this frame!')
+                                assemblePackage.write(dataHolder)
+
+                            else:
+                                logging.debug('bits to bytes this frame')
+                                toByteType = dataHolder.tobytes()
+                                assemblePackage.write(toByteType)
+                            dataLeft -= activeFrame.len
+
+                        else: #This is the last frame
+                            bitMerge = interFrameBitBuffer + activeFrame.read(f'bits : {dataLeft}')
+                            toByteType = bitMerge.tobytes()
+                            assemblePackage.write(toByteType)
+
+                if returnHashFromFile(assembledPath) != self.assembledSHA:
+                    logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
+                    return False
+
+                logging.debug(f'Successfully assembled.')
+                self.isAssembled = True
+
+            else:
+                logging.info(f'{self.framesIngested} / {self.totalFrames}  frames have been loaded for '
+                             f'{self.streamSHA}\n so far, cannot assemble yet.')
+                return False
+
+        postProcessAttempt = PostProcessor(self.outputPath, self.streamSHA, self.saveFolder,
+                                           self.encryptionEnabled, self.encryptionKey, self.scryptN,
+                                           self.scryptR, self.scryptP, self.compressionEnabled)
+
+        # Did all three stages of PostProcess successfully run?
+        if postProcessAttempt.FullyAssembled != True:
             return False
-            #todo replace validatedpiecelist with binary file checking
 
-
-            # destroy palette if selfDestruct
+        return True
 
 
     def _createFrameReferenceTable(self):
         '''This creates a file inside of the object's folder to keep track of which frames have been ingested.  Bit
         positions correspond to frame number (-1 so position 0 is frame 1, etc).
         '''
-        referenceTable = BitStream(length=self.totalFrames)
-        self._writeFile(referenceTable, self.frameReferenceTableName) #todo
-        #todo make tobytes so save friendly
 
+        self.frameReferenceTable = BitStream(length=self.totalFrames)
+
+        for position in self.framesPriorToBinaryPreamble:
+            self.frameReferenceTable.set(True, position - 1)
+
+        self.framesPriorToBinaryPreamble = []
 
 
     def _streamHeaderAssembly(self, frameData, frameNumber):
-        '''returns data bits'''
+        '''Stream headers may span over numerous frames, and could be read non-sequentially.  This function manages this
+        aspect.  Both stream headers are stripped from the raw frame data, returning payload data (if applicable).
+        '''
+
         logging.debug('_streamHeaderAssembly running...')
-        if frameNumber == 1:
+        self.nextStreamHeaderSequentialFrame += 1
 
-            if frameData.len >= 422: # The entire binary preamble can be read first frame.
+        if self.streamHeaderPreambleComplete == False:
 
-                logging.debug('Able to extract streamHeader binary preamble from first frame.')
-                self.streamHeaderBuffer = frameData.read('bits:422')
+            # Preamble header uses all of this frame.
+            if 422 - self.streamHeaderPreambleBuffer.len >= frameData.len:
+
+                logging.debug('Preamble header uses all of this frame.')
+                readLength = frameData.len
+
+            # Preamble terminates on this frame.
+            else:
+
+                logging.debug('Preamble terminates on this frame.')
+                readLength = 422 - self.streamHeaderPreambleBuffer.len
+
+            self.streamHeaderPreambleBuffer.append(frameData.read(f'bits:{readLength}'))
+
+            if self.streamHeaderPreambleBuffer.len == 422:
                 self.readStreamHeaderBinaryPreamble()
 
-                if frameData.len - frameData.bitpos >= self.asciiHeaderByteSize * 8:
+        if self.streamHeaderASCIIComplete == False and frameData.len - frameData.bitpos > 0:
+            # ASCII header rolls over to the next frame.
+            if self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len >= frameData.len \
+                    - frameData.bitpos:
 
-                    # The entire ASCII stream header can be read on first frame.
-                    self.streamHeaderBuffer = frameData.read(f'bits:{self.asciiHeaderByteSize * 8}')
-                    self.readStreamHeaderASCIICompressed()
-                    payloadData = frameData.read(f'bits:{frameData.len - frameData.bitpos}')
-                    return payloadData
+                logging.debug('ASCII header rolls over to another frame.')
+                readLength = frameData.len - frameData.bitpos
 
-                else:
+            # ASCII header terminates on this frame.
+            else:
+                logging.debug('ASCII header terminates on this frame.')
+                readLength = self.asciiHeaderByteSize * 8 - self.streamHeaderASCIIBuffer.len
 
-                    # The ASCII stream header cannot be read on this first frame.
-                    self.streamHeaderBuffer = frameData.read(f'bits:{self.asciiHeaderByteSize * 8}')
+            self.streamHeaderASCIIBuffer.append(frameData.read(f'bits:{readLength}'))
 
-            else: # The binary preamble will continue on into subsequent frames.
+            if self.streamHeaderASCIIBuffer.len == self.asciiHeaderByteSize * 8:
+                self.payloadBeginsThisFrame = frameNumber
+                self.readStreamHeaderASCIICompressed()
 
-                self.streamHeaderBuffer = frameData.read(f'bits:{frameData.len}')
-                return BitStream()
+            if frameData.len - frameData.bitpos > 0:
+                return frameData.read(f'bits:{frameData.len - frameData.bitpos}')
+
+        return BitStream()
+
 
     def _writeFile(self, data, fileName, toCompress=False):
         '''This is an internal method used to write data to the object's folder.  Since we are dealing with bits and not
         bytes (which is the smallest size operating systems can work with), there is a special five-byte header that
-        decodes as an unsigned integer which is the amount of bits to read.'''
+        decodes as an unsigned integer which is the amount of bits to read.
+        '''
+
         bitsAppendage = BitStream(uint=data.len, length=40)
         bitsAppendageToBytes = bitsAppendage.tobytes()
         dataToBytes = data.tobytes()
 
-        with open(self.saveFolder + f'\\{fileName}.bin', 'wb') as saveFrameData:
-            saveFrameData.write(bitsAppendageToBytes)
-            saveFrameData.write(dataToBytes)
-
         if toCompress == True:
-            pass
+            tempName = self.saveFolder + '\\temp.bin'
+            with open(tempName, 'wb') as writeData:
+                writeData.write(bitsAppendageToBytes)
+                writeData.write(dataToBytes)
 
+            compressFile(tempName, self.saveFolder + f'\\{fileName}.bin')
+
+        else:
+            with open(self.saveFolder + f'\\{fileName}.bin', 'wb') as writeData:
+                writeData.write(bitsAppendageToBytes)
+                writeData.write(dataToBytes)
 
 
     def _readFile(self, fileName, toDecompress=False):
         '''This internal method reads the file with the fileName according to how many bits it is, deletes the file, and
-        then returns the BitStream object.'''
+        then returns the BitStream object.
+        '''
+
         filePath = self.saveFolder + f'\\{fileName}.bin'
-        with open(filePath, 'rb') as file:
-            fileToBits = BitStream(file)
-        bitsToRead = fileToBits.read('uint:40')
-        retrievedFile = fileToBits.read(f'bits:{bitsToRead}')
-        os.remove(filePath)
+
+        if toDecompress == False:
+            with open(filePath, 'rb') as readData:
+                fileToBits = BitStream(readData)
+                bitsToRead = fileToBits.read('uint:40')
+                retrievedFile = fileToBits.read(f'bits:{bitsToRead}')
+            os.remove(filePath)
+
+        else:
+            decompressFile(filePath, self.saveFolder + '\\temp.bin')
+            with open(self.saveFolder + '\\temp.bin', 'rb') as readData:
+                fileToBits = BitStream(readData)
+                bitsToRead = fileToBits.read('uint:40')
+                retrievedFile = fileToBits.read(f'bits:{bitsToRead}')
+            os.remove(self.saveFolder + '\\temp.bin')
+
         return retrievedFile
 
 
     def readStreamHeaderBinaryPreamble(self):
-        '''This is a method because it was taking up needless space in this module, and it's used multiple times.'''
+        '''This method converts the raw full binary preamble into the various PartialSave attributes.'''
+
         self.sizeInBytes, self.totalFrames, self.compressionEnabled, self.encryptionEnabled, self.maskingEnabled, \
         self.customPaletteUsed, self.dateCreated, self.streamPaletteID, self.asciiHeaderByteSize = \
-            readStreamHeaderBinaryPreamble(self.streamHeaderBuffer)
-        self.streamHeaderBuffer = BitStream()
+            decodeStreamHeaderBinaryPreamble(self.streamHeaderPreambleBuffer)
+        self.streamHeaderPreambleBuffer = None
         self.dateCreated = datetime.datetime.fromtimestamp(int(self.dateCreated)).strftime('%Y-%m-%d %H:%M:%S')
 
         logging.info(f'*** Part 1/2 of header decoded for {self.streamSHA}: ***\nPayload size: {self.sizeInBytes} B'
@@ -252,43 +325,133 @@ class PartialSave:
                      f'\nEncryption Enabled: {self.encryptionEnabled}\nFile masking enabled: {self.maskingEnabled}'
                      f'\nCustom Palette Used: {self.customPaletteUsed}\nDate created: {self.dateCreated}'
                      f'\nStream palette ID: {self.streamPaletteID}')
+        logging.debug(f'ASCII header byte size: {self.asciiHeaderByteSize} B')
+
+        self._createFrameReferenceTable()
+        self.streamHeaderPreambleComplete = True
 
 
     def readStreamHeaderASCIICompressed(self):
+        '''This method converts the raw full ASCII stream header into the various PartialSave attributes.'''
+
         self.bgVersion, self.streamName, self.streamDescription, self.fileList, self.customColorName, \
         self.customColorDescription, self.customColorDateCreated, self.customColorPalette, self.postCompressionSHA = \
-            readStreamHeaderASCIICompressed(self.streamHeaderBuffer, self.customPaletteUsed, self.encryptionEnabled)
-        self.streamHeaderBuffer = BitStream()
+         decodeStreamHeaderASCIICompressed(self.streamHeaderASCIIBuffer, self.customPaletteUsed, self.encryptionEnabled)
+        self.streamHeaderASCIIBuffer = None
 
         if self.maskingEnabled == True:
-            self.fileList = "Cannot display, masking enabled!"
+            self.fileList = "Cannot display, file masking enabled for this stream!"
+
         else:
             self.fileList = formatFileList(self.fileList)
-
-        if self.customColorDateCreated is not None:
-            self.customColorDateCreated = datetime.datetime.fromtimestamp(int(self.customColorDateCreated))\
-                .strftime('%Y-%m-%d %H:%M:%S')
 
         logging.info(f'*** Part 2/2 of header decoded for {self.streamSHA}: ***\nProgram version of sender: '
                      f'v{self.bgVersion}\nStream name: {self.streamName}\nStream description: {self.streamDescription}'
                      f'\nFile list: {self.fileList}')
+
         if self.customPaletteUsed == True:
-            logging.info(f'\n\nCustom color name: {self.customColorName}\nCustom color description: '
-                         f'{self.customColorDescription}\nCustom color date created: {self.customColorDateCreated}'
+            logging.info(f'\nCustom color name: {self.customColorName}\nCustom color description: '
+                         f'{self.customColorDescription}\nCustom color date created: '
+                    f'{datetime.datetime.fromtimestamp(int(self.customColorDateCreated)).strftime("%Y-%m-%d %H:%M:%S")}'
                          f'\nCustom color palette: {self.customColorPalette}')
 
         if self.encryptionEnabled == True:
-            logging.info(f'\n\nPost-compression hash: {self.postCompressionSHA}')
+            logging.info(f'Post-compression hash: {self.postCompressionSHA}')
             self.assembledSHA = self.postCompressionSHA
 
-    def isFrameNeeded(self, frameNumber):
-        if self.isAssembled == True:
-            return False #todo add binary table check stuff
+        self.streamHeaderASCIIComplete = True
 
-        return True
+
+    def isFrameNeeded(self, frameNumber):
+        '''This determines whether a given frame is needed for this stream or not.'''
+
+        # Is the stream already assembled?  If so, no more frames need to be accepted.
+        if self.isAssembled == True:
+            return False
+
+        # The stream is not assembled.
+        else:
+
+            # If the stream header binary preamble isn't loaded yet, then by default we accept the frame, unless that
+            # frame number is already in self.framesPriorToBinaryPreamble, which is a list of processed frames prior to
+            # the binary preamble being read.
+            if self.streamHeaderPreambleComplete == False:
+                if frameNumber not in self.framesPriorToBinaryPreamble:
+                    return True
+
+                else:
+                    return False
+
+            # The preamble has been loaded, checking the reference table.
+            else:
+
+                # Frame reference table is not in memory and must be loaded.
+                if self.frameReferenceTable == None:
+
+                    self.frameReferenceTable = BitStream(self._readFile('\\frameReferenceTable', toDecompress=True))
+
+                self.frameReferenceTable.bitpos = frameNumber - 1
+                isFrameLoaded = self.frameReferenceTable.read('bool')
+                return not isFrameLoaded
 
 
     def _closeSession(self):
         '''Called by the Assembler object, this will flush self.frameReferenceTable back to disk, as well as flag it as
-        an inactive session.'''
-        self.activeThisSession = False #todo still finish the other part
+        an inactive session.
+        '''
+
+        self.activeThisSession = False
+
+        if self.streamHeaderPreambleComplete == True:
+            self._writeFile(self.frameReferenceTable, '\\frameReferenceTable', toCompress=True)
+
+        self.frameReferenceTable = None
+        logging.debug(f'Closing session for {self.streamSHA}')
+
+
+    def returnStatus(self, debugData):
+        '''This is used in printFullSaveList in savedfunctions module; it returns the state of the object, as well as
+        various information read from the reader.  __str__ is not used, as debugData controls what level of data is
+        returned, whether for end users, or debugging purposes.
+        '''
+
+        tempHolder = f"{'*' * 8} {self.streamSHA} {'*' * 8}" \
+            f"\n\n{self.framesIngested} / {self.totalFrames} frames saved" \
+            f"\n\nStream header complete: {self.streamHeaderASCIIComplete}" \
+            f"\nIs assembled: {self.isAssembled}" \
+            f"\n\nStream name: {self.streamName}" \
+            f"\nStream Description: {self.streamDescription}" \
+            f"\nDate Created: {self.dateCreated}" \
+            f"\nSize in bytes: {self.sizeInBytes} B" \
+            f"\nCompression enabled: {self.compressionEnabled}" \
+            f"\nEncryption enabled: {self.encryptionEnabled}" \
+            f"\nFile masking enabled: {self.maskingEnabled}" \
+            f"\n\nEncryption key: {self.encryptionKey} " \
+            f"\nScrypt N: {self.scryptN}" \
+            f"\nScrypt R: {self.scryptR}" \
+            f"\nScrypt P: {self.scryptP}" \
+            f"\nOutput path upon assembly: {self.outputPath}" \
+            f"\n\nFile list: {self.fileList}"
+
+        if debugData == True:
+            tempHolder += f"\n\n{'*' * 3} {'DEBUG'} {'*' * 3}" \
+                f"\nBG version: {self.bgVersion}" \
+                f"\nASCII header byte size: {self.asciiHeaderByteSize}" \
+                f"\nPost compression SHA: {self.postCompressionSHA}" \
+                f"\nStream Palette ID: {self.streamPaletteID}" \
+                f"\n\nCustom color data (if applicable)" \
+                f"\nCustom color name: {self.customColorName}" \
+                f"\nCustom color description: {self.customColorDescription}" \
+                f"\nCustom color date created: {self.customColorDateCreated}" \
+                f"\nCustom color palette: {self.customColorPalette}"
+
+        return tempHolder
+
+
+    def returnStreamHeaderID(self):
+        '''This method releases the streamPalette ID (and custom color data if applicable) for the Decoder to use to
+        create the palette.
+        '''
+
+        return self.streamHeaderASCIIComplete, self.streamPaletteID, self.customColorName, self.customColorDescription,\
+               self.customColorDateCreated, self.customColorPalette

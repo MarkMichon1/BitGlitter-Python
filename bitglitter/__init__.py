@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2019 Mark Michon
+# Copyright (c) 2019 - ∞ Mark Michon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,31 +20,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# ===============================================================================
+#
 # Official project page:
 # https://github.com/MarkMichon1/BitGlitter
 #
-# Guides and roadmap:
+# Guides and roadmap (under construction!):
 # https://github.com/MarkMichon1/BitGlitter/wiki
 #
 # Discord channel:
-# TBA
+# https://discord.gg/t9uv2pZ
 #
 # Have fun! :)
+#
+#   - Mark
+# ===============================================================================
 
-
-# BASIC USES
-from bitglitter.read.read import read
+# CORE USES
 from bitglitter.write.write import write
-
-
-# CUSTOM PALETTE
-from bitglitter.palettes.palettefunctions import addCustomPalette, editNicknameToCustomPalette, clearAllCustomPalettes,\
-    clearCustomPaletteNicknames, printFullPaletteList, removeCustomPalette, removeCustomPaletteNickname
+from bitglitter.read.read import read
 
 
 # GENERAL CONFIGURATION
 from bitglitter.config.configfunctions import clearSession, clearStats, outputStats
 
 
-# MISCELLANEOUS UTILITIES
-from bitglitter.protocols.protocol_one.write.protocol_one_verifywriteparameters import paletteVerify
+# PARTIAL SAVE CONTROL
+from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList, removePartialSave, updatePartialSave, \
+    removeAllPartialSaves
+
+
+# CUSTOM PALETTE
+from bitglitter.palettes.palettefunctions import addCustomPalette, editNicknameToCustomPalette, clearAllCustomPalettes,\
+    clearCustomPaletteNicknames, printFullPaletteList, removeCustomPalette, removeCustomPaletteNickname

@@ -2,11 +2,11 @@ import logging
 import math
 import time
 
+from bitstring import BitStream, ConstBitStream
+from PIL import Image, ImageDraw
+
 from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import renderCalibrator, generateInitializer, \
     generateFrameHeader, generateStreamHeaderBinaryPreamble, loopGenerator
-
-from bitstring import BitArray, BitStream, ConstBitStream
-from PIL import Image, ImageDraw
 
 
 def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializerPalette, headerPalette, streamPalette,
@@ -14,7 +14,8 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                encryptionEnabled, fileMaskEnabled, dateCreated, asciiCompressed, streamSHA, initializerPaletteDict,
                headerPaletteDict, streamPaletteDict):
     '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
-    # comments in this function that describe what each part is doing, to follow along.'''
+    # comments in this function that describe what each part is doing, to follow along.
+    '''
 
     logging.debug('Entering renderLoop...')
 
@@ -22,8 +23,10 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
     if outputMode == 'image':
         if streamOutputPath:
             imageOutputPath = streamOutputPath + '\\'
+
         else:
             imageOutputPath = ""
+
     if outputMode == 'video':
         imageOutputPath = activePath + '\\'
 
@@ -50,6 +53,7 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
     # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
     while activePayload.bitpos != activePayload.length:
+
         logging.info(f'Rendering frame {frameNumber} of {totalFrames} ...')
 
         # Setting up frame to draw on.
@@ -76,9 +80,8 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
         # Adding an initializer header if necessity.  initializerEnabled is a boolean that signals whether the
         # initializer is on or not.
-        initializerHolder = BitArray()
+        initializerHolder = BitStream()
         if frameNumber == 1 or outputMode == 'image':
-
             image = renderCalibrator(image, blockHeight, blockWidth, pixelWidth)
             initializerHolder = generateInitializer(blockHeight, blockWidth, protocolVersion, activePalette)
             initializerPaletteBlocksUsed += INITIALIZER_DATA_BITS
@@ -107,7 +110,6 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
             # This frame has more bits left for the streamHeader than capacity.
             if len(streamHeaderCombined) - streamHeaderCombined.bitpos > bitsLeftThisFrame:
-
                 streamHeaderChunk = streamHeaderCombined.read(bitsLeftThisFrame)
                 streamHeaderBlocksUsed = math.ceil(len(streamHeaderChunk + FRAME_HEADER_OVERHEAD)
                                                    / activePalette.bitLength)
@@ -151,11 +153,6 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                         lastFrame = True
 
         frameHashableBits = streamHeaderChunk + attachmentBitsAppend + remainderBlocksIntoBits + payloadHolder
-        # logging.debug(f'frameHashableBits.len {frameHashableBits.len}')
-        # logging.debug(f'streamHeaderChunk.len {streamHeaderChunk.len}')
-        # logging.debug(f'attachmentBitsAppend.len {attachmentBitsAppend.len}') #todo
-        # logging.debug(f'remainderBlocksIntoBits.len {remainderBlocksIntoBits.len}')
-        # logging.debug(f'payloadHolder.len {payloadHolder.len}')
         combinedFrameLength = frameHashableBits.len + FRAME_HEADER_OVERHEAD
         blocksUsed = (int(initializerEnabled) * INITIALIZER_DATA_BITS) + math.ceil(combinedFrameLength
                                                                                    / activePalette.bitLength)
@@ -163,10 +160,12 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
         #On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
         #cleanly fits into the block.
         if lastFrame == True:
+
             remainderBits = activePalette.bitLength - (combinedFrameLength % activePalette.bitLength)
-            # logging.debug(f'remainderBits: {remainderBits}')
-            # logging.debug(f'combinedFrameLength: {combinedFrameLength}')
-            bitsToPad = BitArray(bin=f"{'0' * remainderBits}")
+            if remainderBits == activePalette.bitLength:
+                remainderBits = 0
+
+            bitsToPad = BitStream(bin=f"{'0' * remainderBits}")
             frameHashableBits.append(bitsToPad)
 
         frameHeaderHolder = generateFrameHeader(streamSHA, frameHashableBits, frameNumber, blocksUsed)
@@ -174,15 +173,13 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                         + remainderBlocksIntoBits + payloadHolder + bitsToPad
 
         allBitsToWrite = ConstBitStream(combiningBits)
-        # logging.debug(f'allBitsToWrite.len {allBitsToWrite.len}')
         nextCoordinates = loopGenerator(blockHeight, blockWidth, pixelWidth, initializerEnabled)
         blockPosition = 0
 
         # Drawing blocks to screen.
         while len(allBitsToWrite) != allBitsToWrite.bitpos:
 
-            #logging.debug(blockPosition)
-            # Primary palette selection (ie, headerPalette or streamPalette)
+            # Primary palette selection (ie, headerPalette or streamPalette depending on where we are in the stream)
             if blockPosition >= initializerPaletteBlocksUsed:
                 activePaletteDict, readLength = primaryFramePaletteDict, primaryReadLength
 
@@ -195,9 +192,11 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                 raise Exception('Something has gone wrong in matching block position to palette.  This state'
                                 '\nis reached only if something is broken.')
 
-            nextBit = allBitsToWrite.read(f'bits : {readLength}')
-            colorValue = activePaletteDict.getColor(ConstBitStream(nextBit))
+            # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
+            nextBits = allBitsToWrite.read(f'bits : {readLength}')
+            colorValue = activePaletteDict.getColor(ConstBitStream(nextBits))
 
+            # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
             activeCoordinates = next(nextCoordinates)
             draw.rectangle((activeCoordinates[0], activeCoordinates[1], activeCoordinates[2], activeCoordinates[3]),
                            fill=f'rgb{str(colorValue)}')
@@ -209,6 +208,7 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
 
         if outputMode == 'video':
             fileName = frameNumberToString.zfill(math.ceil(math.log(totalFrames + 1, 10)))
+
         else:
             fileName = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(dateCreated)) + ' - ' + str(frameNumber)
 

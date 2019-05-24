@@ -10,13 +10,15 @@ class PostProcessor:
         files- decrypting and decompressing the stream if they were enabled, and then finally unpackaging the files.
         '''
 
-        # The first thing we need to do is check to ensure this is the right file.
-        #setup output folder
+        self.FullyAssembled = False
 
         decryptor = Decryptor(workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR,
                  scryptP, streamSHA)
+        self.isDecrypted = decryptor
 
         if decryptor.isSatisfied == True:
+
             decompressor = Decompressor(workingFolder, decryptor.passThrough, compressionEnabled)
             unpackager = Unpackager(decompressor.passThrough, outputPath, streamSHA)
+            self.FullyAssembled = True
             logging.info('Postprocess complete.')

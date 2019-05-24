@@ -7,17 +7,20 @@ import zlib
 from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
-from bitglitter.palettes.paletteutilities import _paletteGrabber, ValuesToColor
+from bitglitter.palettes.paletteutilities import paletteGrabber, ValuesToColor
 
 
 def asciiHeaderProcess(fileMaskEnabled, activePath, streamPalette, bgVersion, streamName, streamDescription,
                        postEncryptionHash, encryptionEnabled):
     '''This takes all ASCII elements of the stream header, and returns a formatted merged string.'''
+
     if fileMaskEnabled:
         fileListString = ""
+
     else:
         with open(activePath + "\\fileList.txt", 'r') as textFile:
             fileListString = textFile.read()
+
         os.remove(activePath + '\\fileList.txt')
 
     customPaletteString = ""
@@ -48,6 +51,7 @@ def generateStreamHeaderBinaryPreamble(sizeInBytes, totalFrames, compressionEnab
     '''The binary preamble for the Stream Header is created here.  For videos and images, this is only needed for the
     first frame.
     '''
+
     addingBits = BitStream()
 
     addingBits.append(BitArray(uint=sizeInBytes, length=64))
@@ -58,6 +62,7 @@ def generateStreamHeaderBinaryPreamble(sizeInBytes, totalFrames, compressionEnab
 
     if isStreamPaletteCustom:
         addingBits.append(BitArray(hex=streamPaletteID))
+
     else:
         addingBits.append(BitArray(uint=int(streamPaletteID), length=256))
 
@@ -79,13 +84,10 @@ def generateFrameHeader(streamSHA, frameHashableBits, frameNumber, blocksUsed):
     shaHasher = hashlib.sha256()
     shaHasher.update(tempPayloadHolding.tobytes())
     frameSHA = shaHasher.digest()
-    #logging.debug(f'This frame SHA: {shaHasher.hexdigest()}')
+
     fullBitString.append(BitArray(bytes=frameSHA))
-
     fullBitString.append(BitArray(uint=frameNumber, length=32))
-
     fullBitString.append(BitArray(uint=blocksUsed, length=32))
-
     fullBitStringToHash = fullBitString.bytes
 
     crcOutput = zlib.crc32(fullBitStringToHash)
@@ -96,6 +98,7 @@ def generateFrameHeader(streamSHA, frameHashableBits, frameNumber, blocksUsed):
 
 def howManyFrames(blockHeight, blockWidth, asciiCompressedSize, sizeInBytes, streamPalette, headerPalette, outputMode):
     '''This method returns how many frames will be required to complete the rendering process.'''
+
     logging.debug("Calculating how many frames to render...")
 
     totalBlocks = blockHeight * blockWidth
@@ -139,12 +142,14 @@ def howManyFrames(blockHeight, blockWidth, asciiCompressedSize, sizeInBytes, str
 
             if leftoverFrameBits > dataLeft:
                 dataLeft = 0
+
             else:
                 dataLeft -= leftoverFrameBits
 
         frameNumber += 1
 
-    # Calculating how much data can be embedded in a regular framePayload frame, and returning the total frame count needed.
+    # Calculating how much data can be embedded in a regular framePayload frame, and returning the total frame count
+    # needed.
     blocksLeft = totalBlocks - (initializerOverhead * int(outputMode == 'image'))
     payloadBitsPerFrame = (blocksLeft * streamBitLength) - frameHeaderOverhead
 
@@ -158,6 +163,7 @@ def generateInitializer(blockHeight, blockWidth, protocolVersion, headerPalette)
     of video streams, and every frame of image streams.  It provides import information on stream geometry as well as
     protocol version.
     '''
+
     fullBitString = BitArray()
     fullBitString.append(BitArray(uint=protocolVersion, length=4))
     fullBitString.append(BitArray(uint=blockHeight, length=16))
@@ -165,6 +171,7 @@ def generateInitializer(blockHeight, blockWidth, protocolVersion, headerPalette)
 
     if headerPalette.paletteType == 'default':
         fullBitString.append(BitArray(uint=int(headerPalette.id), length=256))
+
     else:
         fullBitString.append(BitArray(hex=headerPalette.id))
 
@@ -181,8 +188,8 @@ def renderCalibrator(image, blockHeight, blockWidth, pixelWidth):
     blockHeight are encoded into this pattern, using alternating color palettes so no two repeating values produce a
     continuous block of color, interfering with the frame lock process.'''
 
-    initializerPaletteDictA = ValuesToColor(_paletteGrabber('1'), 'initializerPalette A')
-    initializerPaletteDictB = ValuesToColor(_paletteGrabber('11'), 'initializerPalette B')
+    initializerPaletteDictA = ValuesToColor(paletteGrabber('1'), 'initializerPalette A')
+    initializerPaletteDictB = ValuesToColor(paletteGrabber('11'), 'initializerPalette B')
 
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, pixelWidth - 1, pixelWidth - 1),
@@ -191,12 +198,16 @@ def renderCalibrator(image, blockHeight, blockWidth, pixelWidth):
     blockWidthEncoded = BitArray(uint=blockWidth, length=blockWidth - 1)
     blockWidthEncoded.reverse()
     readableBlockWidth = ConstBitStream(blockWidthEncoded)
+
     for i in range(blockWidth - 1):
         nextBit = readableBlockWidth.read('bits : 1')
+
         if i % 2 == 0:
             colorValue = initializerPaletteDictB.getColor(ConstBitStream(nextBit))
+
         else:
             colorValue = initializerPaletteDictA.getColor(ConstBitStream(nextBit))
+
         draw.rectangle((pixelWidth * i + pixelWidth,
                         0,
                         pixelWidth * (i + 1) - 1 + pixelWidth,
@@ -206,12 +217,16 @@ def renderCalibrator(image, blockHeight, blockWidth, pixelWidth):
     blockHeightEncoded = BitArray(uint=blockHeight, length=blockHeight-1)
     blockHeightEncoded.reverse()
     readableBlockHeight = ConstBitStream(blockHeightEncoded)
+
     for i in range(blockHeight - 1):
         nextBit = readableBlockHeight.read('bits : 1')
+
         if i % 2 == 0:
             colorValue = initializerPaletteDictB.getColor(ConstBitStream(nextBit))
+
         else:
             colorValue = initializerPaletteDictA.getColor(ConstBitStream(nextBit))
+
         draw.rectangle((0,
                         pixelWidth * i + pixelWidth,
                         pixelWidth - 1,
@@ -222,6 +237,8 @@ def renderCalibrator(image, blockHeight, blockWidth, pixelWidth):
 
 
 def loopGenerator(blockHeight, blockWidth, pixelWidth, initializerEnabled):
+    '''This generator yields the coordinates for each of the blocks used, depending on the geometry of the frame.'''
+
     for yRange in range(blockHeight - int(initializerEnabled)):
         for xRange in range(blockWidth - int(initializerEnabled)):
             yield ((pixelWidth * int(initializerEnabled)) + (pixelWidth * xRange),

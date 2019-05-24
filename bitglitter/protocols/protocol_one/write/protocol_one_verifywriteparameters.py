@@ -9,6 +9,7 @@ def paletteVerify(headerType, bitLength, blockWidth, blockHeight, outputType, fp
     returns a number between 0-100%, for what percentage the overhead occupies.  The lower the value, the higher the
     frame efficiency.
     '''
+
     totalBlocks = blockWidth * blockHeight
 
     blockOverhead = blockHeight + blockWidth + 323
@@ -18,6 +19,7 @@ def paletteVerify(headerType, bitLength, blockWidth, blockHeight, outputType, fp
 
     if headerType == 'headerPalette' or outputType == 'image':
         blocksNeeded += blockOverhead
+
     bitsAvailable = (totalBlocks - blocksNeeded) * bitLength
     bitsAvailable -= frameHeaderInBits
     occupiedBlocks = blocksNeeded + ceil(frameHeaderInBits / bitLength)
@@ -40,11 +42,19 @@ def verifyWriteParameters(fileList, streamName, streamDescription, streamOutputP
     invalid arguments from proceeding through the process, potentially breaking the stream (or causing BitGlitter to
     crash).
     '''
+
     logging.info("Verifying write parameters...")
 
     if not fileList:
         raise FileNotFoundError("A minimum of one file or folder is required for stream creation for argument fileList"
                                 " in write().")
+
+    # TEMPORARY until issue is fixed
+    if outputMode == 'video':
+        if headerPalette == '24' or streamPalette == '24':
+            raise ValueError("24 bit palettes can not be used with videos at this time due to codec issues.  This is"
+                             "\nbeing worked on and will be restored soon!  This palette will still work on images.")
+
 
     properStringSyntax(streamName, 'streamName')
     properStringSyntax(streamDescription, 'streamDescription')

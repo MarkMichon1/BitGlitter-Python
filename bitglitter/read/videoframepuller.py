@@ -1,10 +1,11 @@
 import logging
 import os
-import time
+
 import cv2
 
 
 class VideoFramePuller:
+    '''This object is loads the BitGlitter-encoded video, and returns one frame at a time to be decoded.'''
 
     def __init__(self, fileToInput, activePath):
 
@@ -19,6 +20,7 @@ class VideoFramePuller:
 
     def nextFrame(self):
         '''This method will automatically read the next frame from the video, and return the file path to that image.'''
+
         self.image = self.activeVideo.read()
         self.activeImagePath = f"{self.activePath}\\frame{self.currentFrame}.png"
         cv2.imwrite(self.activeImagePath, self.image[1])
@@ -27,5 +29,6 @@ class VideoFramePuller:
 
     def removePreviousFrame(self):
         '''After the frame is ran through the decoder, fileslicer will run this method to delete the frame.'''
+
         os.remove(self.activeImagePath)
         self.currentFrame += 1

@@ -14,9 +14,8 @@ class ProtocolHandler:
         self.availableReadProtocols = {}
 
 
-    '''Internal method that takes protocols and loads them into the above dictionaries.
-    '''
     def _acceptNewProtocol(self, protocol):
+        '''Internal method that takes protocols and loads them into the above dictionaries.'''
 
         self.availableProtocols[protocol.versionNumber] = protocol
         self.availableWriteProtocols[protocol.versionNumber] = protocol.write
@@ -24,11 +23,13 @@ class ProtocolHandler:
 
 
     def returnReadProtocol(self, versionKey):
+        '''This returns the read protocol object.'''
 
         return self.availableReadProtocols[versionKey]
 
 
     def returnWriteProtocol(self, versionKey):
+        '''This returns the collection of write protocol objects to render a stream.'''
 
         return self.availableWriteProtocols[versionKey]
 
