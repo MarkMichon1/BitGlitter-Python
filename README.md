@@ -360,6 +360,7 @@ Join our discord server, and check out all of the information I posted in the "I
 your interest!
 
 **Discord Link**
+
 **https://discord.gg/t9uv2pZ**
 
 Also, be sure to check out the 
