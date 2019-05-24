@@ -35,7 +35,6 @@ as well as the stream itself so the reader can intelligently decide how to handl
 You're only limited by your hard drive.
 + **Variable block size:** Each of the blocks in the frame can be set to any size, including one pixel.  Larger block 
 sizes give your stream protection in lossy environments, while smaller blocks allow for greater densities.
-+ ****
 
 Currently, BitGlitter is configured to transport files and folders on a computer.  But with minimal modification you can
 use videos or images as a carrier for virtually any kind of binary data.
