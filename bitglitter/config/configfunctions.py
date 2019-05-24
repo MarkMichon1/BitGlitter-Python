@@ -8,7 +8,7 @@ def outputStats(path):
     '''Writes a text file to a file path outlining usage statistics.'''
 
     activePath = os.path.join(os.getcwd(), path)
-    with open(activePath + '\\Statistics.txt', 'w') as writer:
+    with open(activePath + '\\BitGlitter Statistics.txt', 'w') as writer:
         writer.write(str(config.statsHandler))
 
 

@@ -74,3 +74,4 @@ def removeAllPartialSaves():
     '''This removes all partial save objects saved, as well as any temporary data.'''
 
     config.assembler.clearPartialSaves()
+    config.saveSession()

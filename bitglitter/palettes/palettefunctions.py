@@ -22,7 +22,7 @@ def _dictPopper(idOrNick):
 
     elif idOrNick in config.colorHandler.customPaletteList:
         tempHolder = config.colorHandler.customPaletteList[idOrNick]
-        if config.colorHandler.customPaletteNicknameList[tempHolder.nickname]:
+        if tempHolder.nickname in config.colorHandler.customPaletteNicknameList:
             del config.colorHandler.customPaletteNicknameList[tempHolder.nickname]
         return config.colorHandler.customPaletteList.pop(idOrNick)
 

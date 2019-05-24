@@ -46,7 +46,8 @@ class Statistics:
                                                                 f'\nTotal Frames Wrote: {self.framesWrote}'
                                                                 f'\nTotal Data Wrote: {int(self.dataWrote / 8)} B'
                                                                 f'\n\nTotal Blocks Read: {self.blocksRead}'
-                                                                f'\nTotal Frames Read: {self.framesRead}')
+                                                                f'\nTotal Frames Read: {self.framesRead}'
+                                                                f'\nTotal Data Read: {int(self.dataRead / 8)} B')
 
     def writeUpdate(self, blocks, frames, data):
         self.blocksWrote += blocks
