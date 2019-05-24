@@ -4,7 +4,7 @@
 
 ![BitGlitter Sample GIF](https://i.imgur.com/n7E7lnd.gif)
 
-[Click here](https://www.youtube.com/watch?v=HrY4deFrOoA) for a demo vid of a real stream.
+[Click here](https://www.youtube.com/watch?v=HrY4deFrOoA) for a demo video of a real stream.
 
 BitGlitter is an easy to use library that allows you to embed data inside of ordinary pictures or video.  Store and host
 files wherever images or videos can be hosted.
