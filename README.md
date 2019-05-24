@@ -359,7 +359,8 @@ Whether you're a seasoned programmer or brand new, there's plenty of things you 
 Join our discord server, and check out all of the information I posted in the "Information" category.  Thank you for
 your interest!
 
-https://discord.gg/t9uv2pZ
+**Discord Link**
+**https://discord.gg/t9uv2pZ**
 
 Also, be sure to check out the 
 [contributing master page](https://github.com/MarkMichon1/BitGlitter/wiki/Contributing-Master-Page).  It contains a lot
