@@ -23,20 +23,7 @@ def clearSession():
     '''Tries to remove the session pickle if it exists, clearing all statistics and custom colors.'''
 
     try:
+        config.assembler.clearPartialSaves()
         os.remove('config.pickle')
     except:
         pass
-
-
-def removePartialSave(hash):
-    '''Removes the PartialSave object from partialReadHolder in config as well as removes the folder containing any
-    fragments.
-    '''
-
-    config.saveSession()
-
-
-def clearPartialSaves():
-    '''Removes all PartialSave objects and removes all data saved.'''
-
-    config.saveSession()

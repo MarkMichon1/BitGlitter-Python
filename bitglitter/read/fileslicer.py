@@ -8,7 +8,7 @@ from bitglitter.read.videoframepuller import VideoFramePuller
 
 
 def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWidthOverride,
-               encryptionKey, scryptN, scryptR, scryptP, configObject, badFrameStrikes):
+               encryptionKey, scryptN, scryptR, scryptP, configObject, badFrameStrikes, assembleHold):
     '''This function is responsible for handling the 'physical' frames of the stream, and feeding them into the Decoder
     object.  It also checks to see if various checkpoints are passed, and will abort out of read if critical errors in
     the stream are found.
@@ -28,7 +28,7 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
         isVideo = True
 
     decoder = Decoder(isVideo, configObject, scryptN, scryptR, scryptP, blockHeightOverride, blockWidthOverride,
-                      outputPath, encryptionKey)
+                      outputPath, encryptionKey, assembleHold)
 
     if isVideo:
 

@@ -25,7 +25,7 @@
 # Official project page:
 # https://github.com/MarkMichon1/BitGlitter
 #
-# Guides and roadmap:
+# Guides and roadmap (under construction!):
 # https://github.com/MarkMichon1/BitGlitter/wiki
 #
 # Discord channel:
@@ -33,6 +33,7 @@
 #
 # Have fun! :)
 #
+#   - Mark
 # ===============================================================================
 
 # CORE USES

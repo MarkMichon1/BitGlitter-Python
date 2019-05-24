@@ -6,6 +6,7 @@ from bitglitter.read.verifyreadparameters import verifyReadParameters
 def read(fileToInput,
          outputPath = None,
          badFrameStrikes = BAD_FRAME_STRIKES,
+         assembleHold = False,
 
          # Geometry Overrides
          blockHeightOverride = False,
@@ -33,14 +34,14 @@ def read(fileToInput,
 
     # Are all parameters acceptable?
     verifyReadParameters(fileToInput, outputPath, encryptionKey, scryptN, scryptR, scryptP, blockWidthOverride,
-                         blockWidthOverride)
+                         blockWidthOverride, assembleHold)
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
     activePath = READ_PATH
 
     # Pull valid frame data from the inputted file.
     checkpointPassed = fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWidthOverride,
-                                  encryptionKey, scryptN, scryptR, scryptP, config, badFrameStrikes)
+                                  encryptionKey, scryptN, scryptR, scryptP, config, badFrameStrikes, assembleHold)
     if checkpointPassed == False:
         return False
 

@@ -15,7 +15,7 @@ class Decoder:
     '''
 
     def __init__(self, isVideo, configObject, scryptN, scryptR, scryptP, blockHeightOverride, blockWidthOverride,
-                 outputPath, encryptionKey):
+                 outputPath, encryptionKey, assembleHold):
 
         # Misc Setup
         self.isVideo = isVideo
@@ -34,6 +34,7 @@ class Decoder:
         self.scryptP = scryptP
         self.encryptionKey = encryptionKey
         self.outputPath = outputPath
+        self.assembleHold = assembleHold
 
         # Lock on Characteristics
         self.pixelWidth = None
@@ -199,7 +200,7 @@ class Decoder:
 
         self.configObject.assembler.acceptFrame(self.streamSHA, self.framePayload, self.frameNumberofStream,
                                                 self.scryptN, self.scryptR, self.scryptP, self.outputPath,
-                                                self.encryptionKey)
+                                                self.encryptionKey, self.assembleHold)
 
 
     def _attemptStreamPaletteLoad(self):

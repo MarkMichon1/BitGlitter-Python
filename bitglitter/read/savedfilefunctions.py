@@ -24,7 +24,7 @@ def printFullSaveList(path, debugData = False):
             writer.write(tempHolder)
 
         else:
-            writer.write('\nNo partial saves (yet)')
+            writer.write('\nNo partial saves (yet!)')
 
 
 def updatePartialSave(streamSHA, reattemptAssembly = True, passwordUpdate = None, scryptN =  None,

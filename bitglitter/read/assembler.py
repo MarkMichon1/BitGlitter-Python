@@ -29,9 +29,9 @@ class Assembler:
         return False
 
 
-    def createPartialSave(self, streamSHA, scryptN, scryptR, scryptP, outputPath, encryptionKey):
+    def createPartialSave(self, streamSHA, scryptN, scryptR, scryptP, outputPath, encryptionKey, assembleHold):
         self.saveDict[streamSHA] = PartialSave(streamSHA, self.workingFolder, scryptN, scryptR, scryptP, outputPath,
-                                               encryptionKey)
+                                               encryptionKey, assembleHold)
 
 
     def saveFrameIntoPartialSave(self, streamSHA, payload, frameNumber):
@@ -40,11 +40,12 @@ class Assembler:
         self.saveDict[streamSHA].loadFrameData(payload, frameNumber)
 
 
-    def acceptFrame(self, streamSHA, payload, frameNumber, scryptN, scryptR, scryptP, outputPath, encryptionKey):
+    def acceptFrame(self, streamSHA, payload, frameNumber, scryptN, scryptR, scryptP, outputPath, encryptionKey,
+                    assembleHold):
         '''This method accepts a validated frame.'''
 
         if streamSHA not in self.saveDict:
-            self.createPartialSave(streamSHA, scryptN, scryptR, scryptP, outputPath, encryptionKey)
+            self.createPartialSave(streamSHA, scryptN, scryptR, scryptP, outputPath, encryptionKey, assembleHold)
 
         if streamSHA not in self.activeSessionHashes:
             self.activeSessionHashes.append(streamSHA)
@@ -63,7 +64,8 @@ class Assembler:
             for partialSave in self.activeSessionHashes:
 
                 # Not ready to be assembled this session.
-                if self.saveDict[partialSave]._attemptAssembly() == False:
+                if self.saveDict[partialSave]._attemptAssembly() == False \
+                        and self.saveDict[partialSave].assembleHold == False:
                     self.saveDict[partialSave]._closeSession()
 
                 # Assembled, temporary files pending deletion.

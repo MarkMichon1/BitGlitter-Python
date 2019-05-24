@@ -2,11 +2,11 @@ import logging
 import os
 
 from bitglitter.config.constants import VALID_IMAGE_FORMATS, VALID_VIDEO_FORMATS
-from bitglitter.utilities.generalverifyfunctions import isValidDirectory, isIntOverZero, properStringSyntax
+from bitglitter.utilities.generalverifyfunctions import isValidDirectory, isIntOverZero, properStringSyntax, isBool
 
 
 def verifyReadParameters(fileToInput, outputPath, encryptionKey, scryptN, scryptR, scryptP, blockHeightOverride,
-                         blockWidthOverride):
+                         blockWidthOverride, assembleHold):
     '''This function verifies the arguments going into read() to ensure they comform with the required format for
     processing.
     '''
@@ -32,5 +32,7 @@ def verifyReadParameters(fileToInput, outputPath, encryptionKey, scryptN, scrypt
 
     isIntOverZero('blockHeightOverride', blockHeightOverride)
     isIntOverZero('blockWidthOverride', blockWidthOverride)
+
+    isBool('assembleHold', assembleHold)
 
     logging.info("All read parameters within acceptable range.")

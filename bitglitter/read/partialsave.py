@@ -16,17 +16,19 @@ class PartialSave:
     into the original package is done through it's contained methods.
     '''
 
-    def __init__(self, streamSHA, workingFolder, scryptN, scryptR, scryptP, outputPath, encryptionKey):
+    def __init__(self, streamSHA, workingFolder, scryptN, scryptR, scryptP, outputPath, encryptionKey, assembleHold):
 
         # Core object state data
         self.saveFolder = workingFolder + f'\\{streamSHA}'
         self.streamSHA = streamSHA
         self.assembledSHA = streamSHA
         self.framesIngested = 0
+
         self.streamHeaderPreambleComplete = False
         self.streamHeaderASCIIComplete = False
         self.streamHeaderPreambleBuffer = BitStream()
         self.streamHeaderASCIIBuffer = BitStream()
+
         self.nextStreamHeaderSequentialFrame = 1
         self.payloadBeginsThisFrame = None
         self.activeThisSession = True
@@ -35,6 +37,7 @@ class PartialSave:
         self.frameReferenceTable = None
         self.framesPriorToBinaryPreamble = []
         self.streamPaletteRead = False
+        self.assembleHold = assembleHold
 
 
         # Stream Header - Binary Preamble
