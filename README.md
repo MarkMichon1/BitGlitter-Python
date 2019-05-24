@@ -4,7 +4,7 @@
 
 ![BitGlitter Sample GIF](https://i.imgur.com/n7E7lnd.gif)
 
-[Click here](https://www.youtube.com/watch?v=HrY4deFrOoA) for a demo video of a real stream.
+**[Click here](https://www.youtube.com/watch?v=HrY4deFrOoA) for a demo video of a real stream.**
 
 BitGlitter is an easy to use library that allows you to embed data inside of ordinary pictures or video.  Store and host
 files wherever images or videos can be hosted.
@@ -12,7 +12,7 @@ files wherever images or videos can be hosted.
 ### From physical barcodes to digital data transfer
 
 Whether it's barcodes at the store or QR codes you can scan with your phone- they both work on the same principle.  Data
-is encoded into the black and white.  You each think of each color as an abstraction for a binary value, so then when
+is encoded into the black and white.  You can think of each color as an abstraction for a binary value, so then when
 those colors are read in sequence, you can pull meaningful data from the image.  I wondered how this concept could be
 improved upon, and I wanted a cool first project as an introduction to programming.  BitGlitter was born.
 
@@ -87,7 +87,7 @@ color palettes you have available to use, both default and custom.
 
 ### Reading
 
-+ **Error correction against compression or corruption:** BitGlitter protect your file against corruption and artifacts 
++ **Error correction against compression or corruption:** BitGlitter protects your file against corruption and artifacts 
 on the image or video. After loading the correct palette, whenever it detects an incorrect color, it will "snap" it to 
 the nearest color in the palette.  This gives your file resistance against format changes, codecs, or file size 
 reduction.  This allows BitGlitter streams to still be read in environments that would otherwise render all existing 
@@ -111,7 +111,7 @@ contribute, docstrings and notes are throughout the library.
 + **Built in future-proofing:** As of now, BitGlitter has a single protocol (Protocol 1), which is a specific set of
   procedures around how data is handled, and the components of a frame, as well as their layout.  Each protocol has its
   own unique ID to identify it with.  This ID is added in the  header during the write process, and is picked up at 
-  read.  As new protocols get created, older versions of BitGlitter that don't have these included will notify the user
+  `read()`.  As new protocols get created, older versions of BitGlitter that don't have these included will notify the user
   to update their version in order for it to be read.  All older protocol versions are saved in future library
   iterations, so no matter how old the protocol version is used on the stream, it will always be able to be read.
 
@@ -128,7 +128,33 @@ All of the functions to run this library are explained below.  I'm also working 
 BitGlitter in greater detail (how it works, etc) with some included illustrations.  These are not yet complete, 
 [but here is the link to the project's Wiki if you'd like to see it!](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
 
+### Installation
+
+In addition to downloading the code from Github, you can also grab it directly from PyPI:
+
+`pip install bitglitter`
+
+**IMPORTANT:** The only part you will need to grab manually is a copy of ffmpeg.exe .  Place it in the same folder the 
+code will be running, and you'll be set.  This will be done automatically in the near future.  Get the package here on
+the left side of the screen:
+
+[https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+
+ffmpeg.exe is all that is needed.
+
+**Required Third Party Libraries**
+
++ `bitstring` - Bit manipulation.
++ `cryptography` - Cryptographic functions.
++ `ffmpeg-python` - Video rendering and output.
++ `opencv-python` - Video loading and frame manipulation.
++ `Pillow` - Frame creation and output, as well as loading images and reading pixel values.
+
+Thanks to Tanmay Mishra for giving me a pre-release version of his upcoming library `filepackager`.  It has been heavily
+modified and stripped down to suit this library.  The code is included with BitGlitter; there is no need to download it.
+
 **BitGlitter in 60 seconds**
+
 Even though it comes shipped with a lot of functionality, all you need to use it is `write()` (creates the streams) and 
 `read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
 wish to input in string format.
@@ -188,10 +214,10 @@ efficient frames and require substantially longer streams.  Making them very sma
 efficiency, but at the same time a lot more susceptible to read failures if the files are shrunk, or otherwise
 distorted.
 
-`blockHeight=45` sets how many blocks tall the frame will be, by default this is set to 54 (which along with 
+`blockHeight=45` sets how many blocks tall the frame will be, by default this is set to 45 (which along with 
 `blockWidth`, creates a perfect 1080p sized frame).
 
-`blockWidth=80` sets how many blocks wide the frame will be, by default this is set to 96.
+`blockWidth=80` sets how many blocks wide the frame will be.  By default this is set to 96.
 
 `framesPerSecond=30` sets how many frames per second the video will play at, assuming argument `outputMode = "video"`.
 Currently, 30fps and 60fps are accepted.
@@ -224,7 +250,7 @@ Like with `write()`, the only argument required is the BitGlitter-encoded file, 
 
 `badFrameStrikes=10` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
 allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
- iterative over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
+ iterate over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
  regardless of the level of corruption.
 
 `blockHeightOverride=False` and `blockWidthOverride=False` allow you to manually input the stream's block height and 
@@ -327,32 +353,8 @@ A small text file will be written to this location.
 `clearSession()` This wipes all inputted data.  Custom colors, statistics, and partial save objects will all be erased,
 as well as any temporary data for the partially read streams.  This is in essence a hard reset.
 
-# Installation
-
-In addition to downloading the code from Github, you can also grab it directly from PyPI:
-
-`pip install bitglitter`
-**IMPORTANT:** The only part you will need to grab manually is a copy of ffmpeg.exe .  Place it in the same folder the 
-code will be running, and you'll be set.  This will be done automatically in the near future.  Get the package here on
-the left side of the screen:
-
-[https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
-
-ffmpeg.exe is all that is needed.
-
-## Required Third Party Libraries
-
-+ `bitstring` - Bit manipulation.
-+ `cryptography` - Cryptographic functions.
-+ `ffmpeg-python` - Video rendering and output.
-+ `opencv-python` - Video loading and frame manipulation.
-+ `Pillow` - Frame creation and output, as well as loading images and reading pixel values.
-
-Thanks to Tanmay Mishra for giving me a pre-release version of his upcoming library `filepackager`.  It has been heavily
-modified and stripped down to suit this library.  The code is included with BitGlitter; there is no need to download it.
-
-
 # Contributing
+
 Whether you're a seasoned programmer or brand new, there's plenty of things you can do to help this project succeed.
 Join our discord server, and check out all of the information I posted in the "Information" category.  Thank you for
 your interest!
