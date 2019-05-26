@@ -1,3 +1,5 @@
+[![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
+
 ![BitGlitter Logo](https://i.imgur.com/3GJ4bDx.png)
 
 # The basics
@@ -176,7 +178,7 @@ reads the file, along with other stream data.
 
 `streamDescription=''` serves as a text field to optionally put a description for the stream.
 
-`streamOutputPath=False` is where you can optionally define the path of where the created media is outputted.  By
+`outputPath=False` is where you can optionally define the path of where the created media is outputted.  By
 default, media is saved where the python file is ran.  The folder path must already exist if used.
 
 `outputMode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
@@ -364,17 +366,6 @@ https://discord.gg/t9uv2pZ
 Also, be sure to check out the 
 [contributing master page](https://github.com/MarkMichon1/BitGlitter/wiki/Contributing-Master-Page).  It contains a lot
 of information.
-
-Being my first project into Python and programming in general, this project took countless hours to bring it from 
-a sentence-long idea to what you see now.  Numerous commercial offers to obtain this project have been turned down - 
-BitGlitter is a free, open-source project, and will forever stay that way.  Seeing the reception so far makes it all
-worthwhile to me.  And I'm only getting started.  However, taking this project to the next level requires resources to
-grow, and this is something I cannot do on my own.  If you see the potential in this idea and can afford a donation, 
-you're ensuring this prototype grows in capability and impact.  Thank you for reading.  - Mark
-
-Bitcoin address: 12TrCXqqFU67b2JFt7sZkw5iWAYEnpRZ5e
-
-Paypal address: [https://www.paypal.me/markmichon7](https://www.paypal.me/markmichon7)
 
 ![Splitter](https://i.imgur.com/qIygifj.png)
 

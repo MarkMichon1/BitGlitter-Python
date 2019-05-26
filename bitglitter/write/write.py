@@ -8,7 +8,7 @@ def write(   # Basic setup
              fileList,
              streamName = "",
              streamDescription = "",
-             streamOutputPath = False,
+             outputPath = False,
              outputMode = "video",
 
              # Stream configuration
@@ -49,8 +49,8 @@ def write(   # Basic setup
     writeProtocol = protocolHandler.returnWriteProtocol('1')
 
     # Are all parameters acceptable?
-    writeProtocol.verifyWriteParameters(fileList, streamName, streamDescription, streamOutputPath, outputMode, compressionEnabled,
-                          fileMaskEnabled, scryptOverrideN, scryptOverrideR, scryptOverrideP, streamPaletteID,
+    writeProtocol.verifyWriteParameters(fileList, streamName, streamDescription, outputPath, outputMode, compressionEnabled,
+                                        fileMaskEnabled, scryptOverrideN, scryptOverrideR, scryptOverrideP, streamPaletteID,
                                         headerPaletteID, pixelWidth, blockHeight, blockWidth, framesPerSecond)
 
     # This sets the name of the temporary folder while the file is being written.
@@ -66,7 +66,7 @@ def write(   # Basic setup
     renderHandler = RenderHandler(frameProcessor, blockHeight, blockWidth, headerPaletteID, preProcess.streamSHA,
                                   preProcess.sizeInBytes, compressionEnabled, encryptionKey != "", fileMaskEnabled,
                                   preProcess.dateCreated, streamPaletteID, BG_VERSION, streamName, streamDescription,
-                                  preProcess.postEncryptionHash, pixelWidth, outputMode, streamOutputPath,
+                                  preProcess.postEncryptionHash, pixelWidth, outputMode, outputPath,
                                   framesPerSecond, activePath, preProcess.passThrough)
 
 
