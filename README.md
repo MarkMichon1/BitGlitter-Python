@@ -1,5 +1,7 @@
 [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
+**[Discord Server](https://discord.gg/t9uv2pZ)**
+
 ![BitGlitter Logo](https://i.imgur.com/3GJ4bDx.png)
 
 # The basics
