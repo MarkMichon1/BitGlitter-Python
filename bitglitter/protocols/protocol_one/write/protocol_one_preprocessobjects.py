@@ -10,14 +10,18 @@ class Packager:
     single package.dat file.  All arguments that aren't a file or folder are automatically discarded.
     '''
 
-    def __init__(self, activeFolder, fileTuple, maskFiles):
+    def __init__(self, activeFolder, fileList, maskFiles):
 
-        self.fileTuple = fileTuple
+        self.fileList = fileList
         rootFolder = Folder(name='Root')
         logging.info("Preparing files for packaging...")
         invalidInput = False
 
-        for item in fileTuple:
+        # If a string was used to denote a single file or file path, this automatically converts it into a tuple.
+        if isinstance(fileList, str):
+            fileList = (fileList,)
+
+        for item in fileList:
 
             if os.path.isfile(item):
                 logging.debug(f"Adding file: {item}")

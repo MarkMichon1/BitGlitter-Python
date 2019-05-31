@@ -1,3 +1,9 @@
+[![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
+[Discord Server](https://discord.gg/t9uv2pZ)
+
+
+**[Discord Server](https://discord.gg/t9uv2pZ)**
+
 ![BitGlitter Logo](https://i.imgur.com/3GJ4bDx.png)
 
 # The basics
@@ -166,17 +172,17 @@ We'll go a bit more in depth now.
 `write()` is the function that inputs files and turns them into a BitGlitter stream.  There are quite a few arguments
 to customize the stream, but there is only one required argument.  Everything else has defaults.
 
-Not surprisingly, that required argument defines what files or folders you wish to embed in the stream.  Argument 
-`fileList` takes a tuple of strings, there is no limit to how many you can add.  Remember when using tuples,
-with a single item it requires a comma after it, for instance `fileList=('C:\\Users\\Mark\\Desktop\\file.pdf',)`.
-File or folder paths that don't exist are automatically ignored.
+Not surprisingly, that required argument defines what files or folders you wish to embed in the stream.  If and only if
+you're sending a single file or folder path, argument `fileList` takes a string of the path.  BitGlitter also supports
+sending multiple files and folder together, of which there is no limit!  This would require using a tuple or list item
+filled with strings of the file or folder paths.  File or folder paths that don't exist are automatically ignored.
 
 `streamName=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.
 
 `streamDescription=''` serves as a text field to optionally put a description for the stream.
 
-`streamOutputPath=False` is where you can optionally define the path of where the created media is outputted.  By
+`outputPath=False` is where you can optionally define the path of where the created media is outputted.  By
 default, media is saved where the python file is ran.  The folder path must already exist if used.
 
 `outputMode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
@@ -359,22 +365,13 @@ Whether you're a seasoned programmer or brand new, there's plenty of things you 
 Join our discord server, and check out all of the information I posted in the "Information" category.  Thank you for
 your interest!
 
-https://discord.gg/t9uv2pZ
+**Discord Link**
+
+**https://discord.gg/t9uv2pZ**
 
 Also, be sure to check out the 
 [contributing master page](https://github.com/MarkMichon1/BitGlitter/wiki/Contributing-Master-Page).  It contains a lot
 of information.
-
-Being my first project into Python and programming in general, this project took countless hours to bring it from 
-a sentence-long idea to what you see now.  Numerous commercial offers to obtain this project have been turned down - 
-BitGlitter is a free, open-source project, and will forever stay that way.  Seeing the reception so far makes it all
-worthwhile to me.  And I'm only getting started.  However, taking this project to the next level requires resources to
-grow, and this is something I cannot do on my own.  If you see the potential in this idea and can afford a donation, 
-you're ensuring this prototype grows in capability and impact.  Thank you for reading.  - Mark
-
-Bitcoin address: 12TrCXqqFU67b2JFt7sZkw5iWAYEnpRZ5e
-
-Paypal address: [https://www.paypal.me/markmichon7](https://www.paypal.me/markmichon7)
 
 ![Splitter](https://i.imgur.com/qIygifj.png)
 
