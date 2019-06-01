@@ -1,13 +1,14 @@
 import logging
 
 from bitstring import BitArray, ConstBitStream
+from numpy import flip
 
 from bitglitter.read.coloranalysis import colorSnap, returnDistance
 from bitglitter.read.decoderassets import scanBlock
 from bitglitter.palettes.paletteutilities import paletteGrabber, ColorsToValue
 
 
-def frameLockOn(image, blockHeightOverride, blockWidthOverride):
+def frameLockOn(image, blockHeightOverride, blockWidthOverride, frameWidth, frameHeight):
     '''This function is used to lock onto the frame.  If override values are present, these will be used.  Otherwise,
     it will attempt to extract the correct values from the X and Y calibrator on the initial frame.'''
 
@@ -18,13 +19,10 @@ def frameLockOn(image, blockHeightOverride, blockWidthOverride):
     initializerPaletteBDict = ColorsToValue(initializerPaletteB)
     combinedColors = initializerPaletteA.colorSet + initializerPaletteB.colorSet
 
-    pixel = image.load()
-    imageWidth, imageHeight = image.size[0], image.size[1]
-
     if blockHeightOverride and blockWidthOverride: # Jump straight to verification
         logging.info("blockHeightOverride and blockWidthOverride parameters detected.  Attempting to lock with these"
                      " values...")
-        pixelWidth = ((imageWidth / blockWidthOverride) + (imageHeight / blockHeightOverride)) / 2
+        pixelWidth = ((frameWidth / blockWidthOverride) + (frameHeight / blockHeightOverride)) / 2
 
         checkpoint = verifyBlocksX(image, pixelWidth, blockWidthOverride, combinedColors, initializerPaletteADict,
                                    initializerPaletteBDict, override=True)
@@ -40,23 +38,23 @@ def frameLockOn(image, blockHeightOverride, blockWidthOverride):
 
     else:
         # First checkpoint.  Does pixel 0,0 have colorDistance value of under 100 for black (0,0,0)?
-        if returnDistance(pixel[0, 0], (0,0,0)) > 100:
+        if returnDistance(image[0, 0], (0,0,0)) > 100:
             logging.warning('Frame lock fail!  Initial pixel value exceeds maximum color distance allowed for a '
                             'reliable lock.')
             return False, False, False
 
-        pixelWidth, blockDimensionGuess = pixelCreep(pixel, initializerPaletteA, initializerPaletteB, combinedColors,
-                                                     initializerPaletteADict, initializerPaletteBDict, imageWidth,
-                                                     imageHeight, width=True)
+        pixelWidth, blockDimensionGuess = pixelCreep(image, initializerPaletteA, initializerPaletteB, combinedColors,
+                                                     initializerPaletteADict, initializerPaletteBDict, frameWidth,
+                                                     frameHeight, width=True)
         checkpoint = verifyBlocksX(image, pixelWidth, blockDimensionGuess, combinedColors, initializerPaletteADict,
                                    initializerPaletteBDict)
         if checkpoint == False:
             return False, False, False
 
         blockWidth = blockDimensionGuess
-        pixelWidth, blockDimensionGuess = pixelCreep(pixel, initializerPaletteA, initializerPaletteB, combinedColors,
-                                                     initializerPaletteADict, initializerPaletteBDict, imageWidth,
-                                                     imageHeight, width=False)
+        pixelWidth, blockDimensionGuess = pixelCreep(image, initializerPaletteA, initializerPaletteB, combinedColors,
+                                                     initializerPaletteADict, initializerPaletteBDict, frameWidth,
+                                                     frameHeight, width=False)
         checkpoint = verifyBlocksY(image, pixelWidth, blockDimensionGuess, combinedColors, initializerPaletteADict,
                                    initializerPaletteBDict)
 
@@ -148,7 +146,7 @@ def verifyBlocksY(image, pixelWidth, blockHeightEstimate, combinedColors, initia
     return True
 
 
-def pixelCreep(pixelObject, initializerPaletteA, initializerPaletteB, combinedColors, initializerPaletteADict,
+def pixelCreep(image, initializerPaletteA, initializerPaletteB, combinedColors, initializerPaletteADict,
                initializerPaletteBDict, imageWidth, imageHeight, width):
     '''This function moves across the calibrator on the top and left of the frame one pixel at a time, and after
     'snapping' the colors, decodes an unsigned integer from each axis, which if read correctly, is the block width and
@@ -173,15 +171,15 @@ def pixelCreep(pixelObject, initializerPaletteA, initializerPaletteB, combinedCo
     for value in range(16):
         while True:
             if width == True:
-                axisOnImage = pixelOnDimension, 0
+                axisOnImage = 0, pixelOnDimension
                 axisAnalyzed = imageWidth
 
             else:
-                axisOnImage = 0, pixelOnDimension
+                axisOnImage = pixelOnDimension, 0
                 axisAnalyzed = imageHeight
 
             newPaletteLocked = False
-            activeScan = pixelObject[axisOnImage]
+            activeScan = flip(image[axisOnImage])
             activeDistance = returnDistance(activeScan, activeColor)
 
             pixelOnDimension += 1
