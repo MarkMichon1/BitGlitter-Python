@@ -1,7 +1,5 @@
 import logging
 
-from PIL import Image
-
 from bitglitter.palettes.paletteutilities import paletteGrabber, ColorsToValue, _validateAndAddPalette
 from bitglitter.read.decoderassets import minimumBlockCheckpoint, readFrameHeader, readInitializer, validatePayload
 from bitglitter.read.framehandler import FrameHandler
@@ -21,6 +19,8 @@ class Decoder:
         self.isVideo = isVideo
         self.frameNumberofVideo = 0
         self.activeFrame = None
+        self.frameHeight = None
+        self.frameWidth = None
         self.checkpointPassed = True
         self.fatalCheckpoint = True # Non-recoverable errors that require an immediate break from the loop.
         self.streamHeaderCleared = False
@@ -75,7 +75,8 @@ class Decoder:
     def decodeImage(self, fileToInput):
         '''This method is used to decode a single image (jpg, png, bmp).'''
 
-        self.activeFrame = Image.open(fileToInput)
+        self.activeFrame = fileToInput
+        self.frameHeight, self.frameWidth, unused = self.activeFrame.shape
         self.frameHandler.loadNewFrame(self.activeFrame, True)
 
         if self._firstFrameSetup() == False:
@@ -95,7 +96,7 @@ class Decoder:
             self._attemptStreamPaletteLoad()
 
 
-    def decodeVideoFrame(self, fileToInput):
+    def decodeVideoFrame(self, activeFrame):
         '''This is the higher level method that decodes and validates data from each video frame, and then passes it to
         the Assembler object for further processing.
         '''
@@ -107,7 +108,8 @@ class Decoder:
         self.carryOverBits = None
         self.duplicateFrameRead = False
 
-        self.activeFrame = Image.open(fileToInput)
+        self.activeFrame = activeFrame
+        self.frameHeight, self.frameWidth, unused = self.activeFrame.shape
 
         if self.frameNumberofVideo == 1:
             self.frameHandler.loadNewFrame(self.activeFrame, True)
@@ -148,7 +150,7 @@ class Decoder:
         '''
 
         self.checkpointPassed = minimumBlockCheckpoint(self.blockHeightOverride, self.blockWidthOverride,
-                                                       self.activeFrame.size[0], self.activeFrame.size[1])
+                                                       self.frameWidth, self.frameHeight)
         if self.checkpointPassed == False:
             return False
 
@@ -156,7 +158,8 @@ class Decoder:
         self.blockWidth = self.blockWidthOverride
 
         self.blockHeight, self.blockWidth, self.pixelWidth = frameLockOn(self.activeFrame, self.blockHeightOverride,
-                                                                         self.blockWidthOverride)
+                                                                         self.blockWidthOverride, self.frameWidth,
+                                                                         self.frameHeight)
         if self.pixelWidth == False:
             return False
 

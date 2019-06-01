@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import numpy
 import zlib
 
 from bitglitter.palettes.paletteutilities import paletteGrabber
@@ -40,22 +41,13 @@ def scanBlock(image, pixelWidth, blockWidthPosition, blockHeightPosition):
         startPositionY = int(round((blockHeightPosition * pixelWidth) + (pixelWidth * .25), 1))
         endPositionY = int(round(startPositionY + (pixelWidth * .5), 1))
 
-    scannedValues = []
-    pixel = image.load()
-    for xScan in range(endPositionX - startPositionX + 1):
-        for yScan in range(endPositionY - startPositionY + 1):
-            scannedValues.append(pixel[(startPositionX + xScan), (startPositionY + yScan)])
+    numpyOutput = numpy.flip(image[startPositionY:endPositionY, startPositionX:endPositionX]).mean(axis=(0,1))
+    toListFormat = numpyOutput.tolist()
 
-    redChannel = 0
-    greenChannel = 0
-    blueChannel = 0
-    for value in scannedValues:
-        redChannel += value[0]
-        greenChannel += value[1]
-        blueChannel += value[2]
+    for value in range(3):
+        toListFormat[value] = int(toListFormat[value])
 
-    return (round(redChannel / len(scannedValues)), round(greenChannel / len(scannedValues)),
-            round(blueChannel / len(scannedValues)))
+    return toListFormat
 
 
 def readInitializer(bitStream, blockHeight, blockWidth, customPaletteList, defaultPaletteList):

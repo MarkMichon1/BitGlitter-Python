@@ -1,6 +1,7 @@
 import logging
 import os
-import shutil
+
+from cv2 import imread
 
 from bitglitter.config.constants import VALID_VIDEO_FORMATS
 from bitglitter.read.decoder import Decoder
@@ -17,9 +18,8 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
     # Sets up workspace
     readRoot = os.path.join(os.getcwd(), activePath)
     workingFolder = readRoot + '\\Working Folder'
-    if os.path.isdir(workingFolder):
-        shutil.rmtree(workingFolder)
-    os.makedirs(workingFolder)
+    if not os.path.isdir(readRoot):
+        os.makedirs(readRoot)
     configObject.assembler.workingFolder = readRoot
 
     # Determines if the multimedia file is an image or a video.
@@ -37,7 +37,7 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
         # lot of time attempting to read long videos with one failure after the next.
         badFramesThisSession = 0
 
-        videoFramePuller = VideoFramePuller(fileToInput, workingFolder)
+        videoFramePuller = VideoFramePuller(fileToInput)
 
         for frame in range(videoFramePuller.totalFrames):
 
@@ -58,7 +58,6 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
                         else:
                             logging.warning(f'Bad frame strike # {badFramesThisSession}')
 
-                videoFramePuller.removePreviousFrame()
                 configObject.saveSession()
 
             else:
@@ -69,7 +68,7 @@ def fileSlicer(fileToInput, activePath, outputPath, blockHeightOverride, blockWi
 
     else:
         logging.info("Processing image...")
-        checkpointPassed = decoder.decodeImage(fileToInput)
+        checkpointPassed = decoder.decodeImage(imread(fileToInput))
 
         if checkpointPassed == False:
             logging.debug('Breaking out of fileSlicer(), checkpointPassed == False')
