@@ -52,7 +52,7 @@ def updatePartialSave(streamSHA, reattemptAssembly = True, passwordUpdate = None
 
 
 def removePartialSave(streamSHA):
-    '''Taking the stream SHA as an argument, this function will remove the partial save object, and well as remove any
+    '''Taking the stream SHA as an argument, this function will remove the partial save object, as well as remove any
     temporary data BitGlitter may have had with it.
     '''
 
