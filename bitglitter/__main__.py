@@ -1,12 +1,15 @@
-from .cli.cli_args import parser
-from .cli.utilities import valid_args
-
+from .cli.args import parser
+from .write.write import write
+from .cli.analyzer import CliArgumentParser
+from .cli.utilities import validate_args
 
 def main():
-    # test input = python3 -m bitglitter --write writeparams
-    params = valid_args(parser.parse_args())
-    if 'write' in params: 
-        print('Testing')    
+    # python3 -m bitglitter --write image_path output_mode
+	parsed_args = CliArgumentParser(parser)
+	
+	if 'write' in parsed_args:
+		parsed_args.write()
+	
 
 if __name__ == '__main__':
     main()
