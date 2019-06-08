@@ -9,30 +9,30 @@ class ProtocolHandler:
 
         logging.debug('Protocol handler initializing...')
 
-        self.availableProtocols = {}
-        self.availableWriteProtocols = {}
-        self.availableReadProtocols = {}
+        self.available_protocols = {}
+        self.available_write_protocols = {}
+        self.available_read_protocols = {}
 
 
-    def _acceptNewProtocol(self, protocol):
+    def _accept_new_protocol(self, protocol):
         '''Internal method that takes protocols and loads them into the above dictionaries.'''
 
-        self.availableProtocols[protocol.versionNumber] = protocol
-        self.availableWriteProtocols[protocol.versionNumber] = protocol.write
-        self.availableReadProtocols[protocol.versionNumber] = protocol.read
+        self.available_protocols[protocol.version_number] = protocol
+        self.available_write_protocols[protocol.version_number] = protocol.write
+        self.available_read_protocols[protocol.version_number] = protocol.read
 
 
-    def returnReadProtocol(self, versionKey):
+    def return_read_protocol(self, version_key):
         '''This returns the read protocol object.'''
 
-        return self.availableReadProtocols[versionKey]
+        return self.available_read_protocols[version_key]
 
 
-    def returnWriteProtocol(self, versionKey):
+    def return_write_protocol(self, version_key):
         '''This returns the collection of write protocol objects to render a stream.'''
 
-        return self.availableWriteProtocols[versionKey]
+        return self.available_write_protocols[version_key]
 
 # This is where new protocols get added.
-protocolHandler = ProtocolHandler()
-protocolHandler._acceptNewProtocol(protocolversions.protocolOne)
+protocol_handler = ProtocolHandler()
+protocol_handler._accept_new_protocol(protocolversions.protocolOne)

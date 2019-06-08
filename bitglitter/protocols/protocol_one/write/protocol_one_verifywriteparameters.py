@@ -2,42 +2,42 @@ import logging
 from math import ceil
 
 from bitglitter.config.config import config
-from bitglitter.utilities.generalverifyfunctions import isBool, isValidDirectory, isIntOverZero, properStringSyntax
+from bitglitter.utilities.generalverifyfunctions import is_bool, is_valid_directory, is_int_over_zero, proper_string_syntax
 
-def paletteVerify(headerType, bitLength, blockWidth, blockHeight, outputType, fps=0):
+def palette_verify(header_type, bit_length, block_width, block_height, output_type, fps=0):
     '''This function calculates the necessary overhead for both images and videos for subsequent frames after 1.  It
     returns a number between 0-100%, for what percentage the overhead occupies.  The lower the value, the higher the
     frame efficiency.
     '''
 
-    totalBlocks = blockWidth * blockHeight
+    total_blocks = block_width * block_height
 
-    blockOverhead = blockHeight + blockWidth + 323
-    frameHeaderInBits = 608
+    block_overhead = block_height + block_width + 323
+    frame_header_in_bits = 608
 
-    blocksNeeded = 0
+    blocks_needed = 0
 
-    if headerType == 'headerPalette' or outputType == 'image':
-        blocksNeeded += blockOverhead
+    if header_type == 'header_palette' or output_type == 'image':
+        blocks_needed += block_overhead
 
-    bitsAvailable = (totalBlocks - blocksNeeded) * bitLength
-    bitsAvailable -= frameHeaderInBits
-    occupiedBlocks = blocksNeeded + ceil(frameHeaderInBits / bitLength)
+    bits_available = (total_blocks - blocks_needed) * bit_length
+    bits_available -= frame_header_in_bits
+    occupied_blocks = blocks_needed + ceil(frame_header_in_bits / bit_length)
 
-    if occupiedBlocks > totalBlocks:
-        raise ValueError(f"{headerType} has {occupiedBlocks - totalBlocks} too few blocks with this configuration."
+    if occupied_blocks > total_blocks:
+        raise ValueError(f"{header_type} has {occupied_blocks - total_blocks} too few blocks with this configuration."
                          f"\nPlease fix this by using a palette with a larger bitlength or use more blocks per frame.")
 
-    outputPerSec = None
-    if outputType == 'video' and headerType == 'streamPalette':
-        outputPerSec = bitsAvailable * fps
+    output_per_sec = None
+    if output_type == 'video' and header_type == 'stream_palette':
+        output_per_sec = bits_available * fps
 
-    return ((round(100 - (occupiedBlocks / totalBlocks * 100), 2)), bitsAvailable, outputPerSec)
+    return ((round(100 - (occupied_blocks / total_blocks * 100), 2)), bits_available, output_per_sec)
 
 
-def verifyWriteParameters(fileList, streamName, streamDescription, streamOutputPath, outputMode, compressionEnabled,
-                          fileMaskEnabled, scryptOverrideN, scryptOverrideR, scryptOverrideP, streamPalette,
-                          headerPalette, pixelWidth, blockHeight, blockWidth, framesPerSecond):
+def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode, compression_enabled,
+                            file_mask_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette,
+                            header_palette, pixel_width, block_height, block_width, frames_per_second):
     '''This function verifies all write() parameters for Protocol v1.  Look at this as the gatekeeper that stops
     invalid arguments from proceeding through the process, potentially breaking the stream (or causing BitGlitter to
     crash).
@@ -45,73 +45,73 @@ def verifyWriteParameters(fileList, streamName, streamDescription, streamOutputP
 
     logging.info("Verifying write parameters...")
 
-    if not fileList:
-        raise FileNotFoundError("A minimum of one file or folder is required for stream creation for argument fileList"
+    if not file_list:
+        raise FileNotFoundError("A minimum of one file or folder is required for stream creation for argument file_list"
                                 " in write().")
 
     # TEMPORARY until issue is fixed
-    if outputMode == 'video':
-        if headerPalette == '24' or streamPalette == '24':
+    if output_mode == 'video':
+        if header_palette == '24' or stream_palette == '24':
             raise ValueError("24 bit palettes can not be used with videos at this time due to codec issues.  This is"
                              "\nbeing worked on and will be restored soon!  This palette will still work on images.")
 
 
-    properStringSyntax(streamName, 'streamName')
-    properStringSyntax(streamDescription, 'streamDescription')
+    proper_string_syntax(stream_name, 'stream_name')
+    proper_string_syntax(stream_description, 'stream_description')
 
-    if streamOutputPath:
-        isValidDirectory('streamOutputPath', streamOutputPath)
+    if stream_output_path:
+        is_valid_directory('stream_output_path', stream_output_path)
 
-    if outputMode != 'video' and outputMode != 'image':
-        raise ValueError("Argument outputMode in write() only accepts 'video' or 'image'.")
+    if output_mode != 'video' and output_mode != 'image':
+        raise ValueError("Argument output_mode in write() only accepts 'video' or 'image'.")
 
-    isBool('compressionEnabled', compressionEnabled)
-    isBool('fileMaskEnabled', fileMaskEnabled)
+    is_bool('compression_enabled', compression_enabled)
+    is_bool('file_mask_enabled', file_mask_enabled)
 
-    isIntOverZero('scryptOverrideN', scryptOverrideN)
-    isIntOverZero('scryptOverrideR', scryptOverrideR)
-    isIntOverZero('scryptOverrideP', scryptOverrideP)
+    is_int_over_zero('scrypt_n', scrypt_n)
+    is_int_over_zero('scrypt_r', scrypt_r)
+    is_int_over_zero('scrypt_p', scrypt_p)
 
-    # is streamPalette valid?  We're simultaneously setting up a variable for a geometry just check below.
-    def doesPaletteExist(palette, type):
-        if palette in config.colorHandler.defaultPaletteList:
-            paletteToReturn = config.colorHandler.defaultPaletteList[palette]
-        elif palette in config.colorHandler.customPaletteList:
-            paletteToReturn = config.colorHandler.customPaletteList[palette]
-        elif palette in config.colorHandler.customPaletteNicknameList:
-            paletteToReturn = config.colorHandler.customPaletteNicknameList[palette]
+    # is stream_palette valid?  We're simultaneously setting up a variable for a geometry just check below.
+    def does_palette_exist(palette, type):
+        if palette in config.colorHandler.default_palette_list:
+            palette_to_return = config.colorHandler.default_palette_list[palette]
+        elif palette in config.colorHandler.custom_palette_list:
+            palette_to_return = config.colorHandler.custom_palette_list[palette]
+        elif palette in config.colorHandler.custom_palette_nickname_list:
+            palette_to_return = config.colorHandler.custom_palette_nickname_list[palette]
         else:
             raise ValueError(f"Argument {type} in write() is not a valid ID or nickname.  Verify that exact value "
                              "exists.")
-        return paletteToReturn
+        return palette_to_return
 
-    activeHeaderPalette = doesPaletteExist(headerPalette, 'headerPalette')
-    activeStreamPalette = doesPaletteExist(streamPalette, 'streamPalette')
+    active_header_palette = does_palette_exist(header_palette, 'header_palette')
+    active_stream_palette = does_palette_exist(stream_palette, 'stream_palette')
 
-    isIntOverZero('pixelWidth', pixelWidth)
-    isIntOverZero('blockHeight', blockHeight)
-    isIntOverZero('blockWidth', blockWidth)
-    isIntOverZero('framesPerSecond', framesPerSecond)
+    is_int_over_zero('pixel_width', pixel_width)
+    is_int_over_zero('block_height', block_height)
+    is_int_over_zero('block_width', block_width)
+    is_int_over_zero('frames_per_second', frames_per_second)
 
-    if framesPerSecond != 30 and framesPerSecond != 60:
-        raise ValueError("framesPerSecond must either be 30 or 60 at this time (we're working on this!)")
+    if frames_per_second != 30 and frames_per_second != 60:
+        raise ValueError("frames_per_second must either be 30 or 60 at this time (we're working on this!)")
 
-    if blockWidth < 17 or blockHeight < 17:
+    if block_width < 17 or block_height < 17:
         raise ValueError('Minimum block dimensions for Protocol 1 are 17 x 17.')
 
     # With the given dimensions and bit length, is it sufficient?
-    returnedHeaderValues = paletteVerify('headerPalette', activeHeaderPalette.bitLength, blockWidth, blockHeight,
-                                         outputMode, framesPerSecond)
-    logging.info(f'{returnedHeaderValues[0]}% of the frame for initial header is allocated for frame payload (higher is'
+    returned_header_values = palette_verify('header_palette', active_header_palette.bitLength, block_width, block_height,
+                                          output_mode, frames_per_second)
+    logging.info(f'{returned_header_values[0]}% of the frame for initial header is allocated for frame payload (higher is'
                  ' better)')
 
-    returnedStreamValues = paletteVerify('streamPalette', activeStreamPalette.bitLength, blockWidth, blockHeight,
-                                         outputMode, framesPerSecond)
-    logging.info(f'{returnedStreamValues[1]} B, or {returnedStreamValues[0]}% of subsequent frames is allocated for '
+    returned_stream_values = palette_verify('stream_palette', active_stream_palette.bitLength, block_width, block_height,
+                                          output_mode, frames_per_second)
+    logging.info(f'{returned_stream_values[1]} B, or {returned_stream_values[0]}% of subsequent frames is allocated for '
                  f'frame payload (higher is better)')
 
-    if outputMode == 'video':
-        logging.info(f'As a video, it will effectively be transporting {round(returnedStreamValues[2] / 8)} B/sec of '
+    if output_mode == 'video':
+        logging.info(f'As a video, it will effectively be transporting {round(returned_stream_values[2] / 8)} B/sec of '
                      f'data.')
 
     logging.info('Minimum geometry requirements met.')

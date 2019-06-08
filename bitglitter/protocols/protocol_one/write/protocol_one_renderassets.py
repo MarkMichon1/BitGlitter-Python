@@ -7,241 +7,241 @@ import zlib
 from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
-from bitglitter.palettes.paletteutilities import paletteGrabber, ValuesToColor
+from bitglitter.palettes.paletteutilities import palette_grabber, ValuesToColor
 
 
-def asciiHeaderProcess(fileMaskEnabled, activePath, streamPalette, bgVersion, streamName, streamDescription,
-                       postEncryptionHash, encryptionEnabled):
+def ascii_header_process(file_mask_enabled, active_path, stream_palette, bg_version, stream_name, stream_description,
+                         post_encryption_hash, encryption_enabled):
     '''This takes all ASCII elements of the stream header, and returns a formatted merged string.'''
 
-    if fileMaskEnabled:
-        fileListString = ""
+    if file_mask_enabled:
+        file_list_string = ""
 
     else:
-        with open(activePath + "\\fileList.txt", 'r') as textFile:
-            fileListString = textFile.read()
+        with open(active_path + "\\file_list.txt", 'r') as text_file:
+            file_list_string = text_file.read()
 
-        os.remove(activePath + '\\fileList.txt')
+        os.remove(active_path + '\\file_list.txt')
 
-    customPaletteString = ""
-    if streamPalette.paletteType == 'custom':
-        customPaletteAttributeList = [streamPalette.name, streamPalette.description,
-                                 str(streamPalette.dateCreated), str(streamPalette.colorSet)]
-        customPaletteString = "\\\\".join(customPaletteAttributeList) + "\\\\"
+    custom_palette_string = ""
+    if stream_palette.palette_type == 'custom':
+        custom_palette_attribute_list = [stream_palette.name, stream_palette.description,
+                                      str(stream_palette.date_created), str(stream_palette.color_set)]
+        custom_palette_string = "\\\\".join(custom_palette_attribute_list) + "\\\\"
 
-    cryptoString = ""
-    if encryptionEnabled:
-        cryptoString = postEncryptionHash + "\\\\"
+    crypto_string = ""
+    if encryption_enabled:
+        crypto_string = post_encryption_hash + "\\\\"
 
-    metaDataString = "\\\\" + "\\\\".join([bgVersion, streamName, streamDescription, fileListString]) + "\\\\"
+    meta_data_string = "\\\\" + "\\\\".join([bg_version, stream_name, stream_description, file_list_string]) + "\\\\"
 
-    mergedString = "".join([metaDataString, customPaletteString, cryptoString])
-    logging.debug(f'ASCII Stream Header merged: {mergedString}')
+    merged_string = "".join([meta_data_string, custom_palette_string, crypto_string])
+    logging.debug(f'ASCII Stream Header merged: {merged_string}')
 
     # Next, we're compressing it
-    compressedStreamheader = zlib.compress(mergedString.encode(), level=9)
-    compressedFileSize = len(compressedStreamheader)
-    logging.debug(f'ASCII Stream Header compressed. ({len(mergedString)} B -> {compressedFileSize} B)')
+    compressed_stream_header = zlib.compress(merged_string.encode(), level=9)
+    compressed_file_size = len(compressed_stream_header)
+    logging.debug(f'ASCII Stream Header compressed. ({len(merged_string)} B -> {compressed_file_size} B)')
 
-    return compressedStreamheader
+    return compressed_stream_header
 
 
-def generateStreamHeaderBinaryPreamble(sizeInBytes, totalFrames, compressionEnabled, encryptionEnabled, fileMaskEnabled,
-                                       isStreamPaletteCustom, dateCreated, streamPaletteID, asciiCompressedLength):
+def generate_stream_header_binary_preamble(size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_mask_enabled,
+                                           is_stream_palette_custom, date_created, stream_palette_id, ascii_compressed_length):
     '''The binary preamble for the Stream Header is created here.  For videos and images, this is only needed for the
     first frame.
     '''
 
-    addingBits = BitStream()
+    adding_bits = BitStream()
 
-    addingBits.append(BitArray(uint=sizeInBytes, length=64))
-    addingBits.append(BitArray(uint=totalFrames, length=32))
-    addingBits.append(BitArray([int(compressionEnabled), int(encryptionEnabled),
-                                int(fileMaskEnabled), isStreamPaletteCustom]))
-    addingBits.append(BitArray(uint=dateCreated, length=34))
+    adding_bits.append(BitArray(uint=size_in_bytes, length=64))
+    adding_bits.append(BitArray(uint=total_frames, length=32))
+    adding_bits.append(BitArray([int(compression_enabled), int(encryption_enabled),
+                                 int(file_mask_enabled), is_stream_palette_custom]))
+    adding_bits.append(BitArray(uint=date_created, length=34))
 
-    if isStreamPaletteCustom:
-        addingBits.append(BitArray(hex=streamPaletteID))
+    if is_stream_palette_custom:
+        adding_bits.append(BitArray(hex=stream_palette_id))
 
     else:
-        addingBits.append(BitArray(uint=int(streamPaletteID), length=256))
+        adding_bits.append(BitArray(uint=int(stream_palette_id), length=256))
 
-    addingBits.append(BitArray(uint=asciiCompressedLength, length=32))
+    adding_bits.append(BitArray(uint=ascii_compressed_length, length=32))
 
     logging.debug('streamHeader generated.')
-    return ConstBitStream(addingBits)
+    return ConstBitStream(adding_bits)
 
 
-def generateFrameHeader(streamSHA, frameHashableBits, frameNumber, blocksUsed):
+def generate_frame_header(stream_sha, frame_hashable_bits, frame_number, blocks_used):
     '''This creates the header that is present at the beginning of every frame (excluding the first frame or image
     outputs).  These headers orient the reader, in that it tells it where it is in the stream.
     '''
 
-    fullBitString = BitArray()
+    full_bit_string = BitArray()
 
-    fullBitString.append(BitArray(hex=streamSHA))
-    tempPayloadHolding = ConstBitStream(frameHashableBits)
-    shaHasher = hashlib.sha256()
-    shaHasher.update(tempPayloadHolding.tobytes())
-    frameSHA = shaHasher.digest()
+    full_bit_string.append(BitArray(hex=stream_sha))
+    temp_payload_holding = ConstBitStream(frame_hashable_bits)
+    sha_hasher = hashlib.sha256()
+    sha_hasher.update(temp_payload_holding.tobytes())
+    frame_sha = sha_hasher.digest()
 
-    fullBitString.append(BitArray(bytes=frameSHA))
-    fullBitString.append(BitArray(uint=frameNumber, length=32))
-    fullBitString.append(BitArray(uint=blocksUsed, length=32))
-    fullBitStringToHash = fullBitString.bytes
+    full_bit_string.append(BitArray(bytes=frame_sha))
+    full_bit_string.append(BitArray(uint=frame_number, length=32))
+    full_bit_string.append(BitArray(uint=blocks_used, length=32))
+    full_bit_string_to_hash = full_bit_string.bytes
 
-    crcOutput = zlib.crc32(fullBitStringToHash)
-    fullBitString.append(BitArray(uint=crcOutput, length=32))
+    crc_output = zlib.crc32(full_bit_string_to_hash)
+    full_bit_string.append(BitArray(uint=crc_output, length=32))
 
-    return fullBitString
+    return full_bit_string
 
 
-def howManyFrames(blockHeight, blockWidth, asciiCompressedSize, sizeInBytes, streamPalette, headerPalette, outputMode):
+def how_many_frames(block_height, block_width, ascii_compressed_size, size_in_bytes, stream_palette, header_palette, output_mode):
     '''This method returns how many frames will be required to complete the rendering process.'''
 
     logging.debug("Calculating how many frames to render...")
 
-    totalBlocks = blockHeight * blockWidth
-    streamHeaderOverheadInBits = 422 + (asciiCompressedSize * 8)
-    StreamSizeInBits = (sizeInBytes * 8)
-    headerBitLength = headerPalette.bitLength
-    streamBitLength = streamPalette.bitLength
+    total_blocks = block_height * block_width
+    stream_header_overhead_in_bits = 422 + (ascii_compressed_size * 8)
+    stream_size_in_bits = (size_in_bytes * 8)
+    header_bit_length = header_palette.bit_length
+    stream_bit_length = stream_palette.bit_length
 
     # Overhead constants
-    initializerOverhead = blockHeight + blockWidth + 323
-    frameHeaderOverhead = 608
+    initializer_overhead = block_height + block_width + 323
+    frame_header_overhead = 608
 
-    dataLeft = StreamSizeInBits
-    frameNumber = 0
-    streamHeaderBitsLeft = streamHeaderOverheadInBits  # subtract until zero
+    data_left = stream_size_in_bits
+    frame_number = 0
+    stream_header_bits_left = stream_header_overhead_in_bits  # subtract until zero
 
-    while streamHeaderBitsLeft:
+    while stream_header_bits_left:
 
-        bitsConsumed = frameHeaderOverhead
-        blocksLeft = totalBlocks
-        blocksLeft -= (initializerOverhead * int(outputMode == 'image' or frameNumber == 0))
+        bits_consumed = frame_header_overhead
+        blocks_left = total_blocks
+        blocks_left -= (initializer_overhead * int(output_mode == 'image' or frame_number == 0))
 
-        streamHeaderBitsAvailable = (blocksLeft * headerBitLength) - frameHeaderOverhead
+        stream_header_bits_available = (blocks_left * header_bit_length) - frame_header_overhead
 
-        if streamHeaderBitsLeft >= streamHeaderBitsAvailable:
-            streamHeaderBitsLeft -= streamHeaderBitsAvailable
+        if stream_header_bits_left >= stream_header_bits_available:
+            stream_header_bits_left -= stream_header_bits_available
 
-        else: # streamHeaderCombined terminates on this frame
-            streamHeaderBitsAvailable -= streamHeaderBitsLeft
-            bitsConsumed += streamHeaderBitsLeft
-            streamHeaderBitsLeft = 0
+        else: # stream_header_combined terminates on this frame
+            stream_header_bits_available -= stream_header_bits_left
+            bits_consumed += stream_header_bits_left
+            stream_header_bits_left = 0
 
-            streamHeaderBlocksUsed = math.ceil(bitsConsumed / headerPalette.bitLength)
-            attachmentBits = headerPalette.bitLength - (bitsConsumed % headerPalette.bitLength)
+            stream_header_blocks_used = math.ceil(bits_consumed / header_palette.bitLength)
+            attachment_bits = header_palette.bitLength - (bits_consumed % header_palette.bitLength)
 
-            if attachmentBits > 0:
-                dataLeft -= attachmentBits
+            if attachment_bits > 0:
+                data_left -= attachment_bits
 
-            remainingBlocksLeft = blocksLeft - streamHeaderBlocksUsed
-            leftoverFrameBits = remainingBlocksLeft * headerBitLength
+            remaining_blocks_left = blocks_left - stream_header_blocks_used
+            leftover_frame_bits = remaining_blocks_left * header_bit_length
 
-            if leftoverFrameBits > dataLeft:
-                dataLeft = 0
+            if leftover_frame_bits > data_left:
+                data_left = 0
 
             else:
-                dataLeft -= leftoverFrameBits
+                data_left -= leftover_frame_bits
 
-        frameNumber += 1
+        frame_number += 1
 
-    # Calculating how much data can be embedded in a regular framePayload frame, and returning the total frame count
+    # Calculating how much data can be embedded in a regular frame_payload frame, and returning the total frame count
     # needed.
-    blocksLeft = totalBlocks - (initializerOverhead * int(outputMode == 'image'))
-    payloadBitsPerFrame = (blocksLeft * streamBitLength) - frameHeaderOverhead
+    blocks_left = total_blocks - (initializer_overhead * int(output_mode == 'image'))
+    payload_bits_per_frame = (blocks_left * stream_bit_length) - frame_header_overhead
 
-    totalFrames = math.ceil(dataLeft / payloadBitsPerFrame) + frameNumber
-    logging.info(f'{totalFrames} frame(s) required for this operation.')
-    return totalFrames
+    total_frames = math.ceil(data_left / payload_bits_per_frame) + frame_number
+    logging.info(f'{total_frames} frame(s) required for this operation.')
+    return total_frames
 
 
-def generateInitializer(blockHeight, blockWidth, protocolVersion, headerPalette):
+def generate_initializer(block_height, block_width, protocol_version, header_palette):
     '''This generates the initializer header, which is present in black and white colors on the top of the first frame
     of video streams, and every frame of image streams.  It provides import information on stream geometry as well as
     protocol version.
     '''
 
-    fullBitString = BitArray()
-    fullBitString.append(BitArray(uint=protocolVersion, length=4))
-    fullBitString.append(BitArray(uint=blockHeight, length=16))
-    fullBitString.append(BitArray(uint=blockWidth, length=16))
+    full_bit_string = BitArray()
+    full_bit_string.append(BitArray(uint=protocol_version, length=4))
+    full_bit_string.append(BitArray(uint=block_height, length=16))
+    full_bit_string.append(BitArray(uint=block_width, length=16))
 
-    if headerPalette.paletteType == 'default':
-        fullBitString.append(BitArray(uint=int(headerPalette.id), length=256))
+    if header_palette.palette_type == 'default':
+        full_bit_string.append(BitArray(uint=int(header_palette.id), length=256))
 
     else:
-        fullBitString.append(BitArray(hex=headerPalette.id))
+        full_bit_string.append(BitArray(hex=header_palette.id))
 
-    fullBitStringToHash = fullBitString.tobytes()
-    crcOutput = zlib.crc32(fullBitStringToHash)
-    fullBitString.append(BitArray(uint=crcOutput, length=32))
+    full_bit_string_to_hash = full_bit_string.tobytes()
+    crc_output = zlib.crc32(full_bit_string_to_hash)
+    full_bit_string.append(BitArray(uint=crc_output, length=32))
 
-    return fullBitString
+    return full_bit_string
 
 
-def renderCalibrator(image, blockHeight, blockWidth, pixelWidth):
+def render_calibrator(image, block_height, block_width, pixel_width):
     '''This creates the checkboard-like pattern along the top and left of the first frame of video streams, and every
-    frame of image streams.  This is what the reader uses to initially lock onto the frame.  Stream blockWidth and
-    blockHeight are encoded into this pattern, using alternating color palettes so no two repeating values produce a
+    frame of image streams.  This is what the reader uses to initially lock onto the frame.  Stream block_width and
+    block_height are encoded into this pattern, using alternating color palettes so no two repeating values produce a
     continuous block of color, interfering with the frame lock process.'''
 
-    initializerPaletteDictA = ValuesToColor(paletteGrabber('1'), 'initializerPalette A')
-    initializerPaletteDictB = ValuesToColor(paletteGrabber('11'), 'initializerPalette B')
+    initializer_palette_dict_a = ValuesToColor(palette_grabber('1'), 'initializer_palette A')
+    initializer_palette_dict_b = ValuesToColor(palette_grabber('11'), 'initializer_palette B')
 
     draw = ImageDraw.Draw(image)
-    draw.rectangle((0, 0, pixelWidth - 1, pixelWidth - 1),
-                    fill='rgb(0,0,0)')
+    draw.rectangle((0, 0, pixel_width - 1, pixel_width - 1),
+                   fill='rgb(0,0,0)')
 
-    blockWidthEncoded = BitArray(uint=blockWidth, length=blockWidth - 1)
-    blockWidthEncoded.reverse()
-    readableBlockWidth = ConstBitStream(blockWidthEncoded)
+    block_width_encoded = BitArray(uint=block_width, length=block_width - 1)
+    block_width_encoded.reverse()
+    readable_block_width = ConstBitStream(block_width_encoded)
 
-    for i in range(blockWidth - 1):
-        nextBit = readableBlockWidth.read('bits : 1')
+    for i in range(block_width - 1):
+        next_bit = readable_block_width.read('bits : 1')
 
         if i % 2 == 0:
-            colorValue = initializerPaletteDictB.getColor(ConstBitStream(nextBit))
+            color_value = initializer_palette_dict_b.get_color(ConstBitStream(next_bit))
 
         else:
-            colorValue = initializerPaletteDictA.getColor(ConstBitStream(nextBit))
+            color_value = initializer_palette_dict_a.get_color(ConstBitStream(next_bit))
 
-        draw.rectangle((pixelWidth * i + pixelWidth,
+        draw.rectangle((pixel_width * i + pixel_width,
                         0,
-                        pixelWidth * (i + 1) - 1 + pixelWidth,
-                        pixelWidth - 1),
-                       fill=f'rgb{str(colorValue)}')
+                        pixel_width * (i + 1) - 1 + pixel_width,
+                        pixel_width - 1),
+                       fill=f'rgb{str(color_value)}')
 
-    blockHeightEncoded = BitArray(uint=blockHeight, length=blockHeight-1)
-    blockHeightEncoded.reverse()
-    readableBlockHeight = ConstBitStream(blockHeightEncoded)
+    block_height_encoded = BitArray(uint=block_height, length=block_height - 1)
+    block_height_encoded.reverse()
+    readable_block_height = ConstBitStream(block_height_encoded)
 
-    for i in range(blockHeight - 1):
-        nextBit = readableBlockHeight.read('bits : 1')
+    for i in range(block_height - 1):
+        next_bit = readable_block_height.read('bits : 1')
 
         if i % 2 == 0:
-            colorValue = initializerPaletteDictB.getColor(ConstBitStream(nextBit))
+            color_value = initializer_palette_dict_b.get_color(ConstBitStream(next_bit))
 
         else:
-            colorValue = initializerPaletteDictA.getColor(ConstBitStream(nextBit))
+            color_value = initializer_palette_dict_a.get_color(ConstBitStream(next_bit))
 
         draw.rectangle((0,
-                        pixelWidth * i + pixelWidth,
-                        pixelWidth - 1,
-                        pixelWidth * (i + 1) - 1 + pixelWidth),
-                       fill=f'rgb{str(colorValue)}')
+                        pixel_width * i + pixel_width,
+                        pixel_width - 1,
+                        pixel_width * (i + 1) - 1 + pixel_width),
+                       fill=f'rgb{str(color_value)}')
 
     return image
 
 
-def loopGenerator(blockHeight, blockWidth, pixelWidth, initializerEnabled):
+def loop_generator(block_height, block_width, pixel_width, initializer_enabled):
     '''This generator yields the coordinates for each of the blocks used, depending on the geometry of the frame.'''
 
-    for yRange in range(blockHeight - int(initializerEnabled)):
-        for xRange in range(blockWidth - int(initializerEnabled)):
-            yield ((pixelWidth * int(initializerEnabled)) + (pixelWidth * xRange),
-                (pixelWidth * int(initializerEnabled)) + (pixelWidth * yRange),
-                (pixelWidth * int(initializerEnabled)) + (pixelWidth * (xRange + 1) - 1),
-                (pixelWidth * int(initializerEnabled)) + (pixelWidth * (yRange + 1) - 1))
+    for yRange in range(block_height - int(initializer_enabled)):
+        for xRange in range(block_width - int(initializer_enabled)):
+            yield ((pixel_width * int(initializer_enabled)) + (pixel_width * xRange),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * yRange),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * (xRange + 1) - 1),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * (yRange + 1) - 1))

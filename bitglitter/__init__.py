@@ -42,14 +42,14 @@ from bitglitter.read.read import read
 
 
 # GENERAL CONFIGURATION
-from bitglitter.config.configfunctions import clearSession, clearStats, outputStats
+from bitglitter.config.configfunctions import clear_session, clear_stats, output_stats
 
 
 # PARTIAL SAVE CONTROL
-from bitglitter.read.savedfilefunctions import beginAssembly, printFullSaveList, removePartialSave, updatePartialSave, \
-    removeAllPartialSaves
+from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_list, remove_partial_save, update_partial_save, \
+    remove_all_partial_saves
 
 
 # CUSTOM PALETTE
-from bitglitter.palettes.palettefunctions import addCustomPalette, editNicknameToCustomPalette, clearAllCustomPalettes,\
-    clearCustomPaletteNicknames, printFullPaletteList, removeCustomPalette, removeCustomPaletteNickname
+from bitglitter.palettes.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, clear_all_custom_palettes,\
+    clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, remove_custom_palette_nickname

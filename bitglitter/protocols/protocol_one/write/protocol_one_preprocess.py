@@ -2,7 +2,7 @@ import logging
 import time
 
 from bitglitter.protocols.protocol_one.write.protocol_one_preprocessobjects import Packager, Compressor, Encryptor
-from bitglitter.utilities.filemanipulation import refreshWorkingFolder, returnFileSize, returnHashFromFile
+from bitglitter.utilities.filemanipulation import refresh_working_folder, return_file_size, return_hash_from_file
 
 
 class PreProcessor:
@@ -11,29 +11,29 @@ class PreProcessor:
     headers during the render process.
     '''
 
-    def __init__(self, activePath, fileList, cryptoKey, maskFiles, compressionEnabled, scryptOverrideN, scryptOverrideR,
-                 scryptOverrideP):
+    def __init__(self, active_path, file_list, crypto_key, mask_files, compression_enabled, scrypt_n, scrypt_r,
+                 scrypt_p):
 
         logging.info("Preprocess initializing...")
-        self.dateCreated = round(time.time())
+        self.date_created = round(time.time())
 
-        self.activeFolder = refreshWorkingFolder(activePath)
-        packager = Packager(self.activeFolder, fileList, maskFiles)
-        compressor = Compressor(packager.passThrough, self.activeFolder, compressionEnabled)
-        self.streamSHA = returnHashFromFile(compressor.passThrough)
+        self.active_folder = refresh_working_folder(active_path)
+        packager = Packager(self.active_folder, file_list, mask_files)
+        compressor = Compressor(packager.pass_through, self.active_folder, compression_enabled)
+        self.streamSHA = return_hash_from_file(compressor.pass_through)
         logging.info(f"SHA-256: {self.streamSHA}")
-        encryptor = Encryptor(compressor.passThrough, self.activeFolder, cryptoKey, scryptOverrideN, scryptOverrideR,
-                              scryptOverrideP)
+        encryptor = Encryptor(compressor.pass_through, self.active_folder, crypto_key, scrypt_n, scrypt_r,
+                              scrypt_p)
 
-        self.encryptionEnabled = encryptor.encryptionEnabled
-        self.postEncryptionHash = None
+        self.encryption_enabled = encryptor.encryption_enabled
+        self.post_encryption_hash = None
 
-        if cryptoKey:
-            self.postEncryptionHash = returnHashFromFile(encryptor.passThrough)
-            logging.debug(f'Post-encryption SHA-256: {self.postEncryptionHash}')
+        if crypto_key:
+            self.post_encryption_hash = return_hash_from_file(encryptor.pass_through)
+            logging.debug(f'Post-encryption SHA-256: {self.post_encryption_hash}')
 
-        self.sizeInBytes = returnFileSize(encryptor.passThrough)
-        logging.info(f'Package size: {self.sizeInBytes}B')
-        self.passThrough = encryptor.passThrough
+        self.size_in_bytes = return_file_size(encryptor.pass_through)
+        logging.info(f'Package size: {self.size_in_bytes}B')
+        self.pass_through = encryptor.pass_through
 
         logging.info("Preprocess complete.")

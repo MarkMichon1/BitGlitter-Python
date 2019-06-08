@@ -274,7 +274,7 @@ Arguments `scryptN=14`, `scryptR=8` and `scryptP=1`
 
 If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
 
-`addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname = "")`  This function adds custom palettes
+`add_custom_palette(paletteName, paletteDescription, colorSet, optionalNickname = "")`  This function adds custom palettes
 to use.  
 
 Argument `paletteName` takes a string and is the name of the palette that gets displayed and transmitted. 
@@ -294,31 +294,31 @@ Argument `optionalNickname=""` allows you to use an easy to input nickname for y
   code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
   well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
 
-`editNicknameToCustomPalette(idOrNick, newName)` This function allows you to edit the nickname of your custom palette 
+`edit_nickname_to_custom_palette(idOrNick, newName)` This function allows you to edit the nickname of your custom palette 
 to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal ID.
 
-`printFullPaletteList(path)` This function outputs a text file to the folder path outlining the palettes available, both
+`print_full_palette_list(path)` This function outputs a text file to the folder path outlining the palettes available, both
 default palettes and custom.  It shows information such as their name, description, date created, color set, nickname,
 and more.  The required argument is a string of a folder path, which must already exist.  Here's an example of how to
 format it: `C:\Users\Mark\Desktop`
 
-`clearAllCustomPalettes()` This removes all custom palettes from your config.  Please note that the default palettes 
+`clear_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
 will not be removed.
 
-`removeCustomPalette(idOrNick)` This function removes the custom palette from your config.  It takes a string argument
+`remove_custom_palette(idOrNick)` This function removes the custom palette from your config.  It takes a string argument
 of either it's internal ID, or a nickname you've previously given it.
 
-`removeCustomPaletteNickname(idOrNick)` This function strips any nickname associated with a custom palette.  It takes a
+`remove_custom_palette_nickname(idOrNick)` This function strips any nickname associated with a custom palette.  It takes a
 string argument of either the internal ID or a previous nickname.
 
-`clearCustomPaletteNicknames()`  This removes all nicknames from all custom palettes.
+`clear_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.
 
 ### Partial Save Control
 
 Once the first frame of a stream is read, a PartialSave object is created.  This is essentially what manages the binary
 strings, and holds various information on it's state.  These functions help better interface with them.
 
-`updatePartialSave(streamSHA, reattemptAssembly = True, passwordUpdate = None, scryptN =  None, scryptR = None, 
+`update_partial_save(streamSHA, reattemptAssembly = True, passwordUpdate = None, scryptN =  None, scryptR = None, 
 scryptP = None, changeOutputPath = None)` This function allows you to update various parameters of the save.  Requires
 a string input for `streamSHA` which is the ID number of the string.  
 
@@ -332,18 +332,18 @@ Arguments `scryptN, scryptR and scryptP` change the scrypt parameters used to de
 the scrypt parameters were left at default during `write()` of the stream, these can be left as is.  Otherwise, the 
 custom values will need to be inputted whether here or in the optional arguments of `read()`.
 
-`beginAssembly(streamSHA)` This function exists to initiate assembly of a package at a later time, rather than doing so 
+`begin_assembly(streamSHA)` This function exists to initiate assembly of a package at a later time, rather than doing so 
 immediately for whatever reason.
 
-`printFullSaveList(path, debugData=False)` This function outputs a text file to the folder path outlining all (if any)
+`print_full_save_list(path, debugData=False)` This function outputs a text file to the folder path outlining all (if any)
 partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
 itself.  Argument `debugData` is `False` by default, but enabling it to `True` outputs various debug information 
 pertaining to the object as well, which wouldn't serve much utility seeing for someone such as a casual end user.
 
-`removePartialSave(streamSHA)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
+`remove_partial_save(streamSHA)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
 remove the object from your config, as well as remove all temporary data associated with it.
 
-`removeAllPartialSaves()` All saves are removed from the config object, clearing all temporary data.
+`remove_all_partial_saves()` All saves are removed from the config object, clearing all temporary data.
 
 ### General Configuration
 

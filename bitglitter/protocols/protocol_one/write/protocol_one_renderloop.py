@@ -5,187 +5,187 @@ import time
 from bitstring import BitStream, ConstBitStream
 from PIL import Image, ImageDraw
 
-from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import renderCalibrator, generateInitializer, \
-    generateFrameHeader, generateStreamHeaderBinaryPreamble, loopGenerator
+from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import render_calibrator, generate_initializer, \
+    generate_frame_header, generate_stream_header_binary_preamble, loop_generator
 
 
-def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializerPalette, headerPalette, streamPalette,
-               outputMode, streamOutputPath, activePath, passThrough, sizeInBytes, totalFrames, compressionEnabled,
-               encryptionEnabled, fileMaskEnabled, dateCreated, asciiCompressed, streamSHA, initializerPaletteDict,
-               headerPaletteDict, streamPaletteDict):
+def render_loop(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette, stream_palette,
+                output_mode, stream_output_path, active_path, pass_through, size_in_bytes, total_frames, compression_enabled,
+                encryption_enabled, file_mask_enabled, date_created, ascii_compressed, stream_sha, initializer_palette_dict,
+                header_palette_dict, stream_palette_dict):
     '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
     # comments in this function that describe what each part is doing, to follow along.
     '''
 
-    logging.debug('Entering renderLoop...')
+    logging.debug('Entering render_loop...')
 
     # Determining output for images.
-    if outputMode == 'image':
-        if streamOutputPath:
-            imageOutputPath = streamOutputPath + '\\'
+    if output_mode == 'image':
+        if stream_output_path:
+            image_output_path = stream_output_path + '\\'
 
         else:
-            imageOutputPath = ""
+            image_output_path = ""
 
-    if outputMode == 'video':
-        imageOutputPath = activePath + '\\'
+    if output_mode == 'video':
+        image_output_path = active_path + '\\'
 
     # Constants
-    TOTAL_BLOCKS = blockHeight * blockWidth
-    INITIALIZER_OVERHEAD = blockHeight + blockWidth + 323
+    TOTAL_BLOCKS = block_height * block_width
+    INITIALIZER_OVERHEAD = block_height + block_width + 323
     INITIALIZER_DATA_BITS = 324
     FRAME_HEADER_OVERHEAD = 608
 
-    activePayload = ConstBitStream(filename=passThrough)
-    frameNumber = 1
-    primaryFramePaletteDict, primaryReadLength = headerPaletteDict, headerPalette.bitLength
-    activePalette = headerPalette
-    streamPaletteUsed = False
-    lastFrame = False
+    active_payload = ConstBitStream(filename=pass_through)
+    frame_number = 1
+    primary_frame_palette_dict, primary_read_length = header_palette_dict, header_palette.bit_length
+    active_palette = header_palette
+    stream_palette_used = False
+    last_frame = False
 
     # Final preparations for stream header parts.
-    streamHeaderBinaryPreamble = generateStreamHeaderBinaryPreamble(sizeInBytes, totalFrames, compressionEnabled,
-                                                                    encryptionEnabled, fileMaskEnabled,
-                                                                    streamPalette.paletteType == "custom", dateCreated,
-                                                                    streamPalette.id, len(asciiCompressed))
-    streamHeaderCombined = BitStream(streamHeaderBinaryPreamble)
-    streamHeaderCombined.append(asciiCompressed)
+    stream_header_binary_preamble = generate_stream_header_binary_preamble(size_in_bytes, total_frames, compression_enabled,
+                                                                        encryption_enabled, file_mask_enabled,
+                                                                        stream_palette.palette_type == "custom", date_created,
+                                                                        stream_palette.id, len(ascii_compressed))
+    stream_header_combined = BitStream(stream_header_binary_preamble)
+    stream_header_combined.append(ascii_compressed)
 
     # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
-    while activePayload.bitpos != activePayload.length:
+    while active_payload.bitpos != active_payload.length:
 
-        logging.info(f'Rendering frame {frameNumber} of {totalFrames} ...')
+        logging.info(f'Rendering frame {frame_number} of {total_frames} ...')
 
         # Setting up frame to draw on.
-        image = Image.new('RGB', (pixelWidth * blockWidth, pixelWidth * blockHeight), 'white')
+        image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'white')
         draw = ImageDraw.Draw(image)
 
-        streamHeaderChunk = BitStream()
-        payloadHolder = BitStream()
-        attachmentBitsAppend = BitStream()
-        remainderBlocksIntoBits = BitStream()
-        bitsToPad = BitStream()
+        stream_header_chunk = BitStream()
+        payload_holder = BitStream()
+        attachment_bits_append = BitStream()
+        remainder_blocks_into_bits = BitStream()
+        bits_to_pad = BitStream()
 
-        maxAllowablePayloadBits = len(activePayload) - activePayload.bitpos
-        bitsConsumed = FRAME_HEADER_OVERHEAD
-        blocksLeft = TOTAL_BLOCKS
-        initializerEnabled = False
-        blocksUsed = 0
-        initializerPaletteBlocksUsed = 0
-        streamHeaderBlocksUsed = 0
+        max_allowable_payload_bits = len(active_payload) - active_payload.bitpos
+        bits_consumed = FRAME_HEADER_OVERHEAD
+        blocks_left = TOTAL_BLOCKS
+        initializer_enabled = False
+        blocks_used = 0
+        initializer_palette_blocks_used = 0
+        stream_header_blocks_used = 0
 
-        if streamPaletteUsed == True:
-            primaryFramePaletteDict, primaryReadLength = streamPaletteDict, streamPalette.bitLength
-            activePalette = streamPalette
+        if stream_palette_used == True:
+            primary_frame_palette_dict, primary_read_length = stream_palette_dict, stream_palette.bit_length
+            active_palette = stream_palette
 
-        # Adding an initializer header if necessity.  initializerEnabled is a boolean that signals whether the
+        # Adding an initializer header if necessity.  initializer_enabled is a boolean that signals whether the
         # initializer is on or not.
-        initializerHolder = BitStream()
-        if frameNumber == 1 or outputMode == 'image':
-            image = renderCalibrator(image, blockHeight, blockWidth, pixelWidth)
-            initializerHolder = generateInitializer(blockHeight, blockWidth, protocolVersion, activePalette)
-            initializerPaletteBlocksUsed += INITIALIZER_DATA_BITS
-            blocksLeft -= INITIALIZER_OVERHEAD
-            initializerEnabled = True
+        initializer_holder = BitStream()
+        if frame_number == 1 or output_mode == 'image':
+            image = render_calibrator(image, block_height, block_width, pixel_width)
+            initializer_holder = generate_initializer(block_height, block_width, protocol_version, active_palette)
+            initializer_palette_blocks_used += INITIALIZER_DATA_BITS
+            blocks_left -= INITIALIZER_OVERHEAD
+            initializer_enabled = True
 
-        bitsLeftThisFrame = (blocksLeft * activePalette.bitLength) - FRAME_HEADER_OVERHEAD
+        bits_left_this_frame = (blocks_left * active_palette.bit_length) - FRAME_HEADER_OVERHEAD
 
         # Here, we're calculating how many bits we can fit into the stream based on the palettes used.
-        # Normal framePayload frames.
-        if streamPaletteUsed == True:
+        # Normal frame_payload frames.
+        if stream_palette_used == True:
 
-            # Standard framePayload frame in the middle of the stream.
-            if bitsLeftThisFrame <= maxAllowablePayloadBits:
-                payloadHolder = activePayload.read(bitsLeftThisFrame)
+            # Standard frame_payload frame in the middle of the stream.
+            if bits_left_this_frame <= max_allowable_payload_bits:
+                payload_holder = active_payload.read(bits_left_this_frame)
 
             # Payload Frame terminates on this frame.
             else:
                 logging.debug('Payload termination frame')
-                payloadHolder = activePayload.read(maxAllowablePayloadBits)
-                lastFrame = True
+                payload_holder = active_payload.read(max_allowable_payload_bits)
+                last_frame = True
 
 
-        # Frames that need streamHeaderCombined added to them.
+        # Frames that need stream_header_combined added to them.
         else:
 
             # This frame has more bits left for the streamHeader than capacity.
-            if len(streamHeaderCombined) - streamHeaderCombined.bitpos > bitsLeftThisFrame:
-                streamHeaderChunk = streamHeaderCombined.read(bitsLeftThisFrame)
-                streamHeaderBlocksUsed = math.ceil(len(streamHeaderChunk + FRAME_HEADER_OVERHEAD)
-                                                   / activePalette.bitLength)
+            if len(stream_header_combined) - stream_header_combined.bitpos > bits_left_this_frame:
+                stream_header_chunk = stream_header_combined.read(bits_left_this_frame)
+                stream_header_blocks_used = math.ceil(len(stream_header_chunk + FRAME_HEADER_OVERHEAD)
+                                                   / active_palette.bitLength)
 
 
-            # streamHeaderCombined terminates on this frame
+            # stream_header_combined terminates on this frame
             else:
 
                 logging.debug("Streamheader terminates this frame.")
 
-                streamHeaderChunk = streamHeaderCombined.read(len(streamHeaderCombined)
-                                                                    - streamHeaderCombined.bitpos)
-                bitsLeftThisFrame -= len(streamHeaderCombined)
-                bitsConsumed += len(streamHeaderChunk)
+                stream_header_chunk = stream_header_combined.read(len(stream_header_combined)
+                                                                    - stream_header_combined.bitpos)
+                bits_left_this_frame -= len(stream_header_combined)
+                bits_consumed += len(stream_header_chunk)
 
-                streamPaletteUsed = True
-                streamHeaderBlocksUsed = math.ceil(bitsConsumed / activePalette.bitLength)
+                stream_palette_used = True
+                stream_header_blocks_used = math.ceil(bits_consumed / active_palette.bit_length)
 
-                # There may be extra bits available at the end of the blocks used for the headerPalette.  If that's
+                # There may be extra bits available at the end of the blocks used for the header_palette.  If that's
                 # the case, they will be calculated here.
-                finalBlockPartialFill = bitsConsumed % activePalette.bitLength
+                final_block_partial_fill = bits_consumed % active_palette.bit_length
 
-                if finalBlockPartialFill > 0:
-                    attachmentBits = activePalette.bitLength - (finalBlockPartialFill)
-                    attachmentBitsAppend = activePayload.read(attachmentBits)
+                if final_block_partial_fill > 0:
+                    attachment_bits = active_palette.bitLength - (final_block_partial_fill)
+                    attachment_bits_append = active_payload.read(attachment_bits)
 
-                    bitsConsumed += attachmentBits
-                    maxAllowablePayloadBits -= attachmentBits
+                    bits_consumed += attachment_bits
+                    max_allowable_payload_bits -= attachment_bits
 
-                remainingBlocksLeft = blocksLeft - streamHeaderBlocksUsed
+                remaining_blocks_left = blocks_left - stream_header_blocks_used
 
-                # If there are remaining streamPalette blocks available for this frame, we go here.
-                if remainingBlocksLeft > 0:
-                    bitsLeftThisFrame = remainingBlocksLeft * activePalette.bitLength
+                # If there are remaining stream_palette blocks available for this frame, we go here.
+                if remaining_blocks_left > 0:
+                    bits_left_this_frame = remaining_blocks_left * active_palette.bit_length
 
-                    if maxAllowablePayloadBits > bitsLeftThisFrame: # Payload continues on in next frame(s)
-                        remainderBlocksIntoBits = activePayload.read(bitsLeftThisFrame)
+                    if max_allowable_payload_bits > bits_left_this_frame: # Payload continues on in next frame(s)
+                        remainder_blocks_into_bits = active_payload.read(bits_left_this_frame)
 
-                    else: # Full framePayload can terminate on streamHeader termination frame.
-                        remainderBlocksIntoBits = activePayload.read(maxAllowablePayloadBits)
-                        lastFrame = True
+                    else: # Full frame_payload can terminate on streamHeader termination frame.
+                        remainder_blocks_into_bits = active_payload.read(max_allowable_payload_bits)
+                        last_frame = True
 
-        frameHashableBits = streamHeaderChunk + attachmentBitsAppend + remainderBlocksIntoBits + payloadHolder
-        combinedFrameLength = frameHashableBits.len + FRAME_HEADER_OVERHEAD
-        blocksUsed = (int(initializerEnabled) * INITIALIZER_DATA_BITS) + math.ceil(combinedFrameLength
-                                                                                   / activePalette.bitLength)
+        frame_hashable_bits = stream_header_chunk + attachment_bits_append + remainder_blocks_into_bits + payload_holder
+        combined_frame_length = frame_hashable_bits.len + FRAME_HEADER_OVERHEAD
+        blocks_used = (int(initializer_enabled) * INITIALIZER_DATA_BITS) + math.ceil(combined_frame_length
+                                                                                   / active_palette.bit_length)
 
         #On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
         #cleanly fits into the block.
-        if lastFrame == True:
+        if last_frame == True:
 
-            remainderBits = activePalette.bitLength - (combinedFrameLength % activePalette.bitLength)
-            if remainderBits == activePalette.bitLength:
-                remainderBits = 0
+            remainder_bits = active_palette.bit_length - (combined_frame_length % active_palette.bit_length)
+            if remainder_bits == active_palette.bit_length:
+                remainder_bits = 0
 
-            bitsToPad = BitStream(bin=f"{'0' * remainderBits}")
-            frameHashableBits.append(bitsToPad)
+            bits_to_pad = BitStream(bin=f"{'0' * remainder_bits}")
+            frame_hashable_bits.append(bits_to_pad)
 
-        frameHeaderHolder = generateFrameHeader(streamSHA, frameHashableBits, frameNumber, blocksUsed)
-        combiningBits = initializerHolder + frameHeaderHolder + streamHeaderChunk + attachmentBitsAppend \
-                        + remainderBlocksIntoBits + payloadHolder + bitsToPad
+        frame_header_holder = generate_frame_header(stream_sha, frame_hashable_bits, frame_number, blocks_used)
+        combining_bits = initializer_holder + frame_header_holder + stream_header_chunk + attachment_bits_append \
+                        + remainder_blocks_into_bits + payload_holder + bits_to_pad
 
-        allBitsToWrite = ConstBitStream(combiningBits)
-        nextCoordinates = loopGenerator(blockHeight, blockWidth, pixelWidth, initializerEnabled)
-        blockPosition = 0
+        all_bits_to_write = ConstBitStream(combining_bits)
+        next_coordinates = loop_generator(block_height, block_width, pixel_width, initializer_enabled)
+        block_position = 0
 
         # Drawing blocks to screen.
-        while len(allBitsToWrite) != allBitsToWrite.bitpos:
+        while len(all_bits_to_write) != all_bits_to_write.bitpos:
 
-            # Primary palette selection (ie, headerPalette or streamPalette depending on where we are in the stream)
-            if blockPosition >= initializerPaletteBlocksUsed:
-                activePaletteDict, readLength = primaryFramePaletteDict, primaryReadLength
+            # Primary palette selection (ie, header_palette or stream_palette depending on where we are in the stream)
+            if block_position >= initializer_palette_blocks_used:
+                active_palette_dict, read_length = primary_frame_palette_dict, primary_read_length
 
             # Initializer palette selection
-            elif blockPosition < initializerPaletteBlocksUsed:
-                activePaletteDict, readLength = (initializerPaletteDict, initializerPalette.bitLength)
+            elif block_position < initializer_palette_blocks_used:
+                active_palette_dict, read_length = (initializer_palette_dict, initializer_palette.bitLength)
 
             # Here to signal something has broken.
             else:
@@ -193,27 +193,27 @@ def renderLoop(blockHeight, blockWidth, pixelWidth, protocolVersion, initializer
                                 '\nis reached only if something is broken.')
 
             # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
-            nextBits = allBitsToWrite.read(f'bits : {readLength}')
-            colorValue = activePaletteDict.getColor(ConstBitStream(nextBits))
+            next_bits = all_bits_to_write.read(f'bits : {read_length}')
+            color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
 
             # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
-            activeCoordinates = next(nextCoordinates)
-            draw.rectangle((activeCoordinates[0], activeCoordinates[1], activeCoordinates[2], activeCoordinates[3]),
-                           fill=f'rgb{str(colorValue)}')
+            active_coordinates = next(next_coordinates)
+            draw.rectangle((active_coordinates[0], active_coordinates[1], active_coordinates[2], active_coordinates[3]),
+                           fill=f'rgb{str(color_value)}')
 
-            blockPosition += 1
+            block_position += 1
 
         # Frames get saved as .png files.
-        frameNumberToString = str(frameNumber)
+        frame_number_to_string = str(frame_number)
 
-        if outputMode == 'video':
-            fileName = frameNumberToString.zfill(math.ceil(math.log(totalFrames + 1, 10)))
+        if output_mode == 'video':
+            file_name = frame_number_to_string.zfill(math.ceil(math.log(total_frames + 1, 10)))
 
         else:
-            fileName = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(dateCreated)) + ' - ' + str(frameNumber)
+            file_name = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(date_created)) + ' - ' + str(frame_number)
 
-        image.save(f'{imageOutputPath}{str(fileName)}.png')
-        frameNumber += 1
+        image.save(f'{image_output_path}{str(file_name)}.png')
+        frame_number += 1
 
     logging.debug('Render complete, running cleanup()...')
-    return blockPosition, imageOutputPath, str(frameNumber)
+    return block_position, image_output_path, str(frame_number)
