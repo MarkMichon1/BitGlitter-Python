@@ -20,8 +20,8 @@ class PreProcessor:
         self.active_folder = refresh_working_folder(active_path)
         packager = Packager(self.active_folder, file_list, mask_files)
         compressor = Compressor(packager.pass_through, self.active_folder, compression_enabled)
-        self.streamSHA = return_hash_from_file(compressor.pass_through)
-        logging.info(f"SHA-256: {self.streamSHA}")
+        self.stream_sha = return_hash_from_file(compressor.pass_through)
+        logging.info(f"SHA-256: {self.stream_sha}")
         encryptor = Encryptor(compressor.pass_through, self.active_folder, crypto_key, scrypt_n, scrypt_r,
                               scrypt_p)
 

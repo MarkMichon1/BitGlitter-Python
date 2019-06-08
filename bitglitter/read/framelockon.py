@@ -17,20 +17,20 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
     initializer_palette_b = palette_grabber('11')
     initializer_palette_a_dict = ColorsToValue(initializer_palette_a)
     initializer_palette_b_dict = ColorsToValue(initializer_palette_b)
-    combined_colors = initializer_palette_a.colorSet + initializer_palette_b.colorSet
+    combined_colors = initializer_palette_a.color_set + initializer_palette_b.color_set
 
     if block_height_override and block_width_override: # Jump straight to verification
-        logging.info("block_height_override and block_width_override parameters detected.  Attempting to lock with these"
-                     " values...")
+        logging.info("block_height_override and block_width_override parameters detected.  Attempting to lock with "
+                     "these values...")
         pixel_width = ((frame_width / block_width_override) + (frame_height / block_height_override)) / 2
 
-        checkpoint = verify_blocks_x(image, pixel_width, block_width_override, combined_colors, initializer_palette_a_dict,
-                                     initializer_palette_b_dict, override=True)
+        checkpoint = verify_blocks_x(image, pixel_width, block_width_override, combined_colors,
+                                     initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if checkpoint == False:
                 return False, False, False
 
-        checkpoint = verify_blocks_y(image, pixel_width, block_height_override, combined_colors, initializer_palette_a_dict,
-                                     initializer_palette_b_dict, override=True)
+        checkpoint = verify_blocks_y(image, pixel_width, block_height_override, combined_colors,
+                                     initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if checkpoint == False:
                 return False, False, False
 
@@ -43,26 +43,29 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
                             'reliable lock.')
             return False, False, False
 
-        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_colors,
-                                                         initializer_palette_a_dict, initializer_palette_b_dict, frame_width,
-                                                         frame_height, width=True)
-        checkpoint = verify_blocks_x(image, pixel_width, block_dimension_guess, combined_colors, initializer_palette_a_dict,
-                                     initializer_palette_b_dict)
+        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b,
+                                                         combined_colors, initializer_palette_a_dict,
+                                                         initializer_palette_b_dict, frame_width, frame_height,
+                                                         width=True)
+        checkpoint = verify_blocks_x(image, pixel_width, block_dimension_guess, combined_colors,
+                                     initializer_palette_a_dict, initializer_palette_b_dict)
         if checkpoint == False:
             return False, False, False
 
         block_width = block_dimension_guess
-        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_colors,
-                                                         initializer_palette_a_dict, initializer_palette_b_dict, frame_width,
-                                                         frame_height, width=False)
-        checkpoint = verify_blocks_y(image, pixel_width, block_dimension_guess, combined_colors, initializer_palette_a_dict,
-                                     initializer_palette_b_dict)
+        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b,
+                                                         combined_colors, initializer_palette_a_dict,
+                                                         initializer_palette_b_dict, frame_width, frame_height,
+                                                         width=False)
+        checkpoint = verify_blocks_y(image, pixel_width, block_dimension_guess, combined_colors,
+                                     initializer_palette_a_dict, initializer_palette_b_dict)
 
         if checkpoint == False:
             return False, False, False
         block_height = block_dimension_guess
 
-    logging.debug(f'Lockon successful.\npixel_width: {pixel_width}\nblock_height: {block_height}\nblock_width: {block_width}')
+    logging.debug(f'Lockon successful.\npixel_width: {pixel_width}\nblock_height: {block_height}\nblock_width: '
+                  f'{block_width}')
     return block_height, block_width, pixel_width
 
 

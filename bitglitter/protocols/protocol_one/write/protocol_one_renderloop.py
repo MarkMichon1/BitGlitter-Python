@@ -9,10 +9,10 @@ from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import re
     generate_frame_header, generate_stream_header_binary_preamble, loop_generator
 
 
-def render_loop(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette, stream_palette,
-                output_mode, stream_output_path, active_path, pass_through, size_in_bytes, total_frames, compression_enabled,
-                encryption_enabled, file_mask_enabled, date_created, ascii_compressed, stream_sha, initializer_palette_dict,
-                header_palette_dict, stream_palette_dict):
+def render_loop(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
+                stream_palette, output_mode, stream_output_path, active_path, pass_through, size_in_bytes, total_frames,
+                compression_enabled, encryption_enabled, file_mask_enabled, date_created, ascii_compressed, stream_sha,
+                initializer_palette_dict, header_palette_dict, stream_palette_dict):
     '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
     # comments in this function that describe what each part is doing, to follow along.
     '''
@@ -44,10 +44,10 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
     last_frame = False
 
     # Final preparations for stream header parts.
-    stream_header_binary_preamble = generate_stream_header_binary_preamble(size_in_bytes, total_frames, compression_enabled,
-                                                                        encryption_enabled, file_mask_enabled,
-                                                                        stream_palette.palette_type == "custom", date_created,
-                                                                        stream_palette.id, len(ascii_compressed))
+    stream_header_binary_preamble = generate_stream_header_binary_preamble(size_in_bytes, total_frames,
+                                                            compression_enabled, encryption_enabled, file_mask_enabled,
+                                                            stream_palette.palette_type == "custom", date_created,
+                                                            stream_palette.id, len(ascii_compressed))
     stream_header_combined = BitStream(stream_header_binary_preamble)
     stream_header_combined.append(ascii_compressed)
 
@@ -133,7 +133,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
                 final_block_partial_fill = bits_consumed % active_palette.bit_length
 
                 if final_block_partial_fill > 0:
-                    attachment_bits = active_palette.bitLength - (final_block_partial_fill)
+                    attachment_bits = active_palette.bit_length - (final_block_partial_fill)
                     attachment_bits_append = active_payload.read(attachment_bits)
 
                     bits_consumed += attachment_bits
@@ -185,7 +185,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
 
             # Initializer palette selection
             elif block_position < initializer_palette_blocks_used:
-                active_palette_dict, read_length = (initializer_palette_dict, initializer_palette.bitLength)
+                active_palette_dict, read_length = (initializer_palette_dict, initializer_palette.bit_length)
 
             # Here to signal something has broken.
             else:

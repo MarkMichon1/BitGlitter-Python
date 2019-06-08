@@ -49,25 +49,27 @@ def write(   # Basic setup
     write_protocol = protocol_handler.return_write_protocol('1')
 
     # Are all parameters acceptable?
-    write_protocol.verifyWriteParameters(file_list, stream_name, stream_description, output_path, output_mode, compression_enabled,
-                                        file_mask_enabled, scrypt_override_n, scrypt_override_r, scrypt_override_p, stream_palette_id,
-                                        header_palette_id, pixel_width, block_height, block_width, frames_per_second)
+    write_protocol.verify_write_parameters(file_list, stream_name, stream_description, output_path, output_mode,
+                                           compression_enabled, file_mask_enabled, scrypt_override_n, scrypt_override_r,
+                                           scrypt_override_p, stream_palette_id, header_palette_id, pixel_width,
+                                           block_height, block_width, frames_per_second)
 
     # This sets the name of the temporary folder while the file is being written.
     active_path = WRITE_PATH
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
-    pre_process = write_protocol.preProcessing(active_path, file_list, encryption_key, file_mask_enabled, compression_enabled,
-                                             scrypt_override_n, scrypt_override_r, scrypt_override_p)
+    pre_process = write_protocol.pre_processing(active_path, file_list, encryption_key, file_mask_enabled,
+                                                compression_enabled, scrypt_override_n, scrypt_override_r,
+                                                scrypt_override_p)
 
     # After the data is prepared, this is what renders the data into images.
-    frame_processor = write_protocol.frameProcessor()
+    frame_processor = write_protocol.frame_processor()
 
     renderHandler = RenderHandler(frame_processor, block_height, block_width, header_palette_id, pre_process.stream_sha,
-                                  pre_process.size_in_bytes, compression_enabled, encryption_key != "", file_mask_enabled,
-                                  pre_process.date_created, stream_palette_id, BG_VERSION, stream_name, stream_description,
-                                  pre_process.post_encryption_hash, pixel_width, output_mode, output_path,
-                                  frames_per_second, active_path, pre_process.pass_through)
+                                  pre_process.size_in_bytes, compression_enabled, encryption_key != "",
+                                  file_mask_enabled, pre_process.date_created, stream_palette_id, BG_VERSION,
+                                  stream_name, stream_description, pre_process.post_encryption_hash, pixel_width,
+                                  output_mode, output_path, frames_per_second, active_path, pre_process.pass_through)
 
 
     # Returns the SHA of the preprocessed file in string format for optional storage of it.

@@ -9,13 +9,13 @@ def output_stats(path):
 
     active_path = os.path.join(os.getcwd(), path)
     with open(active_path + '\\BitGlitter statistics.txt', 'w') as writer:
-        writer.write(str(config.statsHandler))
+        writer.write(str(config.stats_handler))
 
 
 def clear_stats():
     '''Resets statistics back to zero in all fields.'''
 
-    config.statsHandler.clearStats()
+    config.stats_handler.clear_stats()
     config.save_session()
 
 

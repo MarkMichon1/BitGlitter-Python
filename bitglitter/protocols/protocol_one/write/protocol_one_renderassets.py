@@ -46,8 +46,9 @@ def ascii_header_process(file_mask_enabled, active_path, stream_palette, bg_vers
     return compressed_stream_header
 
 
-def generate_stream_header_binary_preamble(size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_mask_enabled,
-                                           is_stream_palette_custom, date_created, stream_palette_id, ascii_compressed_length):
+def generate_stream_header_binary_preamble(size_in_bytes, total_frames, compression_enabled, encryption_enabled,
+                                           file_mask_enabled, is_stream_palette_custom, date_created, stream_palette_id,
+                                           ascii_compressed_length):
     '''The binary preamble for the Stream Header is created here.  For videos and images, this is only needed for the
     first frame.
     '''
@@ -96,7 +97,8 @@ def generate_frame_header(stream_sha, frame_hashable_bits, frame_number, blocks_
     return full_bit_string
 
 
-def how_many_frames(block_height, block_width, ascii_compressed_size, size_in_bytes, stream_palette, header_palette, output_mode):
+def how_many_frames(block_height, block_width, ascii_compressed_size, size_in_bytes, stream_palette, header_palette,
+                    output_mode):
     '''This method returns how many frames will be required to complete the rendering process.'''
 
     logging.debug("Calculating how many frames to render...")
@@ -131,8 +133,8 @@ def how_many_frames(block_height, block_width, ascii_compressed_size, size_in_by
             bits_consumed += stream_header_bits_left
             stream_header_bits_left = 0
 
-            stream_header_blocks_used = math.ceil(bits_consumed / header_palette.bitLength)
-            attachment_bits = header_palette.bitLength - (bits_consumed % header_palette.bitLength)
+            stream_header_blocks_used = math.ceil(bits_consumed / header_palette.bit_length)
+            attachment_bits = header_palette.bit_length - (bits_consumed % header_palette.bit_length)
 
             if attachment_bits > 0:
                 data_left -= attachment_bits

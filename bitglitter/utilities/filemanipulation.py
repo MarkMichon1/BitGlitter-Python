@@ -56,7 +56,8 @@ def encrypt_file(input_file, output_file, encryption_key, scrypt_n = 14, scrypt_
         os.remove(input_file)
 
 
-def decrypt_file(input_file, output_file, encryption_key, scrypt_n = 14, scrypt_r = 8, scrypt_p = 1, remove_input = True):
+def decrypt_file(input_file, output_file, encryption_key, scrypt_n = 14, scrypt_r = 8, scrypt_p = 1,
+                 remove_input = True):
     '''Taking an input file as well as an encryption key, this function decrypts and saves the file.'''
 
     backend = default_backend()
@@ -94,8 +95,8 @@ def _decrypt_bytes(key, initialization_vector_aes, data, backend):
 
 
 def _derive_key(password, salt, scrypt_n, scrypt_r, scrypt_p, backend):
-    '''This is an internal function used in encrypt_file() and decrypt_file() that creates the text based key, and returns
-    a proper AES key in byte format.
+    '''This is an internal function used in encrypt_file() and decrypt_file() that creates the text based key, and
+    returns a proper AES key in byte format.
     '''
 
     kdf = Scrypt(salt=salt, length=32, n=2 ** scrypt_n, r=scrypt_r, p=scrypt_p,

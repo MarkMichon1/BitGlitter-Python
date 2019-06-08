@@ -108,19 +108,24 @@ class EncodeFrame:
 
         self.ascii_compressed = ascii_header_process(self.file_mask_enabled, self.active_path,
                                                      self.stream_palette, self.bg_version, self.stream_name,
-                                                     self.stream_description, self.post_encryption_hash, self.encryption_enabled)
+                                                     self.stream_description, self.post_encryption_hash,
+                                                     self.encryption_enabled)
 
-        self.total_frames = how_many_frames(self.block_height, self.block_width, len(self.ascii_compressed), self.size_in_bytes,
-                                            self.stream_palette, self.header_palette, self.output_mode)
+        self.total_frames = how_many_frames(self.block_height, self.block_width, len(self.ascii_compressed),
+                                            self.size_in_bytes, self.stream_palette, self.header_palette,
+                                            self.output_mode)
 
         self.remainder_blocks, self.image_output_path, self.frame_number_formatted = render_loop(self.block_height,
-                                                                                                 self.block_width, self.pixel_width, self.PROTOCOL_VERSION, self.initializer_palette,
-                                                                                                 self.header_palette, self.stream_palette, self.output_mode, self.stream_output_path,
-                                                                                                 self.active_path, self.pass_through, self.size_in_bytes, self.total_frames,
-                                                                                                 self.compression_enabled, self.encryption_enabled, self.file_mask_enabled, self.date_created,
-                                                                                                 self.ascii_compressed, self.stream_sha, self.initializer_palette_dict, self.header_palette_dict,
-                                                                                                 self.stream_palette_dict)
+                                                        self.block_width, self.pixel_width, self.PROTOCOL_VERSION,
+                                                        self.initializer_palette, self.header_palette,
+                                                        self.stream_palette, self.output_mode, self.stream_output_path,
+                                                        self.active_path, self.pass_through, self.size_in_bytes,
+                                                        self.total_frames, self.compression_enabled,
+                                                        self.encryption_enabled, self.file_mask_enabled,
+                                                        self.date_created, self.ascii_compressed, self.stream_sha,
+                                                        self.initializer_palette_dict, self.header_palette_dict,
+                                                        self.stream_palette_dict)
 
         if output_mode == 'video':
-            render_video(self.stream_output_path, self.date_created, self.image_output_path, self.frame_number_formatted,
-                         self.frames_per_second)
+            render_video(self.stream_output_path, self.date_created, self.image_output_path,
+                         self.frame_number_formatted, self.frames_per_second)

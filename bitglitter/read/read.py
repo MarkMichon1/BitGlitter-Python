@@ -33,15 +33,16 @@ def read(file_to_input,
     from bitglitter.config.config import config
 
     # Are all parameters acceptable?
-    verify_read_parameters(file_to_input, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p, block_width_override,
-                           block_width_override, assemble_hold)
+    verify_read_parameters(file_to_input, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+                           block_width_override, block_width_override, assemble_hold)
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
     active_path = READ_PATH
 
     # Pull valid frame data from the inputted file.
-    checkpoint_passed = file_slicer(file_to_input, active_path, output_path, block_height_override, block_width_override,
-                                   encryption_key, scrypt_n, scrypt_r, scrypt_p, config, bad_frame_strikes, assemble_hold)
+    checkpoint_passed = file_slicer(file_to_input, active_path, output_path, block_height_override,
+                                    block_width_override, encryption_key, scrypt_n, scrypt_r, scrypt_p, config,
+                                    bad_frame_strikes, assemble_hold)
     if checkpoint_passed == False:
         return False
 

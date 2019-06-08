@@ -23,7 +23,8 @@ class Decryptor:
                 logging.info('Attempting to decrypt with provided key...')
                 logging.debug(f'Trying with key {encryption_key}')
                 self.pass_through = working_folder + '\\decrypted.bin'
-                decrypt_file(input_file, self.pass_through, encryption_key, scrypt_n, scrypt_r, scrypt_p, remove_input=False)
+                decrypt_file(input_file, self.pass_through, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+                             remove_input=False)
 
                 # Checking if password is valid
                 if stream_sha == return_hash_from_file(self.pass_through):

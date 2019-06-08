@@ -2,7 +2,8 @@ import logging
 from math import ceil
 
 from bitglitter.config.config import config
-from bitglitter.utilities.generalverifyfunctions import is_bool, is_valid_directory, is_int_over_zero, proper_string_syntax
+from bitglitter.utilities.generalverifyfunctions import is_bool, is_valid_directory, is_int_over_zero, \
+    proper_string_syntax
 
 def palette_verify(header_type, bit_length, block_width, block_height, output_type, fps=0):
     '''This function calculates the necessary overhead for both images and videos for subsequent frames after 1.  It
@@ -35,8 +36,8 @@ def palette_verify(header_type, bit_length, block_width, block_height, output_ty
     return ((round(100 - (occupied_blocks / total_blocks * 100), 2)), bits_available, output_per_sec)
 
 
-def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode, compression_enabled,
-                            file_mask_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette,
+def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode,
+                            compression_enabled, file_mask_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette,
                             header_palette, pixel_width, block_height, block_width, frames_per_second):
     '''This function verifies all write() parameters for Protocol v1.  Look at this as the gatekeeper that stops
     invalid arguments from proceeding through the process, potentially breaking the stream (or causing BitGlitter to
@@ -74,12 +75,12 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
 
     # is stream_palette valid?  We're simultaneously setting up a variable for a geometry just check below.
     def does_palette_exist(palette, type):
-        if palette in config.colorHandler.default_palette_list:
-            palette_to_return = config.colorHandler.default_palette_list[palette]
-        elif palette in config.colorHandler.custom_palette_list:
-            palette_to_return = config.colorHandler.custom_palette_list[palette]
-        elif palette in config.colorHandler.custom_palette_nickname_list:
-            palette_to_return = config.colorHandler.custom_palette_nickname_list[palette]
+        if palette in config.color_handler.default_palette_list:
+            palette_to_return = config.color_handler.default_palette_list[palette]
+        elif palette in config.color_handler.custom_palette_list:
+            palette_to_return = config.color_handler.custom_palette_list[palette]
+        elif palette in config.color_handler.custom_palette_nickname_list:
+            palette_to_return = config.color_handler.custom_palette_nickname_list[palette]
         else:
             raise ValueError(f"Argument {type} in write() is not a valid ID or nickname.  Verify that exact value "
                              "exists.")
@@ -100,19 +101,19 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
         raise ValueError('Minimum block dimensions for Protocol 1 are 17 x 17.')
 
     # With the given dimensions and bit length, is it sufficient?
-    returned_header_values = palette_verify('header_palette', active_header_palette.bitLength, block_width, block_height,
-                                          output_mode, frames_per_second)
-    logging.info(f'{returned_header_values[0]}% of the frame for initial header is allocated for frame payload (higher is'
-                 ' better)')
+    returned_header_values = palette_verify('header_palette', active_header_palette.bit_length, block_width,
+                                            block_height, output_mode, frames_per_second)
+    logging.info(f'{returned_header_values[0]}% of the frame for initial header is allocated for frame payload (higher '
+                 f'is better)')
 
-    returned_stream_values = palette_verify('stream_palette', active_stream_palette.bitLength, block_width, block_height,
-                                          output_mode, frames_per_second)
-    logging.info(f'{returned_stream_values[1]} B, or {returned_stream_values[0]}% of subsequent frames is allocated for '
-                 f'frame payload (higher is better)')
+    returned_stream_values = palette_verify('stream_palette', active_stream_palette.bit_length, block_width,
+                                            block_height, output_mode, frames_per_second)
+    logging.info(f'{returned_stream_values[1]} B, or {returned_stream_values[0]}% of subsequent frames is allocated for'
+                 f' frame payload (higher is better)')
 
     if output_mode == 'video':
-        logging.info(f'As a video, it will effectively be transporting {round(returned_stream_values[2] / 8)} B/sec of '
-                     f'data.')
+        logging.info(f'As a video, it will effectively be transporting {round(returned_stream_values[2] / 8)} B/sec of'
+                     f' data.')
 
     logging.info('Minimum geometry requirements met.')
     logging.info("Write parameters validated.")

@@ -16,11 +16,11 @@ def print_full_save_list(path, debug_data = False):
     with open(active_path + '\\BitGlitter Partial Saves.txt', 'w') as writer:
         writer.write('*' * 21 + '\nPartial Saves\n' + '*' * 21 + '\n')
 
-        if config.assembler.saveDict:
+        if config.assembler.save_dict:
             temp_holder = ''
 
-            for partialSave in config.assembler.saveDict:
-                temp_holder += ('\n' + config.assembler.saveDict[partialSave].return_status(debug_data) + '\n\n')
+            for partial_save in config.assembler.save_dict:
+                temp_holder += ('\n' + config.assembler.save_dict[partial_save].return_status(debug_data) + '\n\n')
             writer.write(temp_holder)
 
         else:
@@ -42,7 +42,8 @@ def update_partial_save(stream_sha, reattempt_assembly = True, password_update =
     if change_output_path:
         is_valid_directory('change_output_path', change_output_path)
 
-    config.assembler.save_dict[stream_sha].user_input_update(password_update, scrypt_n, scrypt_r, scrypt_p, change_output_path)
+    config.assembler.save_dict[stream_sha].user_input_update(password_update, scrypt_n, scrypt_r, scrypt_p,
+                                                             change_output_path)
 
     if reattempt_assembly == True:
         if config.assembler.save_dict[stream_sha]._attempt_assembly() == True:
@@ -51,22 +52,22 @@ def update_partial_save(stream_sha, reattempt_assembly = True, password_update =
     config.save_session()
 
 
-def remove_partial_save(streamSHA):
+def remove_partial_save(stream_sha):
     '''Taking the stream SHA as an argument, this function will remove the partial save object, and well as remove any
     temporary data BitGlitter may have had with it.
     '''
 
-    config.assembler.remove_partial_save(streamSHA)
+    config.assembler.remove_partial_save(stream_sha)
     config.save_session()
 
 
-def begin_assembly(streamSHA):
+def begin_assembly(stream_sha):
     '''This function exists to initiate assembly of a package at a later time, rather than doing so immediately for
     whatever reason.
     '''
 
-    if config.assembler.save_dict[streamSHA]._attempt_assembly() == True:
-        config.assembler.remove_partial_save(streamSHA)
+    if config.assembler.save_dict[stream_sha]._attempt_assembly() == True:
+        config.assembler.remove_partial_save(stream_sha)
     config.save_session()
 
 

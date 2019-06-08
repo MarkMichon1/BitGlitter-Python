@@ -16,7 +16,8 @@ class PartialSave:
     into the original package is done through it's contained methods.
     '''
 
-    def __init__(self, stream_sha, working_folder, scrypt_n, scrypt_r, scrypt_p, output_path, encryption_key, assemble_hold):
+    def __init__(self, stream_sha, working_folder, scrypt_n, scrypt_r, scrypt_p, output_path, encryption_key,
+                 assemble_hold):
 
         # Core object state data
         self.save_folder = working_folder + f'\\{stream_sha}'
@@ -109,8 +110,8 @@ class PartialSave:
 
     def user_input_update(self, password_update, scrypt_n, scrypt_r, scrypt_p, change_output_path):
         '''This method changes user related configurations such as password, scrypt parameters, and save location.
-        These arguments are blindly accepted from update_partial_save() in savedfilefunctions, as the inputs are validated
-        there.
+        These arguments are blindly accepted from update_partial_save() in savedfilefunctions, as the inputs are
+        validated there.
         '''
 
         if password_update:
@@ -287,8 +288,8 @@ class PartialSave:
 
 
     def _read_file(self, file_name, to_decompress=False):
-        '''This internal method reads the file with the file_name according to how many bits it is, deletes the file, and
-        then returns the BitStream object.
+        '''This internal method reads the file with the file_name according to how many bits it is, deletes the file,
+        and then returns the BitStream object.
         '''
 
         file_path = self.save_folder + f'\\{file_name}.bin'
@@ -314,7 +315,7 @@ class PartialSave:
     def read_stream_header_binary_preamble(self):
         '''This method converts the raw full binary preamble into the various PartialSave attributes.'''
 
-        self.size_in_bytes, self.total_frames, self.compression_enabled, self.encryption_enabled, self.masking_enabled, \
+        self.size_in_bytes, self.total_frames, self.compression_enabled, self.encryption_enabled, self.masking_enabled,\
         self.custom_palette_used, self.date_created, self.stream_palette_id, self.ascii_header_byte_size = \
             decode_stream_header_binary_preamble(self.stream_header_preamble_buffer)
         self.stream_header_preamble_buffer = None
@@ -335,8 +336,10 @@ class PartialSave:
         '''This method converts the raw full ASCII stream header into the various PartialSave attributes.'''
 
         self.bg_version, self.stream_name, self.stream_description, self.file_list, self.custom_color_name, \
-        self.custom_color_description, self.custom_color_date_created, self.custom_color_palette, self.post_compression_sha = \
-         decode_stream_header_ascii_compressed(self.stream_header_ascii_buffer, self.custom_palette_used, self.encryption_enabled)
+        self.custom_color_description, self.custom_color_date_created, self.custom_color_palette, \
+        self.post_compression_sha = \
+         decode_stream_header_ascii_compressed(self.stream_header_ascii_buffer, self.custom_palette_used,
+                                               self.encryption_enabled)
         self.stream_header_ascii_buffer = None
 
         if self.masking_enabled == True:
@@ -346,8 +349,8 @@ class PartialSave:
             self.file_list = format_file_list(self.file_list)
 
         logging.info(f'*** Part 2/2 of header decoded for {self.stream_sha}: ***\nProgram version of sender: '
-                     f'v{self.bg_version}\nStream name: {self.stream_name}\nStream description: {self.stream_description}'
-                     f'\nFile list: {self.file_list}')
+                     f'v{self.bg_version}\nStream name: {self.stream_name}\nStream description: '
+                     f'{self.stream_description} \nFile list: {self.file_list}')
 
         if self.custom_palette_used == True:
             logging.info(f'\nCustom color name: {self.custom_color_name}\nCustom color description: '
@@ -373,8 +376,8 @@ class PartialSave:
         else:
 
             # If the stream header binary preamble isn't loaded yet, then by default we accept the frame, unless that
-            # frame number is already in self.frames_prior_to_binary_preamble, which is a list of processed frames prior to
-            # the binary preamble being read.
+            # frame number is already in self.frames_prior_to_binary_preamble, which is a list of processed frames prior
+            # to the binary preamble being read.
             if self.stream_header_preamble_complete == False:
                 if frame_number not in self.frames_prior_to_binary_preamble:
                     return True
@@ -388,7 +391,8 @@ class PartialSave:
                 # Frame reference table is not in memory and must be loaded.
                 if self.frame_reference_table == None:
 
-                    self.frame_reference_table = BitStream(self._read_file('\\frame_reference_table', to_decompress=True))
+                    self.frame_reference_table = BitStream(self._read_file('\\frame_reference_table',
+                                                                           to_decompress=True))
 
                 self.frame_reference_table.bitpos = frame_number - 1
                 isFrameLoaded = self.frame_reference_table.read('bool')
@@ -453,5 +457,5 @@ class PartialSave:
         create the palette.
         '''
 
-        return self.stream_header_ascii_complete, self.stream_palette_id, self.custom_color_name, self.custom_color_description, \
-               self.custom_color_date_created, self.custom_color_palette
+        return self.stream_header_ascii_complete, self.stream_palette_id, self.custom_color_name, \
+               self.custom_color_description,  self.custom_color_date_created, self.custom_color_palette

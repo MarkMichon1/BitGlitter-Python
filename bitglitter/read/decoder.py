@@ -216,15 +216,15 @@ class Decoder:
         '''
 
         logging.debug('Attempting stream palette load...')
-        save_object = self.config_object.assembler.saveDict[self.stream_sha_from_last_frame].return_stream_header_id()
+        save_object = self.config_object.assembler.save_dict[self.stream_sha_from_last_frame].return_stream_header_id()
 
         if save_object[0] == True:
 
             self.stream_header_cleared = True
 
             # Does stream palette already exist as a custom or default color?
-            if save_object[1] in self.config_object.colorHandler.customPaletteList or save_object[1] in \
-                    self.config_object.colorHandler.defaultPaletteList:
+            if save_object[1] in self.config_object.color_handler.custom_palette_list or save_object[1] in \
+                    self.config_object.color_handler.default_palette_list:
 
                 self.stream_palette = palette_grabber(save_object[1])
                 logging.info(f'Palette ID {save_object[1]} already saved in system... successfully loaded!')

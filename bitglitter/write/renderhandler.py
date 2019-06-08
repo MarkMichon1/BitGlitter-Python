@@ -20,7 +20,8 @@ class RenderHandler:
                  stream_sha,
 
                  # Stream Header - Binary Preamble
-                 size_in_bytes, compression_enabled, encryption_enabled, file_mask_enabled, date_created, stream_palette_id,
+                 size_in_bytes, compression_enabled, encryption_enabled, file_mask_enabled, date_created,
+                 stream_palette_id,
 
                  # Stream Header - ASCII Encoded
                  bg_version, stream_name, stream_description, post_encryption_hash,
@@ -67,23 +68,25 @@ class RenderHandler:
         self.stream_palette_dict = ValuesToColor(self.stream_palette, 'stream_palette')
         self.initializer_palette_dict = ValuesToColor(self.initializer_palette, 'initializer_palette')
 
-        self.protocol.begin_session_process(self.active_path, self.pass_through, self.stream_output_path, self.bg_version,
-                                            self.initializer_palette, self.header_palette, self.stream_palette,
-                                            self.initializer_palette_dict, self.header_palette_dict, self.stream_palette_dict,
-                                            self.block_height, self.block_width, self.pixel_width, self.frames_per_second,
-                                            self.output_mode, self.stream_sha, self.size_in_bytes, self.compression_enabled,
-                                            self.encryption_enabled, self.file_mask_enabled, self.date_created,
-                                            self.stream_name, self.stream_description, self.post_encryption_hash)
+        self.protocol.begin_session_process(self.active_path, self.pass_through, self.stream_output_path,
+                                            self.bg_version, self.initializer_palette, self.header_palette,
+                                            self.stream_palette, self.initializer_palette_dict,
+                                            self.header_palette_dict, self.stream_palette_dict, self.block_height,
+                                            self.block_width, self.pixel_width, self.frames_per_second,
+                                            self.output_mode, self.stream_sha, self.size_in_bytes,
+                                            self.compression_enabled, self.encryption_enabled, self.file_mask_enabled,
+                                            self.date_created, self.stream_name, self.stream_description,
+                                            self.post_encryption_hash)
 
-        config.statsHandler.write_update(((self.protocol.totalFrames - 1) * (self.block_height * self.block_width) +
-                                         self.protocol.remainder_blocks), self.protocol.total_frames, self.size_in_bytes)
+        config.stats_handler.write_update(((self.protocol.total_frames - 1) * (self.block_height * self.block_width) +
+                                         self.protocol.remainder_blocks), self.protocol.total_frames,
+                                          self.size_in_bytes)
 
         self.cleanup()
 
 
-    def cleanup(self, block_position=0):
-        '''Removes temporary folder, updates statistics.'''
-            #todo check this.
+    def cleanup(self):
+        '''Removes temporary folder.'''
 
         logging.debug("Deleting temporary folder....")
         shutil.rmtree(self.active_path)

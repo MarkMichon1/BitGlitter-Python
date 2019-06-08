@@ -309,8 +309,8 @@ def dig(my_folder, file_name, no_payload):
 
                     if no_payload == False:
                         data_file += b":" + something.name.encode() + b"|"
-                        data_file += b"{" + str(os.path.getsize(os.path.join(something.file_path, something.real_name)))\
-                            .encode() + b"}"
+                        data_file += b"{" + str(os.path.getsize(os.path.join(something.file_path,
+                                                                             something.real_name))).encode() + b"}"
                     else:
                         data_file += b"|" + something.name.encode() + b"|"
                         data_file += str(os.path.getsize(os.path.join(something.file_path, something.real_name))) \

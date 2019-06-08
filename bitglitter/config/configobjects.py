@@ -49,18 +49,20 @@ class Statistics:
                                                                 f'\nTotal Frames Read: {self.frames_read}'
                                                                 f'\nTotal Data Read: {int(self.data_read / 8)} B')
 
-    def writeUpdate(self, blocks, frames, data):
+    def write_update(self, blocks, frames, data):
         self.blocks_wrote += blocks
         self.frames_wrote += frames
         self.data_wrote += data
 
 
-    def readUpdate(self, blocks, frames, data):
+    def read_update(self, blocks, frames, data):
+        '''Deprecated.  May be removed.'''
+
         self.blocks_read += blocks
         self.frames_read += frames
         self.data_read += data
 
-    def clearStats(self):
+    def clear_stats(self):
         self.blocks_wrote = 0
         self.frames_wrote = 0
         self.data_wrote = 0
@@ -80,26 +82,25 @@ class PaletteHandler:
                             "Two colors, black and white.  While it has the lowest density of one bit of data per "
                             "pixel, it has the highest reliability.", ((0,0,0), (255,255,255)), 441.67, 1),
 
-                                   '11' : DefaultPalette("1 bit alternate", "Uses cyan/magenta instead of white/black.",
-                                                         ((255, 0, 255), (0, 255, 255)), 360.12, 11),
+                            '11' : DefaultPalette("1 bit alternate", "Uses cyan/magenta instead of white/black.",
+                            ((255, 0, 255), (0, 255, 255)), 360.12, 11),
 
-                                     '2' : DefaultPalette("2 bit default", "Four colors; black, red, green, blue.",
+                            '2' : DefaultPalette("2 bit default", "Four colors; black, red, green, blue.",
                             ((0,0,0), (255,0,0), (0,255,0), (0,0,255)), 255, 2),
 
-                                     '22': DefaultPalette("2 bit alternate", "Four colors; black, magenta, cyan, yellow.",
-                                                       ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255,
-                                                        22),
+                            '22': DefaultPalette("2 bit alternate", "Four colors; black, magenta, cyan, yellow.",
+                            ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255, 22),
 
-                                     '3' : DefaultPalette("3 bit default",
+                            '3' : DefaultPalette("3 bit default",
                             "Eight colors.", ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255),
                             (255,0,255), (255,255,255)), 255, 3),
 
-                                     '4' : DefaultPalette("4 bit default", "Sixteen colors.", ((0,0,0), (128,128,128),
+                            '4' : DefaultPalette("4 bit default", "Sixteen colors.", ((0,0,0), (128,128,128),
                             (192,192,192), (128,0,0), (255,0,0), (128,128,0), (255,255,0), (0,255,0), (0,128,128),
                             (0,128,0), (0,0,128), (0,0,255), (0,255,255), (128,0,128), (255,0,255), (255,255,255)),
                                                         109.12, 4),
 
-                                     '6' : DefaultPalette("6 bit default", "Sixty-four colors.", ((0,0,0), (0,0,85),
+                            '6' : DefaultPalette("6 bit default", "Sixty-four colors.", ((0,0,0), (0,0,85),
                             (0,0,170), (0,0,255), (0,85,0), (0,85,85), (0,85,170), (0,85,255), (0,170,0), (0,170,85),
                             (0,170,170), (0,170,255), (0,255,0), (0,255,85), (0,255,170), (0,255,255), (85,0,0),
                             (85,0,85), (85,0,170), (85,0,255), (85,85,0), (85,85,85), (85,85,170), (85,85,255),
@@ -111,8 +112,8 @@ class PaletteHandler:
                             (255,170,170), (255,170,255), (255,255,0), (255,255,85), (255,255,170), (255,255,255)), 85,
                             6),
 
-                                     '24': TwentyFourBitPalette()
-                                     }
+                            '24': TwentyFourBitPalette()
+                            }
 
         self.custom_palette_list = {}
         self.custom_palette_nickname_list = {}

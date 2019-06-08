@@ -9,9 +9,9 @@ from bitglitter.protocols.protocolhandler import protocol_handler
 
 def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_width,
                              active_frame_size_height):
-    '''If block_height_override and block_width_override have been entered, this checks those values against the height and
-    width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that is
-    finest detail you can have with an image), any values beyond that are invalid, and stopped here.
+    '''If block_height_override and block_width_override have been entered, this checks those values against the height
+    and width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that
+    is finest detail you can have with an image), any values beyond that are invalid, and stopped here.
     '''
 
     if block_height_override and block_width_override:
@@ -74,9 +74,9 @@ def read_initializer(bit_stream, blockHeight, block_width, custom_palette_list, 
     bit_stream.pos = 0
     protocol_version = bit_stream.read('uint : 4')
     logging.debug(f'Protocol version: {protocol_version}')
-    if str(protocol_version) not in protocol_handler.availableProtocols:
-        logging.warning(f'Protocol v{str(protocol_version)} not supported in this version of BitGlitter.  Please update '
-                        f'to fix.  Aborting...')
+    if str(protocol_version) not in protocol_handler.available_protocols:
+        logging.warning(f'Protocol v{str(protocol_version)} not supported in this version of BitGlitter.  Please update'
+                        f' to fix.  Aborting...')
         return False, False
 
     read_block_height = bit_stream.read('uint : 16')
@@ -99,9 +99,10 @@ def read_initializer(bit_stream, blockHeight, block_width, custom_palette_list, 
 
         if frame_palette_id not in custom_palette_list:
 
-            logging.warning('read_initializer: This header palette is unknown, reader cannot proceed until it is learned'
-                            'through a \nstream header.  This can occur if the creator of the stream uses a non-default'
-                            ' palette.  This can also trigger if frames \nare read non-sequentially.  Aborting...')
+            logging.warning('read_initializer: This header palette is unknown, reader cannot proceed until it is '
+                            'learned through a \nstream header.  This can occur if the creator of the stream uses a '
+                            'non-default palette.  This can also trigger if frames \nare read non-sequentially.  '
+                            'Aborting...')
             return False, False
 
     else:

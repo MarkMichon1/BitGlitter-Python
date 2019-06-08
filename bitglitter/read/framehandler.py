@@ -71,10 +71,10 @@ class FrameHandler:
             block_coords = next(self.next_block)
             raw_rgb = scan_block(self.image, self.pixel_width, block_coords[0], block_coords[1])
             if active_color_set:
-                bit_string.append(active_palette_dict.getValue(color_snap(raw_rgb, active_color_set)))
+                bit_string.append(active_palette_dict.get_value(color_snap(raw_rgb, active_color_set)))
 
             else:
-                bit_string.append(active_palette_dict.getValue(raw_rgb))
+                bit_string.append(active_palette_dict.get_value(raw_rgb))
 
         self.block_position += how_many
         config.stats_handler.blocks_read += how_many
@@ -97,7 +97,8 @@ class FrameHandler:
         if palette_type != 'stream_palette' and palette_type != 'header_palette' and palette_type != 'primary_palette':
             raise ValueError("FrameHandler.return_frame_header: invalid palette_type argument.")
 
-        full_block_data = self._blocks_to_bits(math.ceil(608 / self.palette_dict[palette_type].bit_length), f'{palette_type}')
+        full_block_data = self._blocks_to_bits(math.ceil(608 / self.palette_dict[palette_type].bit_length),
+                                               f'{palette_type}')
         carry_over_bits = BitStream()
 
         if full_block_data.len > 608:
@@ -120,7 +121,7 @@ class FrameHandler:
             raise ValueError("FrameHandler.return_remainder_payload: invalid palette_type argument.")
 
         remainder_payload = self._blocks_to_bits(self.non_calibrator_blocks - self.block_position, f'{palette_type}')
-        config.statsHandler.data_read += remainder_payload.len
+        config.stats_handler.data_read += remainder_payload.len
 
         return remainder_payload
 
@@ -186,4 +187,4 @@ class FrameHandler:
         except:
             pass
 
-        config.statsHandler.frames_read += 1
+        config.stats_handler.frames_read += 1

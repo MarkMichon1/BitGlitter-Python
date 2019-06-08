@@ -60,8 +60,8 @@ def decode_stream_header_binary_preamble(bitStream):
 
     ascii_header_compressed_in_bytes = bitStream.read('uint : 32')
 
-    return size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_masking_enabled, is_custom_palette, \
-        date_created, stream_palette_id, ascii_header_compressed_in_bytes
+    return size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_masking_enabled, \
+           is_custom_palette,  date_created, stream_palette_id, ascii_header_compressed_in_bytes
 
 def format_file_list(file_string):
     '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''

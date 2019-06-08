@@ -22,7 +22,7 @@ class Assembler:
             return True
         else:
             if self.save_dict[stream_sha].is_frame_needed(frame_number) == False:
-                logging.info(f'Frame # {frame_number} / {self.save_dict[stream_sha].totalFrames} for stream SHA '
+                logging.info(f'Frame # {frame_number} / {self.save_dict[stream_sha].total_frames} for stream SHA '
                              f'{stream_sha} is already saved!  Skipping...')
             else:
                 return True

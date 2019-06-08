@@ -27,8 +27,8 @@ def file_slicer(file_to_input, active_path, output_path, block_height_override, 
     if os.path.splitext(file_to_input)[1] in VALID_VIDEO_FORMATS:
         is_video = True
 
-    decoder = Decoder(is_video, config_object, scrypt_n, scrypt_r, scrypt_p, block_height_override, block_width_override,
-                      output_path, encryption_key, assemble_hold)
+    decoder = Decoder(is_video, config_object, scrypt_n, scrypt_r, scrypt_p, block_height_override,
+                      block_width_override, output_path, encryption_key, assemble_hold)
 
     if is_video:
 
@@ -45,7 +45,8 @@ def file_slicer(file_to_input, active_path, output_path, block_height_override, 
                 break
 
             if bad_frames_this_session < bad_frame_strikes or bad_frame_strikes == 0:
-                logging.info(f'Processing frame {video_frame_puller.current_frame} of {video_frame_puller.total_frames}...')
+                logging.info(f'Processing frame {video_frame_puller.current_frame} of '
+                             f'{video_frame_puller.total_frames}...')
                 active_frame = video_frame_puller.next_frame()
 
                 if decoder.decode_video_frame(active_frame) == False:
