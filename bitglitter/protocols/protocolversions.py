@@ -7,7 +7,7 @@ from bitglitter.protocols.protocolobjects import Protocol
 protocolOne = Protocol('1',
                        protocol_one_renderlogic.EncodeFrame,
                        "decoder",
-                       verifyWriteParamsFunction=protocol_one_verifywriteparameters.verifyWriteParameters,
-                       preProcessing=protocol_one_preprocess.PreProcessor,
-                       initializerUsed="initializerProtocolOne"
+                       verify_write_params_function=protocol_one_verifywriteparameters.verify_write_parameters,
+                       pre_processing=protocol_one_preprocess.PreProcessor,
+                       initializer_used="initializerProtocolOne"
                        )

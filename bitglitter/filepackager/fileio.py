@@ -2,13 +2,13 @@ import os
 
 #Written by Tanmay Mishra.  See filepackager module for more information.
 
-def copyFile(src, dest, byteStart=None, byteEnd=None):
+def copy_file(source, destination, byte_start=None, byte_end=None):
 
     try:
-        write_file = open(str(dest), 'wb')
+        write_file = open(str(destination), 'wb')
 
-        with open(str(src), 'rb') as open_file:
-            write_file.write(open_file.read()[byteStart:byteEnd])
+        with open(str(source), 'rb') as open_file:
+            write_file.write(open_file.read()[byte_start:byte_end])
 
         write_file.close()
         return True
@@ -16,77 +16,77 @@ def copyFile(src, dest, byteStart=None, byteEnd=None):
     except:
         return False
 
-def fileToBytes(fileName, byteStart=None, byteEnd=None):
+def file_to_bytes(file_name, byte_start=None, byte_end=None):
 
     try:
-        with open(fileName, 'rb') as open_file:
-            myBytes = open_file.read()[byteStart:byteEnd]
-        return myBytes
+        with open(file_name, 'rb') as open_file:
+            my_bytes = open_file.read()[byte_start:byte_end]
+        return my_bytes
 
     except:
         return b''
 
 
-def bytesToFile(fileName, myBytes):
+def bytes_to_file(file_name, my_bytes):
     try:
 
-        with open(fileName, 'wb') as write_file:
-            write_file.write(myBytes)
+        with open(file_name, 'wb') as write_file:
+            write_file.write(my_bytes)
         return True
     except:
         return False
 
-def bytesOrFilesToBytes(items=[]):
+def bytes_or_files_to_bytes(items=[]):
 
-    bytesReturn = b''
+    bytes_return = b''
 
     for item in items:
         if type(item) is bytes:
-            bytesReturn += item
-        if type(item) is str and doesFileExist(item):
-            bytesFromFile = fileToBytes(item)
-            bytesReturn += bytesFromFile
+            bytes_return += item
+        if type(item) is str and does_file_exist(item):
+            bytes_from_file = file_to_bytes(item)
+            bytes_return += bytes_from_file
 
-    return bytesReturn
+    return bytes_return
 
-def bytesOrFilesToFile(fileName, items=[]):
+def bytes_or_files_to_file(file_name, items=[]):
 
     try:
-        myBytes = bytesOrFilesToBytes(items)
-        return bytesToFile(fileName,myBytes)
+        my_bytes = bytes_or_files_to_bytes(items)
+        return bytes_to_file(file_name, my_bytes)
     except:
-        deleteFile(fileName)
+        delete_file(file_name)
         return False
 
-def doesFileExist(fileName):
+def does_file_exist(file_name):
 
-    return os.path.isfile(fileName)
+    return os.path.isfile(file_name)
 
-def getFileSize(fileName):
+def get_file_size(file_name):
     try:
-        return os.path.getsize(str(fileName))
+        return os.path.getsize(str(file_name))
     except:
         return None
 
-def deleteFile(fileName):
+def delete_file(file_name):
 
     try:
-        os.remove(str(fileName))
+        os.remove(str(file_name))
         return True
     except:
         return False
 
-def separateFileName(fileName = ""):
+def separate_file_name(file_name =""):
 
-    indexExt = 0
-    lenFile = len(fileName)
+    index_ext = 0
+    len_file = len(file_name)
 
-    for i in range(0,lenFile):
-        if fileName[(lenFile-i):lenFile-i+1] == '.':
-            indexExt = lenFile-i
+    for i in range(0,len_file):
+        if file_name[(len_file - i):len_file - i + 1] == '.':
+            index_ext = len_file-i
             break
 
-    if fileName[indexExt:] == fileName:
-        return [fileName[indexExt:],fileName[0:indexExt]]
+    if file_name[index_ext:] == file_name:
+        return [file_name[index_ext:], file_name[0:index_ext]]
     else:
-        return [fileName[0:indexExt],fileName[indexExt:]]
+        return [file_name[0:index_ext], file_name[index_ext:]]

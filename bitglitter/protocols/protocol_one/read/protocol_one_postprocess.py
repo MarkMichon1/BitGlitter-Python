@@ -4,21 +4,21 @@ from bitglitter.protocols.protocol_one.read.protocol_one_postprocessobjects impo
 
 
 class PostProcessor:
-    def __init__(self, outputPath, streamSHA, workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR,
-                 scryptP, compressionEnabled):
+    def __init__(self, output_path, stream_SHA, working_folder, encryption_enabled, encryption_key, scrypt_n, scrypt_r,
+                 scrypt_p, compression_enabled):
         '''Upon successfully assembly of the stream, PostProcessor performs the final steps required to output the
         files- decrypting and decompressing the stream if they were enabled, and then finally unpackaging the files.
         '''
 
-        self.FullyAssembled = False
+        self.fully_assembled = False
 
-        decryptor = Decryptor(workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR,
-                 scryptP, streamSHA)
-        self.isDecrypted = decryptor
+        decryptor = Decryptor(working_folder, encryption_enabled, encryption_key, scrypt_n, scrypt_r,
+                              scrypt_p, stream_SHA)
+        self.is_decrypted = decryptor
 
-        if decryptor.isSatisfied == True:
+        if decryptor.is_satisfied == True:
 
-            decompressor = Decompressor(workingFolder, decryptor.passThrough, compressionEnabled)
-            unpackager = Unpackager(decompressor.passThrough, outputPath, streamSHA)
-            self.FullyAssembled = True
+            decompressor = Decompressor(working_folder, decryptor.pass_through, compression_enabled)
+            unpackager = Unpackager(decompressor.pass_through, output_path, stream_SHA)
+            self.fully_assembled = True
             logging.info('Postprocess complete.')

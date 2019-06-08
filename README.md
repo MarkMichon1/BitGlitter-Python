@@ -192,67 +192,67 @@ you're sending a single file or folder path, argument `fileList` takes a string 
 sending multiple files and folder together, of which there is no limit!  This would require using a tuple or list item
 filled with strings of the file or folder paths.  File or folder paths that don't exist are automatically ignored.
 
-`streamName=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
+`stream_name=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.
 
-`streamDescription=''` serves as a text field to optionally put a description for the stream.
+`stream_description=''` serves as a text field to optionally put a description for the stream.
 
-`outputPath=False` is where you can optionally define the path of where the created media is outputted.  By
+`output_path=False` is where you can optionally define the path of where the created media is outputted.  By
 default, media is saved where the python file is ran.  The folder path must already exist if used.
 
-`outputMode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
+`output_mode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
 .png images.  The only two valid arguments are `'image'` and `'video'`.
 
-`compressionEnabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
+`compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
 by default.
 
-`fileMaskEnabled=False` is where you can omit the listing of files/folders from the stream header.  This effectively
+`file_mask_enabled=False` is where you can omit the listing of files/folders from the stream header.  This effectively
 hides the contents of the stream, unless it is fully read.  By default, this is disabled.  What this means is when
 someone reads your stream, in the first several frames it will automatically display the contents of the stream (files
 as well as their size) on the screen.
 
-`encryptionKey=''` optionally encrypts your data with AES-256.  By default, this is disabled.  The stream will not be
+`encryption_key=''` optionally encrypts your data with AES-256.  By default, this is disabled.  The stream will not be
 able to be read unless the reader successfully inputs this.
 
-Arguments `scryptN=14`, `scryptR=8` and `scryptP=1` allow you to customize the parameters of the `scrypt` key derivation 
+Arguments `scrypt_N=14`, `scrypt_R=8` and `scrypt_P=1` allow you to customize the parameters of the `scrypt` key derivation 
 function.  If you're a casual user, you'll never need to touch these (and shouldn't).  Only change these settings if
- you're comfortable with cryptography and you know what you're doing!  It's worth noting `scryptN` uses it's argument as
+ you're comfortable with cryptography and you know what you're doing!  It's worth noting `scrypt_N` uses it's argument as
  2^n.  Finally, if you're changing these numbers, they MUST be manually inputted during `read()` otherwise decryption
  will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end users of the
  stream must know these custom parameters.
 
-`headerPaletteID='6'` sets the palette used in the 'setup' frames in the beginning.  It is strongly recommended you use
+`header_palette_id='6'` sets the palette used in the 'setup' frames in the beginning.  It is strongly recommended you use
 a default palette here if you don't know what you're doing, because this is where important information regarding the
 stream is read, and by using a custom palette, it will be impossible for anyone to read it who hasn't already 'learned'
 the palette.
 
-`streamPaletteID='6'` sets the palette used for the payload.  By default, the 4 bit default color set is used.  I'll 
+`stream_palette_id='6'` sets the palette used for the payload.  By default, the 4 bit default color set is used.  I'll 
 explain all about palettes below.
 
-`pixelWidth=24` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
+`pixel_width=24` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
 important value regarding readability.  Having them overly large will make reading them easier, but will result in less
 efficient frames and require substantially longer streams.  Making them very small will greatly increase their
 efficiency, but at the same time a lot more susceptible to read failures if the files are shrunk, or otherwise
 distorted.
 
-`blockHeight=45` sets how many blocks tall the frame will be, by default this is set to 45 (which along with 
-`blockWidth`, creates a perfect 1080p sized frame).
+`block_height=45` sets how many blocks tall the frame will be, by default this is set to 45 (which along with 
+`block_width`, creates a perfect 1080p sized frame).
 
-`blockWidth=80` sets how many blocks wide the frame will be.  By default this is set to 96.
+`block_width=80` sets how many blocks wide the frame will be.  By default this is set to 96.
 
-`framesPerSecond=30` sets how many frames per second the video will play at, assuming argument `outputMode = "video"`.
+`frames_per_second=30` sets how many frames per second the video will play at, assuming argument `output_mode = "video"`.
 Currently, 30fps and 60fps are accepted.
 
 Finally we have several arguments to control logging.
 
-`loggingLevel='info'` determines what level logging messages get outputted.  It accepts three arguments- `info` is
+`logging_level='info'` determines what level logging messages get outputted.  It accepts three arguments- `info` is
 default and only shows core status data during `read()` and `write()`.  `'debug'`  shows INFO level messages as well as
 lower level messages from the various processes.  Boolean `False` disables logging altogether.
 
-`loggingScreenOutput=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
+`logging_screen_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
 Enabled by default.
 
-`loggingSaveOutput=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
+`logging_save_output=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
 Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved there.
 
 These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to
@@ -263,104 +263,104 @@ corruption.
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.
 
 Like with `write()`, the only argument required is the BitGlitter-encoded file, whether that's an image or a video.
-`fileToInput` is the only required argument.  We'll go over the other ones.
+`file_to_input` is the only required argument.  We'll go over the other ones.
 
-`outputPath=None` Is where you can set where this stream will be saved once all frames have been successfully loaded.
+`output_path=None` Is where you can set where this stream will be saved once all frames have been successfully loaded.
   It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
   stick with that stream.  This argument requires a strong of a folder path that already exists.
 
-`badFrameStrikes=10` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
+`bad_frame_strikes=10` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
 allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
  iterate over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
  regardless of the level of corruption.
 
-`blockHeightOverride=False` and `blockWidthOverride=False` allow you to manually input the stream's block height and 
+`block_height_override=False` and `block_width_override=False` allow you to manually input the stream's block height and 
 block width.  Normally you'll never need to use this, as these values are automatically obtained as the frame is locked
 onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
 attempt to lock onto the screen given these parameters.  Both must be filled in order for the override to work.
 
-`encryptionKey=None` is where you add the encryption key to decrypt the stream.  Like argument `outputPath`, you only
+`encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only
 need this argument once, and it will bind to that save.
 
-Arguments `scryptN=14`, `scryptR=8` and `scryptP=1`
+Arguments `scrypt_n=14`, `scrypt_r=8` and `scrypt_p=1`
 
-`loggingLevel = 'info'`, `loggingScreenOutput = True`, `loggingSaveOutput = False` - Please see the full explanation at
+`logging_level = 'info'`, `logging_screen_output = True`, `logging_save_output = False` - Please see the full explanation at
 `write().`
 
 ### Color Palettes
 
 If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
 
-`addCustomPalette(paletteName, paletteDescription, colorSet, optionalNickname = "")`  This function adds custom palettes
+`add_custom_palette(palette_name, palette_description, color_set, optional_nickname = "")`  This function adds custom palettes
 to use.  
 
-Argument `paletteName` takes a string and is the name of the palette that gets displayed and transmitted. 
+Argument `palette_name` takes a string and is the name of the palette that gets displayed and transmitted. 
 
-Argument`paletteDescription` takes a string as well, and is the description of the palette, if you wish to add it.  
+Argument`palette_description` takes a string as well, and is the description of the palette, if you wish to add it.  
 
-Argument `colorSet` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
-a simple example of what it would look like using two colors: `colorSet=((0, 255, 0), (0, 0, 255))`.  There are a few
+Argument `color_set` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
+a simple example of what it would look like using two colors: `color_set=((0, 255, 0), (0, 0, 255))`.  There are a few
 requirements to these tuples:
 + No two identical values can be added.  For instance, the color black with the same RGB values twice.  Each color used
 must be unique!  The more 'different' the colors are, the better.
 + You must have a minimum of two colors.
 + It must be 2^n colors used, so 2, 4, 8, 16, etc.
 
-Argument `optionalNickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
+Argument `optional_nickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
   how you select this palette to specifically run on your stream.  Internally, custom palettes have a 64 character ID 
   code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
   well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
 
-`editNicknameToCustomPalette(idOrNick, newName)` This function allows you to edit the nickname of your custom palette 
+`edit_nickname_to_custom_palette(id_or_nick, new_name)` This function allows you to edit the nickname of your custom palette 
 to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal ID.
 
-`printFullPaletteList(path)` This function outputs a text file to the folder path outlining the palettes available, both
+`print_full_palette_list(path)` This function outputs a text file to the folder path outlining the palettes available, both
 default palettes and custom.  It shows information such as their name, description, date created, color set, nickname,
 and more.  The required argument is a string of a folder path, which must already exist.  Here's an example of how to
 format it: `C:\Users\Mark\Desktop`
 
-`clearAllCustomPalettes()` This removes all custom palettes from your config.  Please note that the default palettes 
+`clear_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
 will not be removed.
 
-`removeCustomPalette(idOrNick)` This function removes the custom palette from your config.  It takes a string argument
+`remove_custom_palette(id_or_nick)` This function removes the custom palette from your config.  It takes a string argument
 of either it's internal ID, or a nickname you've previously given it.
 
-`removeCustomPaletteNickname(idOrNick)` This function strips any nickname associated with a custom palette.  It takes a
+`remove_custom_palette_nickname(id_or_nick)` This function strips any nickname associated with a custom palette.  It takes a
 string argument of either the internal ID or a previous nickname.
 
-`clearCustomPaletteNicknames()`  This removes all nicknames from all custom palettes.
+`clear_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.
 
 ### Partial Save Control
 
 Once the first frame of a stream is read, a PartialSave object is created.  This is essentially what manages the binary
 strings, and holds various information on it's state.  These functions help better interface with them.
 
-`updatePartialSave(streamSHA, reattemptAssembly = True, passwordUpdate = None, scryptN =  None, scryptR = None, 
-scryptP = None, changeOutputPath = None)` This function allows you to update various parameters of the save.  Requires
+`update_partial_save(stream_sha, reattempt_assembly = True, password_update = None, scrypt_n =  None, scrypt_r = None, 
+scrypt_p = None, change_output_path = None)` This function allows you to update various parameters of the save.  Requires
 a string input for `streamSHA` which is the ID number of the string.  
 
-Argument `reattemptAssembly` makes the assembler
+Argument `reattempt_assembly` makes the assembler
 attempt to reassemble the frames, as well as output the embedded files and folders.  This would be used in the case of
 an incorrect password or scrypt parameters, and you'd like to try again.
 
-Argument `passwordUpdate` takes a string argument, and will add (or replace) the encryption key tied to this stream.
+Argument `password_update` takes a string argument, and will add (or replace) the encryption key tied to this stream.
 
-Arguments `scryptN, scryptR and scryptP` change the scrypt parameters used to derive the key used for decryption.  If
+Arguments `scrypt_n, scrypt_r and scrypt_p` change the scrypt parameters used to derive the key used for decryption.  If
 the scrypt parameters were left at default during `write()` of the stream, these can be left as is.  Otherwise, the 
 custom values will need to be inputted whether here or in the optional arguments of `read()`.
 
-`beginAssembly(streamSHA)` This function exists to initiate assembly of a package at a later time, rather than doing so 
+`begin_assembly(stream_sha)` This function exists to initiate assembly of a package at a later time, rather than doing so 
 immediately for whatever reason.
 
-`printFullSaveList(path, debugData=False)` This function outputs a text file to the folder path outlining all (if any)
+`print_full_save_list(path, debug_data=False)` This function outputs a text file to the folder path outlining all (if any)
 partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
 itself.  Argument `debugData` is `False` by default, but enabling it to `True` outputs various debug information 
 pertaining to the object as well, which wouldn't serve much utility seeing for someone such as a casual end user.
 
-`removePartialSave(streamSHA)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
+`remove_partial_save(stream_sha)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
 remove the object from your config, as well as remove all temporary data associated with it.
 
-`removeAllPartialSaves()` All saves are removed from the config object, clearing all temporary data.
+`remove_all_partial_saves()` All saves are removed from the config object, clearing all temporary data.
 
 ### General Configuration
 
@@ -369,9 +369,9 @@ remove the object from your config, as well as remove all temporary data associa
 scanned gets added to a running total.  Argument `path` requires a string argument of a folder path that already exists.
 A small text file will be written to this location.
 
-`clearStats()` All statistics will be reset to zero.
+`clear_stats()` All statistics will be reset to zero.
 
-`clearSession()` This wipes all inputted data.  Custom colors, statistics, and partial save objects will all be erased,
+`clear_session()` This wipes all inputted data.  Custom colors, statistics, and partial save objects will all be erased,
 as well as any temporary data for the partially read streams.  This is in essence a hard reset.
 
 # Contributing

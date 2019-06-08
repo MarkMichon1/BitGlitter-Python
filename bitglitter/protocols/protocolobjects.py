@@ -6,24 +6,24 @@ class Protocol:
     def __init__(self,
 
                  # Required values; it's lookup key, how data is converted, and how frames are decoded back into data.
-                 versionNumber,
-                 frameProcessor,
+                 version_number,
+                 frame_processor,
                  decoder,
 
                  # Optional write process steps.
-                 verifyWriteParamsFunction = None,
-                 preProcessing = None,
-                 initializerUsed = None,
+                 verify_write_params_function = None,
+                 pre_processing = None,
+                 initializer_used = None,
 
                  # Optional read process steps.
-                 postProcessing = None
+                 post_processing = None
                  ):
 
-        self.versionNumber = versionNumber
+        self.version_number = version_number
 
-        self.write = ProtocolWrite(versionNumber, verifyWriteParamsFunction, preProcessing, frameProcessor,
-                                   initializerUsed,)
-        self.read = ProtocolRead(decoder, postProcessing)
+        self.write = ProtocolWrite(version_number, verify_write_params_function, pre_processing, frame_processor,
+                                   initializer_used, )
+        self.read = ProtocolRead(decoder, post_processing)
 
 
 class ProtocolWrite:
@@ -31,13 +31,13 @@ class ProtocolWrite:
 
     def __init__(self, versionNumber, verifyWriteParamsFunction, preProcessing, frameProcessor, initializerUsed):
 
-        self.versionNumber = versionNumber
+        self.version_number = versionNumber
 
-        self.verifyWriteParameters = verifyWriteParamsFunction
-        self.preProcessing = preProcessing
-        self.frameProcessor = frameProcessor
+        self.verify_write_parameters = verifyWriteParamsFunction
+        self.pre_processing = preProcessing
+        self.frame_processor = frameProcessor
 
-        self.initializerUsed = initializerUsed
+        self.initializer_used = initializerUsed
 
 
 class ProtocolRead:
@@ -46,4 +46,4 @@ class ProtocolRead:
     def __init__(self, decoder, postProcessing):
 
         self.decoder = decoder
-        self.postProcessing = postProcessing
+        self.post_processing = postProcessing
