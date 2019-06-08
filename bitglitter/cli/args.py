@@ -1,10 +1,13 @@
 import argparse
 
+from bitglitter.cli.analyzer import CliArgumentParser
+
 parser = argparse.ArgumentParser(description=""""Embed data payloads inside of ordinary
                                              images or video with high-performance 2-D barcodes.""")
-subparsers = parser.add_subparsers()
 
-from bitglitter.cli.analyzer import CliArgumentParser
+
+subparsers = parser.add_subparsers(dest="subparser_name")
+
 
 write_parser = subparsers.add_parser(
      'write',
@@ -30,21 +33,29 @@ write_parser.add_argument(
      help='File output mode: "image" or "video"'
 )
 
-write_parser.set_defaults(func=CliArgumentParser.write(vars(write_parser.parse_known_args()[0])))
 
 # To implement here
-read_parser = subparsers.add_parser('read',
-                    help='This is the high level function that decodes BitGlitter encoded images and video back into'
-                         '\nthe files/folders contained within them.  This along with write() are the two primary'
-                         '\nfunctions of this library.')
+read_parser = subparsers.add_parser(
+     'read',
+     help="""This is the high level function that decodes BitGlitter encoded images and video back into
+               the files/folders contained within them.  This along with write() are the two primary
+               functions of this library."""
+)
 
 read_parser.add_argument(
      '-file',
      type=str,
-     help='The file to be decoded.'
+     help='File to be decoded.'
 )
 
 
+cli_argument = vars(parser.parse_known_args()[0]).get('subparser_name')
+if cli_argument == 'read':
+     read_parser.set_defaults(func=CliArgumentParser.read(vars(read_parser.parse_known_args()[0])))
+elif cli_argument == 'write':
+     write_parser.set_defaults(func=CliArgumentParser.write(vars(write_parser.parse_known_args()[0])))
+
+# TODO:
 # parser.add_argument('--clearSession',
 #                     help='Tries to remove the session pickle if it exists, clearing all statistics and custom colors.')
 # parser.add_argument('--clearStats',
