@@ -30,7 +30,12 @@ write_parser.add_argument(
 write_parser.add_argument(
      '-mode',
      type=str,
-     help='File output mode: "image" or "video"'
+     help='File output mode: "image" or "video".'
+)
+write_parser.add_argument(
+     '-o',
+     type=str,
+     help='File output path.'
 )
 
 
@@ -44,6 +49,12 @@ read_parser = subparsers.add_parser(
 
 read_parser.add_argument(
      '-file',
+     type=str,
+     help='File to be decoded.'
+)
+
+read_parser.add_argument(
+     '-o',
      type=str,
      help='File to be decoded.'
 )
