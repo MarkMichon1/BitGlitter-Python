@@ -125,7 +125,7 @@ contribute, docstrings and notes are throughout the library.
 
 ### CLI
 
-+ **Write from commnad line:** 
++ Write from commnad line:
 
 + `python3 -m bitglitter write` - To write to a file.
 
@@ -133,7 +133,7 @@ contribute, docstrings and notes are throughout the library.
       `-mode` - Either 'image' or 'video'
       `-o` - Output path
 
-+ **Read from commnad line:** 
++ Read from commnad line:
 
 + `python3 -m bitglitter read` - To read a file.
     
