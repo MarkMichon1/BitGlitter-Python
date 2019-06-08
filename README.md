@@ -125,21 +125,20 @@ contribute, docstrings and notes are throughout the library.
 
 ### CLI
 
-+ Write from commnad line:
+Write from commnad line:
 
-+ `python3 -m bitglitter write` - To write to a file.
++ `python3 -m bitglitter write`
 
       `-file` - The absolute path to the file
-      `-mode` - Either 'image' or 'video'
+      `-mode` - Either 'image' or 'video'. Default: video
       `-o` - Output path
 
-+ Read from commnad line:
+ Read from commnad line:
 
-+ `python3 -m bitglitter read` - To read a file.
++ `python3 -m bitglitter read`
     
-    `-file` - The absolute path to the file
-    `-o` - Output path
-
+      `-file` - The absolute path to the file
+      `-o` - Output path
 
 ### Applications
 To be determined.  This will be updated as time progresses!
