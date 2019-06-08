@@ -5,7 +5,7 @@ from bitglitter.config.config import config
 # These functions are for end users.
 
 def outputStats(path):
-    '''Writes a text file to a folder path outlining usage statistics.'''
+    '''Writes a text file to a file path outlining usage statistics.'''
 
     activePath = os.path.join(os.getcwd(), path)
     with open(activePath + '\\BitGlitter Statistics.txt', 'w') as writer:
