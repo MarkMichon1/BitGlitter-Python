@@ -2,7 +2,7 @@ import logging
 import shutil
 
 from bitglitter.config.config import config
-from bitglitter.palettes.paletteutilities import paletteGrabber, ValuesToColor
+from bitglitter.palettes.paletteutilities import palette_grabber, ValuesToColor
 
 
 class RenderHandler:
@@ -14,78 +14,82 @@ class RenderHandler:
     def __init__(self,
 
                  # Initializer
-                 protocol, blockHeight, blockWidth, headerPaletteID,
+                 protocol, block_height, block_width, header_palette_id,
 
                  # Frame Header
-                 streamSHA,
+                 stream_sha,
 
                  # Stream Header - Binary Preamble
-                 sizeInBytes, compressionEnabled, encryptionEnabled, fileMaskEnabled, dateCreated, streamPaletteID,
+                 size_in_bytes, compression_enabled, encryption_enabled, file_mask_enabled, date_created,
+                 stream_palette_id,
 
                  # Stream Header - ASCII Encoded
-                 bgVersion, streamName, streamDescription, postEncryptionHash,
+                 bg_version, stream_name, stream_description, post_encryption_hash,
 
                  # Render argument
-                 pixelWidth, outputMode, streamOutputPath, framesPerSecond,
+                 pixel_width, output_mode, stream_output_path, frames_per_second,
 
                  # Misc
-                 activeFolder, passThrough
+                 active_folder, pass_through
                  ):
 
         logging.debug('RenderHandler initializing...')
 
         self.protocol = protocol
-        self.blockHeight = blockHeight
-        self.blockWidth = blockWidth
+        self.block_height = block_height
+        self.block_width = block_width
 
-        self.streamSHA = streamSHA
+        self.stream_sha = stream_sha
 
-        self.sizeInBytes = sizeInBytes
-        self.compressionEnabled = compressionEnabled
-        self.encryptionEnabled = encryptionEnabled
-        self.fileMaskEnabled = fileMaskEnabled
-        self.dateCreated = dateCreated
+        self.size_in_bytes = size_in_bytes
+        self.compression_enabled = compression_enabled
+        self.encryption_enabled = encryption_enabled
+        self.file_mask_enabled = file_mask_enabled
+        self.date_created = date_created
 
-        self.bgVersion = bgVersion
-        self.streamName = streamName
-        self.streamDescription = streamDescription
-        self.postEncryptionHash = postEncryptionHash
+        self.bg_version = bg_version
+        self.stream_name = stream_name
+        self.stream_description = stream_description
+        self.post_encryption_hash = post_encryption_hash
 
-        self.pixelWidth = pixelWidth
-        self.outputMode = outputMode
-        self.streamOutputPath = streamOutputPath
-        self.framesPerSecond = framesPerSecond
+        self.pixel_width = pixel_width
+        self.output_mode = output_mode
+        self.stream_output_path = stream_output_path
+        self.frames_per_second = frames_per_second
 
-        self.activePath = activeFolder
-        self.passThrough = passThrough
+        self.active_path = active_folder
+        self.pass_through = pass_through
 
-        self.headerPalette = paletteGrabber(headerPaletteID)
-        self.streamPalette = paletteGrabber(streamPaletteID)
-        self.initializerPalette = paletteGrabber('1')
+        self.header_palette = palette_grabber(header_palette_id)
+        self.stream_palette = palette_grabber(stream_palette_id)
+        self.initializer_palette = palette_grabber('1')
 
-        self.headerPaletteDict = ValuesToColor(self.headerPalette, 'headerPalette')
-        self.streamPaletteDict = ValuesToColor(self.streamPalette, 'streamPalette')
-        self.initializerPaletteDict = ValuesToColor(self.initializerPalette, 'initializerPalette')
+        self.header_palette_dict = ValuesToColor(self.header_palette, 'header_palette')
+        self.stream_palette_dict = ValuesToColor(self.stream_palette, 'stream_palette')
+        self.initializer_palette_dict = ValuesToColor(self.initializer_palette, 'initializer_palette')
 
-        self.protocol.beginSessionProcess(self.activePath, self.passThrough, self.streamOutputPath, self.bgVersion,
-                                          self.initializerPalette, self.headerPalette, self.streamPalette,
-                                          self.initializerPaletteDict, self.headerPaletteDict, self.streamPaletteDict,
-                                          self.blockHeight, self.blockWidth, self.pixelWidth, self.framesPerSecond,
-                                          self.outputMode, self.streamSHA, self.sizeInBytes, self.compressionEnabled,
-                                          self.encryptionEnabled, self.fileMaskEnabled, self.dateCreated,
-                                          self.streamName, self.streamDescription, self.postEncryptionHash)
+        self.protocol.begin_session_process(self.active_path, self.pass_through, self.stream_output_path,
+                                            self.bg_version, self.initializer_palette, self.header_palette,
+                                            self.stream_palette, self.initializer_palette_dict,
+                                            self.header_palette_dict, self.stream_palette_dict, self.block_height,
+                                            self.block_width, self.pixel_width, self.frames_per_second,
+                                            self.output_mode, self.stream_sha, self.size_in_bytes,
+                                            self.compression_enabled, self.encryption_enabled, self.file_mask_enabled,
+                                            self.date_created, self.stream_name, self.stream_description,
+                                            self.post_encryption_hash)
 
-        config.statsHandler.writeUpdate(((self.protocol.totalFrames - 1) * (self.blockHeight * self.blockWidth) +
-                                         self.protocol.remainderBlocks), self.protocol.totalFrames, self.sizeInBytes)
+        config.stats_handler.write_update(((self.protocol.total_frames - 1) * (self.block_height * self.block_width) +
+                                         self.protocol.remainder_blocks), self.protocol.total_frames,
+                                          self.size_in_bytes)
 
         self.cleanup()
 
 
-    def cleanup(self, blockPosition=0):
-        '''Removes temporary folder, updates statistics.'''
+    def cleanup(self):
+        '''Removes temporary folder.'''
 
         logging.debug("Deleting temporary folder....")
-        shutil.rmtree(self.activePath)
+        shutil.rmtree(self.active_path)
 
-        config.saveSession()
+        config.save_session()
         logging.info('Write process complete!')

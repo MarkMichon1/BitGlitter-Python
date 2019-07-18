@@ -5,7 +5,7 @@ with open("README.md", "r") as openReadMe:
 
 setup(
     name="BitGlitter",
-    version="1.0.1",
+    version="1.0.3",
     author="Mark Michon",
     author_email="markmichon7@gmail.com",
     description="⚡ Embed data payloads inside of ordinary images or video, through high performance 2-D matrix codes.",
@@ -19,10 +19,12 @@ setup(
         'ffmpeg-python',
         'opencv-python',
         'Pillow',
+        'argparse',
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    entry_points={'console scripts' : ['bitglitter = bitglitter.__main__:cli']}
 )

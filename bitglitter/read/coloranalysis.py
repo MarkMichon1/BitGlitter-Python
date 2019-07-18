@@ -1,20 +1,20 @@
 import math
 
-def colorSnap(rawFrameRGB, paletteColorList):
+def color_snap(raw_frame_rgb, palette_color_list):
 
-    closestMatch = None
-    closestDistance = 500
-    for color in paletteColorList:
+    closest_match = None
+    closest_distance = 500
+    for color in palette_color_list:
 
-        activeDistance = math.sqrt(((rawFrameRGB[0] - color[0]) ** 2) + ((rawFrameRGB[1] - color[1])** 2)
-                                   + ((rawFrameRGB[2] - color[2]) ** 2))
-        if activeDistance < closestDistance:
-            closestMatch = color
-            closestDistance = activeDistance
-    return closestMatch
+        active_distance = math.sqrt(((raw_frame_rgb[0] - color[0]) ** 2) + ((raw_frame_rgb[1] - color[1]) ** 2)
+                                   + ((raw_frame_rgb[2] - color[2]) ** 2))
+        if active_distance < closest_distance:
+            closest_match = color
+            closest_distance = active_distance
+    return closest_match
 
 
-def returnDistance(rawFrameRGB, expectedValue):
-    return math.sqrt(((rawFrameRGB[0] - expectedValue[0]) ** 2) + ((rawFrameRGB[1] - expectedValue[1]) ** 2) +
-              ((rawFrameRGB[2] - expectedValue[2]) ** 2))
+def return_distance(raw_frame_rgb, expected_value):
+    return math.sqrt(((raw_frame_rgb[0] - expected_value[0]) ** 2) + ((raw_frame_rgb[1] - expected_value[1]) ** 2) +
+                     ((raw_frame_rgb[2] - expected_value[2]) ** 2))
 

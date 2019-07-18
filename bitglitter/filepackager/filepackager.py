@@ -9,37 +9,37 @@ import bitglitter.filepackager.fileio as fileio
 class Folder:
 
 
-    def __init__(self, name = None, filePath = None):
+    def __init__(self, name = None, file_path = None):
 
         self.contains = []
-        self.currentPath = []
-        self.uniqueFolderNames = {}
-        self.uniqueFileNames = {}
+        self.current_path = []
+        self.unique_folder_names = {}
+        self.unique_file_names = {}
 
-        if filePath == None:
+        if file_path == None:
 
             self.name = name
-            self.filePath = filePath
+            self.file_path = file_path
 
-        if filePath != None:
+        if file_path != None:
 
             try:
-                self.name = os.path.basename(filePath)
-                self.filePath = filePath
-                self.index(self.filePath)
+                self.name = os.path.basename(file_path)
+                self.file_path = file_path
+                self.index(self.file_path)
             except:
                 self.name = name
-                self.filePath = None
+                self.file_path = None
 
 
-    def copyAttributes(self, sourceFolder):
+    def copy_attributes(self, source_folder):
 
-        self.currentPath = sourceFolder.currentPath
-        self.filePath = sourceFolder.filePath
-        self.contains = sourceFolder.contains
-        self.name = sourceFolder.name
-        self.uniqueFolderNames = sourceFolder.uniqueFolderNames
-        self.uniqueFileNames = sourceFolder.uniqueFileNames
+        self.current_path = source_folder.current_path
+        self.file_path = source_folder.file_path
+        self.contains = source_folder.contains
+        self.name = source_folder.name
+        self.unique_folder_names = source_folder.unique_folder_names
+        self.unique_file_names = source_folder.unique_file_names
 
 
     def __repr__(self):
@@ -51,7 +51,7 @@ class Folder:
 
         if type(other) is str:
 
-            if len(self.currentPath) == 0:
+            if len(self.current_path) == 0:
 
                 for items in self.contains:
 
@@ -60,12 +60,12 @@ class Folder:
                         self.contains.remove(items)
                         break
 
-            if len(self.currentPath) > 0:
+            if len(self.current_path) > 0:
 
-                self.contains[self.currentPath[0]] = self.actionPath(other,
-                                                                     self.contains[self.currentPath[0]],
-                                                                     self.currentPath[1:],
-                                                                     action = 'Subtract')
+                self.contains[self.current_path[0]] = self.action_path(other,
+                                                                       self.contains[self.current_path[0]],
+                                                                      self.current_path[1:],
+                                                                       action = 'Subtract')
 
         return self
 
@@ -74,91 +74,91 @@ class Folder:
 
         if type(other) is File or type(other) is Folder:
 
-            if len(self.currentPath) == 0:
+            if len(self.current_path) == 0:
 
-                other = self.returnFixedName(other)
+                other = self.return_fixed_name(other)
                 self.contains.append(other)
 
-            if len(self.currentPath) > 0:
+            if len(self.current_path) > 0:
 
-                self.contains[self.currentPath[0]] = self.actionPath(other,
-                                                                     self.contains[self.currentPath[0]],
-                                                                     self.currentPath[1:],
-                                                                     action = 'Add')
+                self.contains[self.current_path[0]] = self.action_path(other,
+                                                                       self.contains[self.current_path[0]],
+                                                                      self.current_path[1:],
+                                                                       action = 'Add')
 
         return self
 
 
-    def moveInto(self, folderName):
+    def move_into(self, folder_name):
 
-        thisFolder = Folder()
-        thisFolder.copyAttributes(self)
+        this_folder = Folder()
+        this_folder.copy_attributes(self)
 
-        for index in range(0,len(self.currentPath)):
-            thisFolder = thisFolder.contains[self.currentPath[index]]
+        for index in range(0, len(self.current_path)):
+            this_folder = this_folder.contains[self.current_path[index]]
 
         index = 0
 
-        for items in thisFolder.contains:
+        for items in this_folder.contains:
 
-            if items.name == folderName and type(items) is Folder:
+            if items.name == folder_name and type(items) is Folder:
 
-                self.currentPath.append(index)
+                self.current_path.append(index)
                 break
 
             index += 1
 
 
-    def moveUp(self):
-        if len(self.currentPath) > 0:
-            self.currentPath = self.currentPath[:-1]
+    def move_up(self):
+        if len(self.current_path) > 0:
+            self.current_path = self.current_path[:-1]
 
 
-    def returnFixedName(self, childOther):
+    def return_fixed_name(self, child_other):
 
         try:
-            if type(childOther) is Folder:
-                self.uniqueFolderNames[childOther.name] = self.uniqueFolderNames[childOther.name]
-            if type(childOther) is File:
-                self.uniqueFileNames[childOther.name] = self.uniqueFileNames[childOther.name]
+            if type(child_other) is Folder:
+                self.unique_folder_names[child_other.name] = self.unique_folder_names[child_other.name]
+            if type(child_other) is File:
+                self.unique_file_names[child_other.name] = self.unique_file_names[child_other.name]
         except:
-            if type(childOther) is Folder:
-                self.uniqueFolderNames[childOther.name] = 1
-            if type(childOther) is File:
-                self.uniqueFileNames[childOther.name] = 1
+            if type(child_other) is Folder:
+                self.unique_folder_names[child_other.name] = 1
+            if type(child_other) is File:
+                self.unique_file_names[child_other.name] = 1
         else:
-            if type(childOther) is Folder:
-                self.uniqueFolderNames[childOther.name] += 1
-            if type(childOther) is File:
-                self.uniqueFileNames[childOther.name] += 1
+            if type(child_other) is Folder:
+                self.unique_folder_names[child_other.name] += 1
+            if type(child_other) is File:
+                self.unique_file_names[child_other.name] += 1
         finally:
-            if type(childOther) is Folder:
-                nameFreq = self.uniqueFolderNames[childOther.name]
-            if type(childOther) is File:
-                nameFreq = self.uniqueFileNames[childOther.name]
+            if type(child_other) is Folder:
+                name_freq = self.unique_folder_names[child_other.name]
+            if type(child_other) is File:
+                name_freq = self.unique_file_names[child_other.name]
 
-        if nameFreq > 1:
-            if type(childOther) is Folder:
-                childOther.name = childOther.name + '(' + str(nameFreq) + ')'
-            if type(childOther) is File:
-                name = fileio.separateFileName(childOther.name)
-                childOther.name = name[0] + '(' + str(nameFreq) + ')' + name[1]
+        if name_freq > 1:
+            if type(child_other) is Folder:
+                child_other.name = child_other.name + '(' + str(name_freq) + ')'
+            if type(child_other) is File:
+                name = fileio.separate_file_name(child_other.name)
+                child_other.name = name[0] + '(' + str(name_freq) + ')' + name[1]
 
-        return childOther
+        return child_other
 
 
-    def actionPath(self, value, folder, currentPath=[], action='Add'):
+    def action_path(self, value, folder, current_path=[], action='Add'):
 
-        if len(currentPath) == 0:
+        if len(current_path) == 0:
 
             if action == 'Add':
 
                 if type(value) is Folder:
-                    value = folder.returnFixedName(value)
+                    value = folder.return_fixed_name(value)
                     folder.contains.append(value)
 
                 if type(value) is File and os.path.isfile(os.path.join(value.filePath, value.name)):
-                    value = folder.returnFixedName(value)
+                    value = folder.return_fixed_name(value)
                     folder.contains.append(value)
 
             if action == 'Subtract' and type(value) is str:
@@ -169,35 +169,35 @@ class Folder:
 
             return folder
 
-        if len(currentPath) > 0:
+        if len(current_path) > 0:
 
-            folder.contains[currentPath[0]] = self.actionPath(value,
-                                                              folder.contains[currentPath[0]],
-                                                              currentPath[1:])
+            folder.contains[current_path[0]] = self.action_path(value,
+                                                                folder.contains[current_path[0]],
+                                                                current_path[1:])
             return folder
 
 
-    def printFolder(self, printSub = True):
+    def print_folder(self, print_sub = True):
 
-        thisFolder = Folder()
-        thisFolder.copyAttributes(self)
+        this_folder = Folder()
+        this_folder.copy_attributes(self)
 
-        for index in range(0,len(self.currentPath)):
+        for index in range(0, len(self.current_path)):
 
-            thisFolder = thisFolder.contains[self.currentPath[index]]
+            this_folder = this_folder.contains[self.current_path[index]]
 
-        self.printRecursive(thisFolder,'',printSub)
+        self.print_recursive(this_folder, '', print_sub)
 
 
-    def printRecursive(self, thisFolder, space = '', printSub = True): #Recursively prints folder and its
-        #children.
+    def print_recursive(self, this_folder, space ='', print_sub = True):
+        '''Recursively prints folder and it's children.'''
 
-        print(space + "[" + thisFolder.name + "]:")
+        print(space + "[" + this_folder.name + "]:")
 
-        for items in thisFolder.contains:
+        for items in this_folder.contains:
             if type(items) is Folder:
-                if printSub == True:
-                    items.printRecursive(items, space + '    ', printSub)
+                if print_sub == True:
+                    items.print_recursive(items, space + '    ', print_sub)
                 else:
                     print('    ' + "[" + items.name + "]:")
                     print('    ' + "..." + str(len(items.contains)) + " file(s)/folder(s)..." )
@@ -206,28 +206,28 @@ class Folder:
                 print('    ' + space + "(" + items.name + ")")
 
 
-    def index(self, myPath):
+    def index(self, my_path):
 
         default_dir = os.getcwd()
-        os.chdir(myPath)
+        os.chdir(my_path)
         current = os.listdir()
-        self.filePath = myPath
+        self.file_path = my_path
 
         for something in current:
 
-            if os.path.isdir(os.path.join(myPath, something)):
+            if os.path.isdir(os.path.join(my_path, something)):
 
                 logging.debug("Directory Found: " + something)
-                newFolder = Folder(name=str(something))
-                newFolder.index(myPath + '/' + something + '/')
-                self.contains.append(newFolder)
+                new_folder = Folder(name=str(something))
+                new_folder.index(my_path + '/' + something + '/')
+                self.contains.append(new_folder)
 
-            if os.path.isfile(os.path.join(myPath, something)):
+            if os.path.isfile(os.path.join(my_path, something)):
 
                 logging.debug("File Found: " + something)
-                newFile = File(myPath + '/' + something)
-                newFile.filePath = myPath
-                self.contains.append(newFile)
+                new_file = File(my_path + '/' + something)
+                new_file.file_path = my_path
+                self.contains.append(new_file)
 
         os.chdir(default_dir)
 
@@ -236,50 +236,50 @@ class Folder:
 
 class File:
 
-    def __init__(self, filePath = None):
+    def __init__(self, file_path = None):
 
-        if filePath == None:
+        if file_path == None:
 
             self.name = None
-            self.filePath = filePath
-            self.realName = None
+            self.file_path = file_path
+            self.real_name = None
 
-        if filePath != None:
+        if file_path != None:
 
             try:
-                self.realName = os.path.basename(filePath)
-                self.name = self.realName
-                self.filePath = '\\'.join(filePath.split('\\')[0:-1])
+                self.real_name = os.path.basename(file_path)
+                self.name = self.real_name
+                self.file_path = '\\'.join(file_path.split('\\')[0:-1])
             except:
                 self.name = None
-                self.filePath = None
-                self.realName = None
+                self.file_path = None
+                self.real_name = None
 
     def __repr__(self):
 
         return '(' + self.name + ')'
 
 
-def package(myFolder, fileName, mask):
+def package(my_folder, file_name, mask):
 
-    root = Folder(myFolder.name)
-    root += myFolder
-    dig(root, fileName + '\\package.dat', noPayload=False)
+    root = Folder(my_folder.name)
+    root += my_folder
+    dig(root, file_name + '\\package.dat', no_payload=False)
     logging.debug('Package created.')
     if not mask:
-        dig(root, fileName + '\\fileList.txt', noPayload=True)
-        logging.debug("fileList created.")
+        dig(root, file_name + '\\file_list.txt', no_payload=True)
+        logging.debug("file_list created.")
     else:
         logging.debug('fileMask enabled, skipping...')
     logging.debug("Internal filepackager process complete.")
 
 
-def dig(myFolder, fileName, noPayload):
+def dig(my_folder, file_name, no_payload):
 
-    open(fileName, 'a+').close()
+    open(file_name, 'a+').close()
     default_dir = os.getcwd()
-    dataFile = b''
-    current = myFolder.contains
+    data_file = b''
+    current = my_folder.contains
 
     for something in current:
 
@@ -287,150 +287,150 @@ def dig(myFolder, fileName, noPayload):
             logging.debug("Directory Found: " + something.name)
             logging.debug("Writing Directory: " + something.name)
 
-            with open(fileName,'ab') as write_file:
-                if noPayload == False:
+            with open(file_name, 'ab') as write_file:
+                if no_payload == False:
                     write_file.write(b"<" + something.name.encode() + b">")
 
-            dig(something, fileName, noPayload)
+            dig(something, file_name, no_payload)
 
-            with open(fileName,'ab') as write_file:
-                if noPayload == False:
+            with open(file_name, 'ab') as write_file:
+                if no_payload == False:
                     write_file.write(b"</" + something.name.encode() + b">")
 
             logging.debug("Closing Directory: " + something.name)
 
         if type(something) is File:
 
-            if something.filePath != None:
+            if something.file_path != None:
 
                 logging.debug("File Found: " + something.name)
 
                 try:
 
-                    if noPayload == False:
-                        dataFile += b":" + something.name.encode() + b"|"
-                        dataFile += b"{" + str(os.path.getsize(os.path.join(something.filePath, something.realName)))\
-                            .encode() + b"}"
+                    if no_payload == False:
+                        data_file += b":" + something.name.encode() + b"|"
+                        data_file += b"{" + str(os.path.getsize(os.path.join(something.file_path,
+                                                                             something.real_name))).encode() + b"}"
                     else:
-                        dataFile += b"|" + something.name.encode() + b"|"
-                        dataFile += str(os.path.getsize(os.path.join(something.filePath, something.realName))) \
+                        data_file += b"|" + something.name.encode() + b"|"
+                        data_file += str(os.path.getsize(os.path.join(something.file_path, something.real_name))) \
                             .encode()
-                    if noPayload == False:
-                        dataFile += open(something.filePath + '/' + something.realName, 'rb').read()
+                    if no_payload == False:
+                        data_file += open(something.file_path + '/' + something.real_name, 'rb').read()
                 except:
-                    dataFile = b":|{0}"
+                    data_file = b":|{0}"
                     logging.debug("\nERROR: Unable to package file, " + something.name + ", skipping.\n")
 
 
-            if something.filePath == None:
+            if something.file_path == None:
 
                 logging.debug("Virtual File Found: " + something.name)
 
-                dataFile += b":" + something.name.encode() + b"|"
-                dataFile += b"{0}"
-                dataFile += b''
+                data_file += b":" + something.name.encode() + b"|"
+                data_file += b"{0}"
+                data_file += b''
 
-            with open(fileName,'ab') as open_file:
+            with open(file_name, 'ab') as open_file:
 
                 logging.debug("Writing File: " + something.name)
-                open_file.write(dataFile)
+                open_file.write(data_file)
 
-            dataFile = b''
+            data_file = b''
 
     os.chdir(default_dir)
 
 
-def unpackage(fileName, savePath, streamSHA):
+def unpackage(file_name, save_path, stream_SHA):
 
-    outputPath = savePath
-    if savePath == None:
-        outputPath = os.getcwd()
-    originalWorkingDirectory = os.getcwd()
-    rootFolderCreated = False
+    output_path = save_path
+    if save_path == None:
+        output_path = os.getcwd()
+    original_working_directory = os.getcwd()
+    root_folder_created = False
 
-    with open(fileName,'rb') as open_file:
+    with open(file_name, 'rb') as open_file:
 
-        readByte = b''
+        read_byte = b''
         temp = b''
-        currentFile = b''
+        current_file = b''
 
         while True:
 
-            readByte = open_file.read(1)
+            read_byte = open_file.read(1)
 
-            if readByte == b'':
+            if read_byte == b'':
                 break
 
-            if readByte == b'<': #working with folder.
+            if read_byte == b'<': #working with folder.
 
                 while True:
 
-                    readByte = open_file.read(1)
+                    read_byte = open_file.read(1)
 
-                    if readByte != b'>':
+                    if read_byte != b'>':
 
-                        temp += readByte
+                        temp += read_byte
                     else:
 
                         if temp[0:1] != b'/':
                             logging.debug("Folder " + temp.decode('utf-8') + ' detected.')
 
-                            if rootFolderCreated == True:
-                                os.mkdir(os.path.join(outputPath,temp.decode('utf-8')))
-                                outputPath += '/' + temp.decode('utf-8')
+                            if root_folder_created == True:
+                                os.mkdir(os.path.join(output_path,temp.decode('utf-8')))
+                                output_path += '/' + temp.decode('utf-8')
                                 logging.debug("Making Folder: " + temp.decode('utf-8') + " and moving into it.")
 
                             else:
                                 try:
-                                    os.mkdir(os.path.join(outputPath, streamSHA))
+                                    os.mkdir(os.path.join(output_path, stream_SHA))
                                 except:
                                     pass
-                                outputPath += '/' + streamSHA
-                                logging.debug("Making Folder: " + streamSHA + " and moving into it.")
-                                rootFolderCreated = True
+                                output_path += '/' + stream_SHA
+                                logging.debug("Making Folder: " + stream_SHA + " and moving into it.")
+                                root_folder_created = True
 
-                            os.chdir(outputPath)
+                            os.chdir(output_path)
                             temp = b''
                             break
 
                         if temp[0:1] == b'/':
                             logging.debug("Folder termination detected. Moving one directory up.")
                             os.chdir('..')
-                            outputPath = os.getcwd()
+                            output_path = os.getcwd()
                             temp = b''
                             break
 
-            if readByte == b':':
+            if read_byte == b':':
 
                 while True:
 
-                    readByte = open_file.read(1)
+                    read_byte = open_file.read(1)
 
-                    if readByte != b'|':
-                        temp += readByte
+                    if read_byte != b'|':
+                        temp += read_byte
                     else:
-                        if not os.path.isdir(os.path.join(outputPath, temp.decode('utf-8'))):
+                        if not os.path.isdir(os.path.join(output_path, temp.decode('utf-8'))):
                             logging.debug("File " + temp.decode('utf-8') + ' detected.')
-                            open(os.path.join(outputPath, temp.decode('utf-8')), 'wb').close()
-                            currentFile = temp.decode('utf-8')
+                            open(os.path.join(output_path, temp.decode('utf-8')), 'wb').close()
+                            current_file = temp.decode('utf-8')
                             temp = b''
                         break
-            if readByte == b'{':
+            if read_byte == b'{':
 
                 while True:
 
-                    readByte = open_file.read(1)
+                    read_byte = open_file.read(1)
 
-                    if readByte != b'}':
+                    if read_byte != b'}':
 
-                        temp += readByte
+                        temp += read_byte
                     else:
 
-                        logging.debug("Creating file " + currentFile + "...")
-                        with open(os.path.join(outputPath, currentFile), 'wb') as write_file:
+                        logging.debug("Creating file " + current_file + "...")
+                        with open(os.path.join(output_path, current_file), 'wb') as write_file:
                             write_file.write(open_file.read(int(temp)))
-                        logging.debug("Data printed to " + currentFile)
+                        logging.debug("Data printed to " + current_file)
                         temp = b''
                         break
 
-    os.chdir(originalWorkingDirectory)
+    os.chdir(original_working_directory)

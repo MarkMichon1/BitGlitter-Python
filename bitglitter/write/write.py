@@ -1,74 +1,76 @@
 from bitglitter.config.constants import BG_VERSION, WRITE_PATH, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, SCRYPT_P_DEFAULT, \
     HEADER_PALETTE_ID, STREAM_PALETTE_ID, PIXEL_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH, FRAMES_PER_SECOND
-from bitglitter.config.loggingset import loggingSetter
+from bitglitter.config.loggingset import logging_setter
 from bitglitter.write.renderhandler import RenderHandler
 
 
 def write(   # Basic setup
-             fileList,
-             streamName = "",
-             streamDescription = "",
-             outputPath = False,
-             outputMode = "video",
+             file_list,
+             stream_name ="",
+             stream_description ="",
+             output_path = False,
+             output_mode ="video",
 
              # Stream configuration
-             compressionEnabled = True,
-             fileMaskEnabled = False,
+             compression_enabled = True,
+             file_mask_enabled = False,
 
              # Encryption
-             encryptionKey = "",
-             scryptOverrideN = SCRYPT_N_DEFAULT,
-             scryptOverrideR = SCRYPT_R_DEFAULT,
-             scryptOverrideP = SCRYPT_P_DEFAULT,
+             encryption_key ="",
+             scrypt_override_n = SCRYPT_N_DEFAULT,
+             scrypt_override_r = SCRYPT_R_DEFAULT,
+             scrypt_override_p = SCRYPT_P_DEFAULT,
 
              # Stream geometry, color
-             #protocolVersion = '1' # Currently disabled, will enable once multiple choices of protocols are available.
-             headerPaletteID = HEADER_PALETTE_ID,
-             streamPaletteID = STREAM_PALETTE_ID,
-             pixelWidth = PIXEL_WIDTH,
-             blockHeight = BLOCK_HEIGHT,
-             blockWidth = BLOCK_WIDTH,
+             #protocol_version = '1' # Currently disabled, will enable once multiple choices of protocols are available.
+             header_palette_id = HEADER_PALETTE_ID,
+             stream_palette_id = STREAM_PALETTE_ID,
+             pixel_width = PIXEL_WIDTH,
+             block_height = BLOCK_HEIGHT,
+             block_width = BLOCK_WIDTH,
 
              # Video rendering
-             framesPerSecond = FRAMES_PER_SECOND,
+             frames_per_second = FRAMES_PER_SECOND,
 
              # Logging
-             loggingLevel ='info',
-             loggingScreenOutput = True,
-             loggingSaveOutput = False,
+             logging_level ='info',
+             logging_screen_output = True,
+             logging_save_output = False,
              ):
     '''This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
     information.
     '''
 
     # Logging initializing.
-    loggingSetter(loggingLevel, loggingScreenOutput, loggingSaveOutput)
+    logging_setter(logging_level, logging_screen_output, logging_save_output)
 
     # Loading write protocol.  This import function is here deliberately because of logging.
-    from bitglitter.protocols.protocolhandler import protocolHandler
-    writeProtocol = protocolHandler.returnWriteProtocol('1')
+    from bitglitter.protocols.protocolhandler import protocol_handler
+    write_protocol = protocol_handler.return_write_protocol('1')
 
     # Are all parameters acceptable?
-    writeProtocol.verifyWriteParameters(fileList, streamName, streamDescription, outputPath, outputMode, compressionEnabled,
-                                        fileMaskEnabled, scryptOverrideN, scryptOverrideR, scryptOverrideP, streamPaletteID,
-                                        headerPaletteID, pixelWidth, blockHeight, blockWidth, framesPerSecond)
+    write_protocol.verify_write_parameters(file_list, stream_name, stream_description, output_path, output_mode,
+                                           compression_enabled, file_mask_enabled, scrypt_override_n, scrypt_override_r,
+                                           scrypt_override_p, stream_palette_id, header_palette_id, pixel_width,
+                                           block_height, block_width, frames_per_second)
 
     # This sets the name of the temporary folder while the file is being written.
-    activePath = WRITE_PATH
+    active_path = WRITE_PATH
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
-    preProcess = writeProtocol.preProcessing(activePath, fileList, encryptionKey, fileMaskEnabled, compressionEnabled,
-                                             scryptOverrideN, scryptOverrideR, scryptOverrideP)
+    pre_process = write_protocol.pre_processing(active_path, file_list, encryption_key, file_mask_enabled,
+                                                compression_enabled, scrypt_override_n, scrypt_override_r,
+                                                scrypt_override_p)
 
     # After the data is prepared, this is what renders the data into images.
-    frameProcessor = writeProtocol.frameProcessor()
+    frame_processor = write_protocol.frame_processor()
 
-    renderHandler = RenderHandler(frameProcessor, blockHeight, blockWidth, headerPaletteID, preProcess.streamSHA,
-                                  preProcess.sizeInBytes, compressionEnabled, encryptionKey != "", fileMaskEnabled,
-                                  preProcess.dateCreated, streamPaletteID, BG_VERSION, streamName, streamDescription,
-                                  preProcess.postEncryptionHash, pixelWidth, outputMode, outputPath,
-                                  framesPerSecond, activePath, preProcess.passThrough)
+    renderHandler = RenderHandler(frame_processor, block_height, block_width, header_palette_id, pre_process.stream_sha,
+                                  pre_process.size_in_bytes, compression_enabled, encryption_key != "",
+                                  file_mask_enabled, pre_process.date_created, stream_palette_id, BG_VERSION,
+                                  stream_name, stream_description, pre_process.post_encryption_hash, pixel_width,
+                                  output_mode, output_path, frames_per_second, active_path, pre_process.pass_through)
 
 
     # Returns the SHA of the preprocessed file in string format for optional storage of it.
-    return preProcess.streamSHA
+    return pre_process.stream_sha

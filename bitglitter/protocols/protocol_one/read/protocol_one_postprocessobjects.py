@@ -2,7 +2,7 @@ import logging
 import os
 
 from bitglitter.filepackager.filepackager import unpackage
-from bitglitter.utilities.filemanipulation import decryptFile, returnHashFromFile, decompressFile
+from bitglitter.utilities.filemanipulation import decrypt_file, return_hash_from_file, decompress_file
 
 
 class Decryptor:
@@ -10,31 +10,32 @@ class Decryptor:
     and, if encryption was enabled on this stream, will attempt to decrypt it with the AES key provided.
     '''
 
-    def __init__(self, workingFolder, encryptionEnabled, encryptionKey, scryptN, scryptR, scryptP, streamSHA):
+    def __init__(self, working_folder, encryption_enabled, encryption_key, scrypt_n, scrypt_r, scrypt_p, stream_sha):
 
-        inputFile = workingFolder + '\\assembled.bin'
-        self.passThrough = inputFile
-        self.isSatisfied = False
+        input_file = working_folder + '\\assembled.bin'
+        self.pass_through = input_file
+        self.is_satisfied = False
 
-        if encryptionEnabled:
+        if encryption_enabled:
 
-            if encryptionKey:
+            if encryption_key:
 
                 logging.info('Attempting to decrypt with provided key...')
-                logging.debug(f'Trying with key {encryptionKey}')
-                self.passThrough = workingFolder + '\\decrypted.bin'
-                decryptFile(inputFile, self.passThrough, encryptionKey, scryptN, scryptR, scryptP, removeInput=False)
+                logging.debug(f'Trying with key {encryption_key}')
+                self.pass_through = working_folder + '\\decrypted.bin'
+                decrypt_file(input_file, self.pass_through, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+                             remove_input=False)
 
                 # Checking if password is valid
-                if streamSHA == returnHashFromFile(self.passThrough):
+                if stream_sha == return_hash_from_file(self.pass_through):
 
                     logging.info('Successfully decrypted.')
-                    self.isSatisfied = True
+                    self.is_satisfied = True
 
                 else:
 
                     logging.info("Password incorrect, cannot continue.")
-                    os.remove(self.passThrough)
+                    os.remove(self.pass_through)
 
             else:
 
@@ -43,21 +44,21 @@ class Decryptor:
         else:
 
             logging.info('Encryption was not enabled on this stream.  Skipping step...')
-            self.isSatisfied = True
+            self.is_satisfied = True
 
 
 class Decompressor:
     '''If compression was enabled on this stream, this object will decompress it.'''
 
-    def __init__(self, workingFolder, passThrough, compressionEnabled):
+    def __init__(self, working_folder, pass_through, compression_enabled):
 
-        self.passThrough = passThrough
+        self.pass_through = pass_through
 
-        if compressionEnabled:
-            newPath = workingFolder + "\\decompressed.dat"
+        if compression_enabled:
+            new_path = working_folder + "\\decompressed.dat"
             logging.info('Decompressing file...')
-            decompressFile(self.passThrough, newPath)
-            self.passThrough = newPath
+            decompress_file(self.pass_through, new_path)
+            self.pass_through = new_path
             logging.info('Successfully decompressed.')
 
         else:
@@ -67,15 +68,15 @@ class Decompressor:
 class Unpackager:
     '''This object takes the decompressed binary and 'unpackages' it into the files and/or folders embedded in it.'''
 
-    def __init__(self, passThrough, outputPath, streamSHA):
+    def __init__(self, pass_through, output_path, stream_sha):
 
-        if outputPath == None:
-            printedSaveLocation = 'program run folder'
+        if output_path == None:
+            printed_save_location = 'program run folder'
 
         else:
-            printedSaveLocation = outputPath
+            printed_save_location = output_path
 
-        logging.info(f'Unpackaging file(s) at {printedSaveLocation}...')
+        logging.info(f'Unpackaging file(s) at {printed_save_location}...')
 
-        unpackage(passThrough, outputPath, streamSHA)
+        unpackage(pass_through, output_path, stream_sha)
         logging.info('File(s) successfully unpackaged.')
