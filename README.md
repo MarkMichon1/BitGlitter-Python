@@ -125,7 +125,7 @@ contribute, docstrings and notes are throughout the library.
 
 ### CLI
 
-Write from commnad line:
+Write from command line:
 
 + `python3 -m bitglitter write`
 
