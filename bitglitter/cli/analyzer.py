@@ -22,7 +22,7 @@ class CliArgumentParser(object):
             output_path = False
         
         if path.isfile(file) == True or path.isdir(file) == True:
-            read(fileToInput=file)
+            read(file_to_input=file)
         else:
             raise FileNotFoundError('Read first argument must be a valid path to a file or folder.')
 
@@ -43,7 +43,7 @@ class CliArgumentParser(object):
         
         if path.isfile(file_path) == True or path.isdir(file_path) == True:
             try:
-                write(fileList=file_path, streamName=stream_name, outputMode=mode, outputPath=output_path)
+                write(file_list=file_path, stream_name=stream_name, output_mode=mode, output_path=output_path)
             except FileNotFoundError:
                 raise FileNotFoundError("ffmpeg is required and wasn't found do you have ffmpeg installed in your local directory ?")
             except TypeError:
