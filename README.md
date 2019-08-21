@@ -125,6 +125,8 @@ contribute, docstrings and notes are throughout the library.
 
 ### CLI
 
+**Temporary warning-** Due to issues uploading to PyPI, these features are only available on Github for now.  The PyPI version of BitGlitter still performs everything else fine.  This will be removed when the problem is fixed.
+
 Write from command line:
 
 + `python3 -m bitglitter write`
