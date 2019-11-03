@@ -26,5 +26,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    entry_points={'console scripts' : ['bitglitter = bitglitter.__main__:cli']}
+    entry_points={'console_scripts' : ['bitglitter = bitglitter.__main__:cli']}
 )
