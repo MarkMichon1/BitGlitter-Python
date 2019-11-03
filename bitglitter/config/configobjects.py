@@ -83,13 +83,13 @@ class PaletteHandler:
                             "pixel, it has the highest reliability.", ((0,0,0), (255,255,255)), 441.67, 1),
 
                             '11' : DefaultPalette("1 bit alternate", "Uses cyan/magenta instead of white/black.",
-                            ((255, 0, 255), (0, 255, 255)), 360.12, 11),
+                            ((255, 0, 255), (0, 255, 255)), 360.62, 11),
 
                             '2' : DefaultPalette("2 bit default", "Four colors; black, red, green, blue.",
                             ((0,0,0), (255,0,0), (0,255,0), (0,0,255)), 255, 2),
 
                             '22': DefaultPalette("2 bit alternate", "Four colors; black, magenta, cyan, yellow.",
-                            ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255, 22),
+                            ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 360.62, 22),
 
                             '3' : DefaultPalette("3 bit default",
                             "Eight colors.", ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255),

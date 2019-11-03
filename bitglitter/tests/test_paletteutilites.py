@@ -11,13 +11,12 @@ def test_color_distance_with_default_1bit_palette():
     assert len(t_palette) == 2 # number of colors
     assert t_expect == t_result
 
-#def test_color_distance_with_alternate_1bit_palette():
-# TEST DOESNT PASS
-#    t_palette = ((255, 0, 255), (0, 255, 255))
-#    t_expect = 360.12
-#    t_result = color_distance(t_palette)
-#    assert len(t_palette) == 2 # number of colors
-#    assert t_expect == t_result
+def test_color_distance_with_alternate_1bit_palette():
+    t_palette = ((255, 0, 255), (0, 255, 255))
+    t_expect = 360.62
+    t_result = color_distance(t_palette)
+    assert len(t_palette) == 2 # number of colors
+    assert t_expect == t_result
 
 def test_color_distance_with_default_2bit_palette():
     t_palette = ((0,0,0), (255,0,0), (0,255,0), (0,0,255))
@@ -26,13 +25,12 @@ def test_color_distance_with_default_2bit_palette():
     assert len(t_palette) == 4 # number of colors
     assert t_expect == t_result
 
-#def test_color_distance_with_alternate_2bit_palette():
-# TEST DOESNT PASS
-#    t_palette = ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255))
-#    t_expect = 255
-#    t_result = color_distance(t_palette)
-#    assert len(t_palette) == 4 # number of colors
-#    assert t_expect == t_result
+def test_color_distance_with_alternate_2bit_palette():
+    t_palette = ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255))
+    t_expect = 360.62
+    t_result = color_distance(t_palette)
+    assert len(t_palette) == 4 # number of colors
+    assert t_expect == t_result
 
 
 def test_color_distance_with_default_3bit_palette():
