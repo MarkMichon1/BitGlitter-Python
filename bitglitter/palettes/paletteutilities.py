@@ -137,16 +137,24 @@ def color_distance(palette):
     returned means you have at least a single pair of identical RGB values.  All values must be unique!
     '''
 
-    local_distances = []
+    min_distance = None
 
     for unique_set in itertools.combinations(palette, 2):
 
-        active_distance = math.sqrt(
-            ((unique_set[1][0] - unique_set[0][0]) ** 2) + ((unique_set[1][1] - unique_set[0][1])
-            ** 2) + ((unique_set[1][2] - unique_set[0][2]) ** 2))
-        local_distances.append(active_distance)
+        red_distance = (unique_set[1][0] - unique_set[0][0]) ** 2
+        green_distance = (unique_set[1][1] - unique_set[0][1]) ** 2
+        blue_distance = (unique_set[1][2] - unique_set[0][2]) ** 2
 
-    return round(min(local_distances), 2)
+        sum_of_distances = math.sqrt(red_distance + green_distance + blue_distance)
+
+        if min_distance:
+            if sum_of_distances < min_distance:
+                min_distance = sum_of_distances
+        else:
+            min_distance = sum_of_distances
+
+    return round(min_distance, 2)
+
 
 
 def return_palette_id(name, description, date_created, color_set):
