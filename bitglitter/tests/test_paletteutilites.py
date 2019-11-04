@@ -69,3 +69,12 @@ def test_color_distance_with_default_6bit_palette():
     assert len(t_palette) == 64 # number of colors
     assert t_expect == t_result
 
+
+def test_color_distance_with_duplicate_values():
+    t_palette = ((0,0,0), (255,0,0), (0,255,0), (0,0,0))
+    t_expect = 0
+    t_result = color_distance(t_palette)
+    assert len(t_palette) == 4 # number of colors
+    assert t_expect == t_result
+
+

@@ -139,15 +139,16 @@ def color_distance(palette):
 
     min_distance = None
 
-    for unique_set in itertools.combinations(palette, 2):
+    for pair in itertools.combinations(palette, 2):
+        first_color, second_color = pair
 
-        red_distance = (unique_set[1][0] - unique_set[0][0]) ** 2
-        green_distance = (unique_set[1][1] - unique_set[0][1]) ** 2
-        blue_distance = (unique_set[1][2] - unique_set[0][2]) ** 2
+        r_distance = (second_color[0] - first_color[0]) ** 2
+        g_distance = (second_color[1] - first_color[1]) ** 2
+        b_distance = (second_color[2] - first_color[2]) ** 2
 
-        sum_of_distances = math.sqrt(red_distance + green_distance + blue_distance)
+        sum_of_distances = math.sqrt(r_distance + g_distance + b_distance)
 
-        if min_distance:
+        if min_distance is not None:
             if sum_of_distances < min_distance:
                 min_distance = sum_of_distances
         else:
