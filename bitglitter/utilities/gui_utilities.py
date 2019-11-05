@@ -19,6 +19,3 @@ def return_all_palette_objects():
     custom_palettes = config.color_handler.custom_palette_list
 
     return list(default_palettes.values()), list(custom_palettes.values())
-d, p = return_all_palette_objects()
-print(d)
-print(p)
