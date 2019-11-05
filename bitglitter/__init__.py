@@ -22,8 +22,11 @@
 #
 # ===============================================================================
 #
-# Official project page:
+# Official project page (Python library):
 # https://github.com/MarkMichon1/BitGlitter
+#
+# Official project page (Executable GUI)
+# https://github.com/MarkMichon1/BitGlitter-GUI
 #
 # Guides and roadmap (under construction!):
 # https://github.com/MarkMichon1/BitGlitter/wiki
