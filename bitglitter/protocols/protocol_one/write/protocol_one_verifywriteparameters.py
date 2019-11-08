@@ -36,7 +36,7 @@ def palette_verify(header_type, bit_length, block_width, block_height, output_ty
     return ((round(100 - (occupied_blocks / total_blocks * 100), 2)), bits_available, output_per_sec)
 
 
-def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode,
+def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode, output_name,
                             compression_enabled, file_mask_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette,
                             header_palette, pixel_width, block_height, block_width, frames_per_second):
     '''This function verifies all write() parameters for Protocol v1.  Look at this as the gatekeeper that stops
@@ -59,6 +59,7 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
 
     proper_string_syntax(stream_name, 'stream_name')
     proper_string_syntax(stream_description, 'stream_description')
+    proper_string_syntax(output_name, 'output_name')
 
     if stream_output_path:
         is_valid_directory('stream_output_path', stream_output_path)

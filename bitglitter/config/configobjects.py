@@ -78,29 +78,30 @@ class PaletteHandler:
     '''
 
     def __init__(self):
-        self.default_palette_list = {'1' : DefaultPalette("1 bit default",
+        self.default_palette_list = {'1' : DefaultPalette("1 Bit Default",
                             "Two colors, black and white.  While it has the lowest density of one bit of data per "
                             "pixel, it has the highest reliability.", ((0,0,0), (255,255,255)), 441.67, 1),
 
-                            '11' : DefaultPalette("1 bit alternate", "Uses cyan/magenta instead of white/black.",
-                            ((255, 0, 255), (0, 255, 255)), 360.62, 11),
+                            '11' : DefaultPalette("1 Bit Default Alternate",
+                            "Uses cyan/magenta instead of white/black.",
+                            ((255, 0, 255), (0, 255, 255)), 360.12, 11),
 
-                            '2' : DefaultPalette("2 bit default", "Four colors; black, red, green, blue.",
+                            '2' : DefaultPalette("2 Bit Default", "Four colors; black, red, green, blue.",
                             ((0,0,0), (255,0,0), (0,255,0), (0,0,255)), 255, 2),
 
-                            '22': DefaultPalette("2 bit alternate", "Four colors; black, magenta, cyan, yellow.",
-                            ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 360.62, 22),
+                            '22': DefaultPalette("2 Bit Default Alternate", "Four colors; black, magenta, cyan, yellow.",
+                            ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255, 22),
 
-                            '3' : DefaultPalette("3 bit default",
+                            '3' : DefaultPalette("3 Bit Default",
                             "Eight colors.", ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255),
                             (255,0,255), (255,255,255)), 255, 3),
 
-                            '4' : DefaultPalette("4 bit default", "Sixteen colors.", ((0,0,0), (128,128,128),
+                            '4' : DefaultPalette("4 Bit Default", "Sixteen colors.", ((0,0,0), (128,128,128),
                             (192,192,192), (128,0,0), (255,0,0), (128,128,0), (255,255,0), (0,255,0), (0,128,128),
                             (0,128,0), (0,0,128), (0,0,255), (0,255,255), (128,0,128), (255,0,255), (255,255,255)),
                                                         109.12, 4),
 
-                            '6' : DefaultPalette("6 bit default", "Sixty-four colors.", ((0,0,0), (0,0,85),
+                            '6' : DefaultPalette("6 Bit Default", "Sixty-four colors.", ((0,0,0), (0,0,85),
                             (0,0,170), (0,0,255), (0,85,0), (0,85,85), (0,85,170), (0,85,255), (0,170,0), (0,170,85),
                             (0,170,170), (0,170,255), (0,255,0), (0,255,85), (0,255,170), (0,255,255), (85,0,0),
                             (85,0,85), (85,0,170), (85,0,255), (85,85,0), (85,85,85), (85,85,170), (85,85,255),

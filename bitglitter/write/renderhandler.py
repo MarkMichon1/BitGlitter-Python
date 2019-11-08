@@ -30,7 +30,7 @@ class RenderHandler:
                  pixel_width, output_mode, stream_output_path, frames_per_second,
 
                  # Misc
-                 active_folder, pass_through
+                 active_folder, pass_through, output_name
                  ):
 
         logging.debug('RenderHandler initializing...')
@@ -50,6 +50,7 @@ class RenderHandler:
         self.bg_version = bg_version
         self.stream_name = stream_name
         self.stream_description = stream_description
+        self.output_name = output_name
         self.post_encryption_hash = post_encryption_hash
 
         self.pixel_width = pixel_width
@@ -69,8 +70,8 @@ class RenderHandler:
         self.initializer_palette_dict = ValuesToColor(self.initializer_palette, 'initializer_palette')
 
         self.protocol.begin_session_process(self.active_path, self.pass_through, self.stream_output_path,
-                                            self.bg_version, self.initializer_palette, self.header_palette,
-                                            self.stream_palette, self.initializer_palette_dict,
+                                            self.bg_version, self.output_name, self.initializer_palette,
+                                            self.header_palette, self.stream_palette, self.initializer_palette_dict,
                                             self.header_palette_dict, self.stream_palette_dict, self.block_height,
                                             self.block_width, self.pixel_width, self.frames_per_second,
                                             self.output_mode, self.stream_sha, self.size_in_bytes,

@@ -22,8 +22,11 @@
 #
 # ===============================================================================
 #
-# Official project page:
+# Official project page (Python library):
 # https://github.com/MarkMichon1/BitGlitter
+#
+# Official project page (Executable GUI)
+# https://github.com/MarkMichon1/BitGlitter-GUI
 #
 # Guides and roadmap (under construction!):
 # https://github.com/MarkMichon1/BitGlitter/wiki
@@ -54,3 +57,6 @@ from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_l
 from bitglitter.palettes.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
     clear_all_custom_palettes, clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, \
     remove_custom_palette_nickname
+
+# GUI interface
+# TBA

@@ -10,9 +10,9 @@ from bitglitter.protocols.protocol_one.write.protocol_one_renderassets import re
 
 
 def render_loop(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
-                stream_palette, output_mode, stream_output_path, active_path, pass_through, size_in_bytes, total_frames,
-                compression_enabled, encryption_enabled, file_mask_enabled, date_created, ascii_compressed, stream_sha,
-                initializer_palette_dict, header_palette_dict, stream_palette_dict):
+                stream_palette, output_mode, stream_output_path, output_name, active_path, pass_through, size_in_bytes,
+                total_frames, compression_enabled, encryption_enabled, file_mask_enabled, date_created,
+                ascii_compressed, stream_sha, initializer_palette_dict, header_palette_dict, stream_palette_dict):
     '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
     # comments in this function that describe what each part is doing, to follow along.
     '''
@@ -210,7 +210,10 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
             file_name = frame_number_to_string.zfill(math.ceil(math.log(total_frames + 1, 10)))
 
         else:
-            file_name = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(date_created)) + ' - ' + str(frame_number)
+            if output_name:
+                file_name = output_name + ' - ' + str(frame_number)
+            else:
+                file_name = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(date_created)) + ' - ' + str(frame_number)
 
         image.save(f'{image_output_path}{str(file_name)}.png')
         frame_number += 1

@@ -33,6 +33,11 @@ class DefaultPalette(AbstractPalette):
         self.palette_type = 'default'
 
 
+    def __repr__(self):
+
+        return f'{self.name} [default]'
+
+
     def __str__(self):
 
         return (f'Name: {self.name}\nIdentification Code: {str(self.id)}\nDescription: {self.description}\nBit Length: '
@@ -53,6 +58,11 @@ class CustomPalette(AbstractPalette):
         self.id = id
         self.nickname = nickname
         self.palette_type = 'custom'
+
+
+    def __repr__(self):
+
+        return f'{self.name} [custom]'
 
 
     def __str__(self):
@@ -82,6 +92,11 @@ class TwentyFourBitPalette:
         self.id = str(self.bit_length)
         self.color_distance = 0
         self.palette_type = 'default'
+
+
+    def __repr__(self):
+
+        return f'{self.name} [default]'
 
 
     def __str__(self):
