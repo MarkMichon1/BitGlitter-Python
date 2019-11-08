@@ -51,7 +51,7 @@ class EncodeFrame:
     def begin_session_process(self,
 
                               # General- Path and Protocol
-                              active_path, pass_through, stream_output_path, bg_version,
+                              active_path, pass_through, stream_output_path, bg_version, output_name,
 
                               # Palettes
                               initializer_palette, header_palette, stream_palette,
@@ -79,6 +79,7 @@ class EncodeFrame:
         self.pass_through = pass_through
         self.stream_output_path = stream_output_path
         self.bg_version = bg_version
+        self.output_name = output_name
 
         self.header_palette = header_palette
         self.initializer_palette = initializer_palette
@@ -116,16 +117,16 @@ class EncodeFrame:
                                             self.output_mode)
 
         self.remainder_blocks, self.image_output_path, self.frame_number_formatted = render_loop(self.block_height,
-                                                        self.block_width, self.pixel_width, self.PROTOCOL_VERSION,
-                                                        self.initializer_palette, self.header_palette,
-                                                        self.stream_palette, self.output_mode, self.stream_output_path,
-                                                        self.active_path, self.pass_through, self.size_in_bytes,
-                                                        self.total_frames, self.compression_enabled,
-                                                        self.encryption_enabled, self.file_mask_enabled,
-                                                        self.date_created, self.ascii_compressed, self.stream_sha,
-                                                        self.initializer_palette_dict, self.header_palette_dict,
-                                                        self.stream_palette_dict)
+                                                    self.block_width, self.pixel_width, self.PROTOCOL_VERSION,
+                                                    self.initializer_palette, self.header_palette, self.stream_palette,
+                                                    self.output_mode, self.stream_output_path, self.output_name,
+                                                    self.active_path, self.pass_through, self.size_in_bytes,
+                                                    self.total_frames, self.compression_enabled,
+                                                    self.encryption_enabled, self.file_mask_enabled, self.date_created,
+                                                    self.ascii_compressed, self.stream_sha,
+                                                    self.initializer_palette_dict, self.header_palette_dict,
+                                                    self.stream_palette_dict)
 
         if output_mode == 'video':
-            render_video(self.stream_output_path, self.date_created, self.image_output_path,
+            render_video(self.stream_output_path, self.output_name, self.date_created, self.image_output_path,
                          self.frame_number_formatted, self.frames_per_second)
