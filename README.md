@@ -209,6 +209,11 @@ default, media is saved where the python file is ran.  The folder path must alre
 `output_mode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
 .png images.  The only two valid arguments are `'image'` and `'video'`.
 
+`output_name=''` is how you can customize the output name of the file that is created.  Videos, for instance, will be 
+named 'custom_name.mp4', while images will be named 'custom_name.png - 1', 'custom_name.png - 2', etc, the number being
+each frame number.  If left blank, it will use the current date and time of the `write()` function starting as the file
+name.
+
 `compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
 by default.
 
