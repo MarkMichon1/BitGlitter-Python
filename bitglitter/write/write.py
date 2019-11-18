@@ -22,13 +22,15 @@ def write(   # Basic setup
              scrypt_override_r = SCRYPT_R_DEFAULT,
              scrypt_override_p = SCRYPT_P_DEFAULT,
 
-             # Stream geometry, color
-             #protocol_version = '1' # Currently disabled, will enable once multiple choices of protocols are available.
+             # Stream geometry, color, general config
+             protocol_version = 1,
              header_palette_id = HEADER_PALETTE_ID,
              stream_palette_id = STREAM_PALETTE_ID,
              pixel_width = PIXEL_WIDTH,
              block_height = BLOCK_HEIGHT,
              block_width = BLOCK_WIDTH,
+             delay_frames = 0,
+             non_render_zones = None, #todo think about argument syntax
 
              # Video rendering
              frames_per_second = FRAMES_PER_SECOND,
