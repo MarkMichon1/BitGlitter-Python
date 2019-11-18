@@ -30,6 +30,8 @@ def write(   # Basic setup
              block_height = BLOCK_HEIGHT,
              block_width = BLOCK_WIDTH,
              delay_frames = 0,
+             delay_frame_background_color = None,
+             delay_frame_filler = None,
              non_render_zones = None, #todo think about argument syntax
 
              # Video rendering
