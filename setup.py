@@ -14,17 +14,18 @@ setup(
     url="https://github.com/MarkMichon1/BitGlitter",
     packages=find_namespace_packages(),
     install_requires=[
-        'bitstring',
-        'cryptography',
-        'ffmpeg-python',
-        'opencv-python',
-        'Pillow',
-        'argparse',
+        "bitstring",
+        "cryptography",
+        "ffmpeg-python",
+        "opencv-python",
+        "Pillow",
+        "argparse",
     ],
+    extra_require={"dev": "pytest"},
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    entry_points={'console scripts' : ['bitglitter = bitglitter.__main__:cli']}
+    entry_points={"console_scripts" : ["bitglitter = bitglitter.__main__:cli"]}
 )
