@@ -18,9 +18,15 @@ class AbstractPalette:
         self.number_of_colors = len(self.color_set)
         self.bit_length = int(math.log(self.number_of_colors, 2))
 
+        self.palette_type = None
+
     def __getitem__(self, item):
 
         return self.color_set[item]
+
+    def __repr__(self):
+
+        return f'{self.name} [{self.palette_type}]'
 
 
 class DefaultPalette(AbstractPalette):
@@ -31,12 +37,6 @@ class DefaultPalette(AbstractPalette):
         super().__init__(name, description, color_set, color_distance)
         self.id = str(id)
         self.palette_type = 'default'
-
-
-    def __repr__(self):
-
-        return f'{self.name} [default]'
-
 
     def __str__(self):
 
@@ -58,12 +58,6 @@ class CustomPalette(AbstractPalette):
         self.id = id
         self.nickname = nickname
         self.palette_type = 'custom'
-
-
-    def __repr__(self):
-
-        return f'{self.name} [custom]'
-
 
     def __str__(self):
 
@@ -92,12 +86,6 @@ class TwentyFourBitPalette:
         self.id = str(self.bit_length)
         self.color_distance = 0
         self.palette_type = 'default'
-
-
-    def __repr__(self):
-
-        return f'{self.name} [default]'
-
 
     def __str__(self):
 
