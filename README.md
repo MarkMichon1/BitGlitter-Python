@@ -139,7 +139,7 @@ Write from command line:
       `-mode` - Either 'image' or 'video'. Default: video
       `-o` - Output path
 
- Read from commnad line:
+ Read from command line:
 
 + `python3 -m bitglitter read`
     
