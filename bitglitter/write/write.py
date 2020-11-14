@@ -1,5 +1,5 @@
-from bitglitter.config.constants import BG_VERSION, WRITE_PATH, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, SCRYPT_P_DEFAULT, \
-    HEADER_PALETTE_ID, STREAM_PALETTE_ID, PIXEL_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH, FRAMES_PER_SECOND
+from bitglitter.config.constants import BG_VERSION, DEFAULT_WRITE_PATH, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, DEFAULT_SCRYPT_P, \
+    DEFAULT_HEADER_PALETTE_ID, DEFAULT_STREAM_PALETTE_ID, DEFAULT_PIXEL_WIDTH, DEFAULT_BLOCK_HEIGHT, DEFAULT_BLOCK_WIDTH, DEFAULT_FPS
 from bitglitter.config.loggingset import logging_setter
 from bitglitter.write.renderhandler import RenderHandler
 
@@ -18,24 +18,24 @@ def write(   # Basic setup
 
              # Encryption
              encryption_key ="",
-             scrypt_override_n = SCRYPT_N_DEFAULT,
-             scrypt_override_r = SCRYPT_R_DEFAULT,
-             scrypt_override_p = SCRYPT_P_DEFAULT,
+             scrypt_override_n = DEFAULT_SCRYPT_N,
+             scrypt_override_r = DEFAULT_SCRYPT_R,
+             scrypt_override_p = DEFAULT_SCRYPT_P,
 
              # Stream geometry, color, general config
              protocol_version = 1,
-             header_palette_id = HEADER_PALETTE_ID,
-             stream_palette_id = STREAM_PALETTE_ID,
-             pixel_width = PIXEL_WIDTH,
-             block_height = BLOCK_HEIGHT,
-             block_width = BLOCK_WIDTH,
+             header_palette_id = DEFAULT_HEADER_PALETTE_ID,
+             stream_palette_id = DEFAULT_STREAM_PALETTE_ID,
+             pixel_width = DEFAULT_PIXEL_WIDTH,
+             block_height = DEFAULT_BLOCK_HEIGHT,
+             block_width = DEFAULT_BLOCK_WIDTH,
              delay_frames = 0,
              delay_frame_background_color = None,
              delay_frame_filler = None,
              non_render_zones = None, #todo think about argument syntax
 
              # Video rendering
-             frames_per_second = FRAMES_PER_SECOND,
+             frames_per_second = DEFAULT_FPS,
 
              # Logging
              logging_level ='info',
@@ -60,7 +60,7 @@ def write(   # Basic setup
                                            pixel_width, block_height, block_width, frames_per_second)
 
     # This sets the name of the temporary folder while the file is being written.
-    active_path = WRITE_PATH
+    active_path = DEFAULT_WRITE_PATH
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     pre_process = write_protocol.pre_processing(active_path, file_list, encryption_key, file_mask_enabled,

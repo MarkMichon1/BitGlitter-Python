@@ -1,7 +1,7 @@
 import logging
 import shutil
 
-from bitglitter.config.constants import READ_PATH
+from bitglitter.config.constants import DEFAULT_READ_PATH
 from bitglitter.read.partialsave import PartialSave
 
 
@@ -11,7 +11,7 @@ class Assembler:
     '''
 
     def __init__(self):
-        self.working_folder = READ_PATH
+        self.working_folder = DEFAULT_READ_PATH
         self.save_dict = {}
         self.active_session_hashes = []
 

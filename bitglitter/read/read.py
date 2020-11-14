@@ -1,11 +1,11 @@
-from bitglitter.config.constants import READ_PATH, BAD_FRAME_STRIKES, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, \
-    SCRYPT_P_DEFAULT
+from bitglitter.config.constants import DEFAULT_READ_PATH, DEFAULT_BAD_FRAME_STRIKES, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
+    DEFAULT_SCRYPT_P
 from bitglitter.config.loggingset import logging_setter
 from bitglitter.read.verifyreadparameters import verify_read_parameters
 
 def read(file_to_input,
          output_path = None,
-         bad_frame_strikes = BAD_FRAME_STRIKES,
+         bad_frame_strikes = DEFAULT_BAD_FRAME_STRIKES,
          assemble_hold = False,
 
          # Geometry Overrides
@@ -14,9 +14,9 @@ def read(file_to_input,
 
          # Crypto Input
          encryption_key = None,
-         scrypt_n = SCRYPT_N_DEFAULT,
-         scrypt_r = SCRYPT_R_DEFAULT,
-         scrypt_p = SCRYPT_P_DEFAULT,
+         scrypt_n = DEFAULT_SCRYPT_N,
+         scrypt_r = DEFAULT_SCRYPT_R,
+         scrypt_p = DEFAULT_SCRYPT_P,
 
          # Logging Settings
          logging_level ='info',
@@ -37,7 +37,7 @@ def read(file_to_input,
                            block_width_override, block_width_override, assemble_hold)
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
-    active_path = READ_PATH
+    active_path = DEFAULT_READ_PATH
 
     # Pull valid frame data from the inputted file.
     checkpoint_passed = file_slicer(file_to_input, active_path, output_path, block_height_override,
