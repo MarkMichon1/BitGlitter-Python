@@ -1,7 +1,7 @@
 import logging
 import time
 
-from bitglitter.protocols.protocol_one.write.protocol_one_preprocessobjects import Packager, Compressor, Encryptor
+from bitglitter.write.preprocessobjects import Packager, Compressor, Encryptor
 from bitglitter.utilities.filemanipulation import refresh_working_folder, return_file_size, return_hash_from_file
 
 

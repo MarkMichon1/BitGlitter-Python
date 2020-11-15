@@ -1,10 +1,12 @@
 import logging
 import os
 
-import bitglitter.filepackager.fileio as fileio
+import bitglitter.filepackager_pending_delete.fileio_pending_delete as fileio
 
-# filepackager and fileio modules were both written by Tanmay Mishra. https://github.com/tmishra3/
+# filepackager_pending_delete and fileio modules were both written by Tanmay Mishra. https://github.com/tmishra3/
 
+
+# This directory is being replaced by packager and unpackager.py in write and read directories.
 
 class Folder:
 
@@ -271,7 +273,7 @@ def package(my_folder, file_name, mask):
         logging.debug("file_list created.")
     else:
         logging.debug('fileMask enabled, skipping...')
-    logging.debug("Internal filepackager process complete.")
+    logging.debug("Internal filepackager_pending_delete process complete.")
 
 
 def dig(my_folder, file_name, no_payload):

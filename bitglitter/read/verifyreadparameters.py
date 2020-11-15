@@ -1,7 +1,7 @@
 import logging
 import os
 
-from bitglitter.config.constants import VALID_IMAGE_FORMATS, VALID_VIDEO_FORMATS
+from bitglitter.config.defaultvalues import VALID_IMAGE_FORMATS, VALID_VIDEO_FORMATS
 from bitglitter.utilities.generalverifyfunctions import is_valid_directory, is_int_over_zero, proper_string_syntax, \
     is_bool
 

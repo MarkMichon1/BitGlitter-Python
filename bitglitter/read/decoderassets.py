@@ -3,8 +3,8 @@ import logging
 import numpy
 import zlib
 
-from bitglitter.palettes.paletteutilities import palette_grabber
-from bitglitter.protocols.protocolhandler import protocol_handler
+from bitglitter.palettes.utilities import palette_grabber
+from bitglitter.protocols.handler import protocol_handler
 
 
 def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_width,

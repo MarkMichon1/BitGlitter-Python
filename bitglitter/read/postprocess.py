@@ -1,6 +1,6 @@
 import logging
 
-from bitglitter.protocols.protocol_one.read.protocol_one_postprocessobjects import Decryptor, Decompressor, Unpackager
+from bitglitter.read.postprocessobjects import Decryptor, Decompressor, Unpackager
 
 
 class PostProcessor:

@@ -5,7 +5,7 @@ from numpy import flip
 
 from bitglitter.read.coloranalysis import color_snap, return_distance
 from bitglitter.read.decoderassets import scan_block
-from bitglitter.palettes.paletteutilities import palette_grabber, ColorsToValue
+from bitglitter.palettes.utilities import palette_grabber, ColorsToValue
 
 
 def frame_lock_on(image, block_height_override, block_width_override, frame_width, frame_height):

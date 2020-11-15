@@ -2,7 +2,7 @@ import os
 import time
 
 from bitglitter.config.config import config
-from bitglitter.palettes.paletteutilities import _add_custom_palette_direct, color_distance, return_palette_id
+from bitglitter.palettes.utilities import _add_custom_palette_direct, color_distance, return_palette_id
 from bitglitter.utilities.generalverifyfunctions import proper_string_syntax
 
 # All of these functions are for end users except for _dict_popper.

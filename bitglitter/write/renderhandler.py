@@ -2,7 +2,7 @@ import logging
 import shutil
 
 from bitglitter.config.config import config
-from bitglitter.palettes.paletteutilities import palette_grabber, ValuesToColor
+from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 
 
 class RenderHandler:

@@ -10,6 +10,8 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
+#TODO: break this entire module up
+
 def compress_file(input_file, output_file, remove_input = True):
     '''This inputs a file, and writes a compressed one, removing the input file afterwards by default.'''
 

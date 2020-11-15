@@ -1,28 +1,4 @@
-import pickle
-
-from bitglitter.palettes.paletteobjects import DefaultPalette, TwentyFourBitPalette
-from bitglitter.read.assembler import Assembler
-
-
-class Config:
-    '''This is the master object that holds all session data.'''
-
-    def __init__(self):
-
-        self.color_handler = PaletteHandler()
-        self.stats_handler = Statistics()
-        self.assembler = Assembler()
-        self.assembler.clear_partial_saves() # Deleting old folder if new config object must be made.
-
-        self.save_session()
-
-    # Reserved for next release, introducing presets
-    # preset_dict = {}
-
-    def save_session(self):
-        with open('config.pickle', 'wb') as pickleSaver:
-            pickle.dump(self, pickleSaver)
-
+from bitglitter.palettes.palettes import DefaultPalette, TwentyFourBitPalette
 
 class Statistics:
     '''Read and write values are held in this object.  It's attributes are changed through method calls.'''
@@ -118,3 +94,14 @@ class PaletteHandler:
 
         self.custom_palette_list = {}
         self.custom_palette_nickname_list = {}
+
+
+class SettingsHandler:
+
+    def __init__(self):
+        pass
+
+class SaveHandler:
+
+    def __init__(self):
+        pass

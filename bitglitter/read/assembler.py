@@ -1,7 +1,7 @@
 import logging
 import shutil
 
-from bitglitter.config.constants import DEFAULT_READ_PATH
+from bitglitter.config.defaultvalues import DEFAULT_READ_PATH
 from bitglitter.read.partialsave import PartialSave
 
 

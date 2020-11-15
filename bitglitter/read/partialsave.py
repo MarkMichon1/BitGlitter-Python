@@ -4,7 +4,7 @@ import os
 
 from bitstring import BitStream
 
-from bitglitter.protocols.protocol_one.read.protocol_one_postprocess import PostProcessor
+from bitglitter.read.postprocess import PostProcessor
 from bitglitter.read.partialsaveassets import format_file_list, decode_stream_header_ascii_compressed, \
     decode_stream_header_binary_preamble
 from bitglitter.utilities.filemanipulation import compress_file, decompress_file, return_hash_from_file

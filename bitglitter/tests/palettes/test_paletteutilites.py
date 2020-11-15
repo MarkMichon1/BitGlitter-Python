@@ -1,7 +1,7 @@
 import pytest
 
 
-from bitglitter.palettes.paletteutilities import color_distance
+from bitglitter.palettes.utilities import color_distance
 
 
 def test_color_distance_with_default_1bit_palette():

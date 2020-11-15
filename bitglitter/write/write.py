@@ -1,5 +1,7 @@
-from bitglitter.config.constants import BG_VERSION, DEFAULT_WRITE_PATH, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, DEFAULT_SCRYPT_P, \
+from bitglitter.config.defaultvalues import BG_VERSION, DEFAULT_WRITE_PATH, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, DEFAULT_SCRYPT_P, \
     DEFAULT_HEADER_PALETTE_ID, DEFAULT_STREAM_PALETTE_ID, DEFAULT_PIXEL_WIDTH, DEFAULT_BLOCK_HEIGHT, DEFAULT_BLOCK_WIDTH, DEFAULT_FPS
+
+from bitglitter.config.config import AppConfig
 from bitglitter.config.loggingset import logging_setter
 from bitglitter.write.renderhandler import RenderHandler
 
@@ -45,12 +47,14 @@ def write(   # Basic setup
     '''This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
     information.
     '''
+    #TODO:
+    app_config = AppConfig()
 
     # Logging initializing.
     logging_setter(logging_level, logging_screen_output, logging_save_output)
 
     # Loading write protocol.  This import function is here deliberately because of logging.
-    from bitglitter.protocols.protocolhandler import protocol_handler
+    from bitglitter.protocols.handler import protocol_handler
     write_protocol = protocol_handler.return_write_protocol('1') # will be dynamic when there are new protocols.
 
     # Are all parameters acceptable?
@@ -77,6 +81,7 @@ def write(   # Basic setup
                                   output_mode, output_path, frames_per_second, active_path, pre_process.pass_through,
                                   output_name)
 
+    #config.finish_write
 
     # Returns the SHA of the preprocessed file in string format for optional storage of it.
     return pre_process.stream_sha

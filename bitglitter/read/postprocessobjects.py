@@ -1,7 +1,7 @@
 import logging
 import os
 
-from bitglitter.filepackager.filepackager import unpackage
+from bitglitter.filepackager_pending_delete.filepackager_pending_delete import unpackage
 from bitglitter.utilities.filemanipulation import decrypt_file, return_hash_from_file, decompress_file
 
 

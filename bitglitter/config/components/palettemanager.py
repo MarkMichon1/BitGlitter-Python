@@ -1,0 +1,1 @@
+#todo: ALL manager components have their own pickle files for faster saving/loading, and more organized code.

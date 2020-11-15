@@ -1,4 +1,4 @@
-from bitglitter.config.constants import DEFAULT_READ_PATH, DEFAULT_BAD_FRAME_STRIKES, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
+from bitglitter.config.defaultvalues import DEFAULT_READ_PATH, DEFAULT_BAD_FRAME_STRIKES, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
     DEFAULT_SCRYPT_P
 from bitglitter.config.loggingset import logging_setter
 from bitglitter.read.verifyreadparameters import verify_read_parameters

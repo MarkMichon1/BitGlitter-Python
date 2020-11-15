@@ -1,6 +1,6 @@
 import logging
 
-from bitglitter.palettes.paletteutilities import palette_grabber, ColorsToValue, _validate_and_add_palette
+from bitglitter.palettes.utilities import palette_grabber, ColorsToValue, _validate_and_add_palette
 from bitglitter.read.decoderassets import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
 from bitglitter.read.framehandler import FrameHandler
 from bitglitter.read.framelockon import frame_lock_on

@@ -3,7 +3,7 @@ import os
 
 from cv2 import imread
 
-from bitglitter.config.constants import VALID_VIDEO_FORMATS
+from bitglitter.config.defaultvalues import VALID_VIDEO_FORMATS
 from bitglitter.read.decoder import Decoder
 from bitglitter.read.videoframepuller import VideoFramePuller
 

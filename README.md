@@ -1,5 +1,7 @@
 **(11/14/20) Overhaul in progress!**
-I'm currently in the middle of overhauling major components of the library, as well as refactoring and adding some stuff.  This will put BitGlitter in a much better place for future development and deployment.
+I'm currently in the middle of overhauling major components of the library, as well as refactoring and adding some 
+stuff.  This will put BitGlitter in a much better place for future development and deployment.  Many parts of this
+library will be broken until this is completed.  Working version 1.0.3 is still available via `pip`!
 
 
 [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)

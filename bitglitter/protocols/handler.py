@@ -1,6 +1,6 @@
 import logging
 
-import bitglitter.protocols.protocolregistry as protocolversions
+import bitglitter.protocols.registry as protocolversions
 
 class ProtocolHandler:
     '''This is the master protocol object that holds Protocol 1, and will hold future protocols down the road.'''
@@ -34,5 +34,5 @@ class ProtocolHandler:
         return self.available_write_protocols[version_key]
 
 # This is where new protocols get added.
-protocol_handler = ProtocolHandler()
+protocol_handler = ProtocolHandler() #todo move to registry
 protocol_handler._accept_new_protocol(protocolversions.protocol_one)

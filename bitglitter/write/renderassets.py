@@ -7,7 +7,7 @@ import zlib
 from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
-from bitglitter.palettes.paletteutilities import palette_grabber, ValuesToColor
+from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 
 
 def ascii_header_process(file_mask_enabled, active_path, stream_palette, bg_version, stream_name, stream_description,
@@ -27,13 +27,13 @@ def ascii_header_process(file_mask_enabled, active_path, stream_palette, bg_vers
     if stream_palette.palette_type == 'custom':
         custom_palette_attribute_list = [stream_palette.name, stream_palette.description,
                                       str(stream_palette.date_created), str(stream_palette.color_set)]
-        custom_palette_string = "\\\\".join(custom_palette_attribute_list) + "\\\\"
+        custom_palette_string = "\\".join(custom_palette_attribute_list) + "\\"
 
     crypto_string = ""
     if encryption_enabled:
-        crypto_string = post_encryption_hash + "\\\\"
+        crypto_string = post_encryption_hash + "\\"
 
-    meta_data_string = "\\\\" + "\\\\".join([bg_version, stream_name, stream_description, file_list_string]) + "\\\\"
+    meta_data_string = "\\" + "\\".join([bg_version, stream_name, stream_description, file_list_string]) + "\\\\"
 
     merged_string = "".join([meta_data_string, custom_palette_string, crypto_string])
     logging.debug(f'ASCII Stream Header merged: {merged_string}')

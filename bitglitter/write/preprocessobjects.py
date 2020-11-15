@@ -1,7 +1,7 @@
 import logging
 import os
 
-from bitglitter.filepackager.filepackager import Folder, File, package
+from bitglitter.filepackager_pending_delete.filepackager_pending_delete import Folder, File, package
 from bitglitter.utilities.filemanipulation import compress_file, encrypt_file
 
 

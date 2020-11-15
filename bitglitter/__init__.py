@@ -54,7 +54,7 @@ from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_l
 
 
 # CUSTOM PALETTE
-from bitglitter.palettes.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
+from bitglitter.palettes.functions import add_custom_palette, edit_nickname_to_custom_palette, \
     clear_all_custom_palettes, clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, \
     remove_custom_palette_nickname
 

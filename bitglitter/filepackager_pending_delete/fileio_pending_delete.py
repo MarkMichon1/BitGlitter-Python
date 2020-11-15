@@ -1,6 +1,6 @@
 import os
 
-#Written by Tanmay Mishra.  See filepackager module for more information.
+#Written by Tanmay Mishra.  See filepackager_pending_delete module for more information.
 
 def copy_file(source, destination, byte_start=None, byte_end=None):
 
