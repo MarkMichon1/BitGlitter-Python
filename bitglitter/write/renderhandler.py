@@ -4,6 +4,7 @@ import shutil
 from bitglitter.config.config import config
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 
+#todo- revisit, refactor.
 
 class RenderHandler:
     '''This is where the rendering process is set up, and fed into the appropriate protocol objects and objects.  While

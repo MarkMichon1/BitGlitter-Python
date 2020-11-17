@@ -4,6 +4,8 @@ from bitglitter.write.renderassets import ascii_header_process, how_many_frames
 from bitglitter.write.renderloop import render_loop
 from bitglitter.write.rendervideo import render_video
 
+# Todo: remove- either merge with write() or some other module.
+
 class EncodeFrame:
     '''This object takes what has already been processed from pre_processing, renders that data into images.'''
 
