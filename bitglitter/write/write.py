@@ -1,10 +1,4 @@
-from bitglitter.config.defaultvalues import BG_VERSION, DEFAULT_WRITE_PATH, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
-    DEFAULT_SCRYPT_P, \
-    DEFAULT_HEADER_PALETTE_ID, DEFAULT_STREAM_PALETTE_ID, DEFAULT_PIXEL_WIDTH, DEFAULT_BLOCK_HEIGHT, \
-    DEFAULT_BLOCK_WIDTH, DEFAULT_FPS
-
-from bitglitter.config.config import AppConfig
-from bitglitter.config.loggingset import logging_setter
+from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.write.preprocessors import PreProcessor
 from bitglitter.write.renderhandler import RenderHandler
 from bitglitter.write.renderlogic import EncodeFrame
@@ -15,34 +9,34 @@ def write(  # Basic setup
         file_list,
         stream_name="",
         stream_description="",
-        output_path=False,
+        output_path=None,
         output_mode="video",
         output_name="",
 
         # Stream configuration
         compression_enabled=True,
-        file_mask_enabled=False,
+        file_mask_enabled=False, #todo: revisit in light of new packaging format
 
         # Encryption
         encryption_key="",
-        scrypt_override_n=DEFAULT_SCRYPT_N,
-        scrypt_override_r=DEFAULT_SCRYPT_R,
-        scrypt_override_p=DEFAULT_SCRYPT_P,
+        scrypt_override_n=14,
+        scrypt_override_r=8,
+        scrypt_override_p=1,
 
         # Stream geometry, color, general config
-        header_palette_id=DEFAULT_HEADER_PALETTE_ID,
-        stream_palette_id=DEFAULT_STREAM_PALETTE_ID,
-        pixel_width=DEFAULT_PIXEL_WIDTH,
-        block_height=DEFAULT_BLOCK_HEIGHT,
-        block_width=DEFAULT_BLOCK_WIDTH,
+        header_palette_id='6',
+        stream_palette_id='6',
+        pixel_width=24,
+        block_height=45,
+        block_width=80,
 
         # Video rendering
-        frames_per_second=DEFAULT_FPS,
+        frames_per_second=30,
 
         # Logging
         logging_level='info',
-        logging_screen_output=True,
-        logging_save_output=False,
+        logging_stdout_output=True,
+        logging_txt_output=False,
 ):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
     information.
@@ -52,7 +46,7 @@ def write(  # Basic setup
     app_config = AppConfig()
 
     # Logging initializing.
-    logging_setter(logging_level, logging_screen_output, logging_save_output)
+    logging_setter(logging_level, logging_stdout_output, logging_txt_output)
 
     # Are all parameters acceptable?
     verify_write_parameters(file_list, stream_name, stream_description, output_path, output_mode,

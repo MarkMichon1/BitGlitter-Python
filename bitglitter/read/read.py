@@ -1,6 +1,6 @@
 from bitglitter.config.defaultvalues import DEFAULT_READ_PATH, DEFAULT_BAD_FRAME_STRIKES, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
     DEFAULT_SCRYPT_P
-from bitglitter.config.loggingset import logging_setter
+from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.read.verifyreadparameters import verify_read_parameters
 
 def read(file_to_input,
@@ -49,5 +49,5 @@ def read(file_to_input,
     # Now that all frames have been scanned, we'll have the config object check to see if any files are ready for
     # assembly.  If there are, they will be put together and outputted, as well as removed/flushed from partialSaves.
     config.assembler.review_active_sessions()
-    config.save_session()
+    config._save_session()
     return True

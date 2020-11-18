@@ -93,5 +93,5 @@ class RenderHandler:
         logging.debug("Deleting temporary folder....")
         shutil.rmtree(self.active_path)
 
-        config.save_session()
+        config._save_session()
         logging.info('Write process complete!')

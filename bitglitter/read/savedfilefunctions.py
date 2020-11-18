@@ -49,7 +49,7 @@ def update_partial_save(stream_sha, reattempt_assembly = True, password_update =
         if config.assembler.save_dict[stream_sha]._attempt_assembly() == True:
             config.assembler.remove_partial_save(stream_sha)
 
-    config.save_session()
+    config._save_session()
 
 
 def remove_partial_save(stream_sha):
@@ -58,7 +58,7 @@ def remove_partial_save(stream_sha):
     '''
 
     config.assembler.remove_partial_save(stream_sha)
-    config.save_session()
+    config._save_session()
 
 
 def begin_assembly(stream_sha):
@@ -68,11 +68,11 @@ def begin_assembly(stream_sha):
 
     if config.assembler.save_dict[stream_sha]._attempt_assembly() == True:
         config.assembler.remove_partial_save(stream_sha)
-    config.save_session()
+    config._save_session()
 
 
 def remove_all_partial_saves():
     '''This removes all partial save objects saved, as well as any temporary data.'''
 
     config.assembler.clear_partial_saves()
-    config.save_session()
+    config._save_session()

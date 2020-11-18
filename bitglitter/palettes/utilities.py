@@ -102,12 +102,12 @@ class ColorsToValue:
 def palette_grabber(id_or_nick):
     '''Goes through each of the dictionaries to return the color object.'''
 
-    if id_or_nick in config.color_handler.default_palette_list:
-        return config.color_handler.default_palette_list[id_or_nick]
-    elif id_or_nick in config.color_handler.custom_palette_list:
-        return config.color_handler.custom_palette_list[id_or_nick]
-    elif id_or_nick in config.color_handler.custom_palette_nickname_list:
-        return config.color_handler.custom_palette_nickname_list[id_or_nick]
+    if id_or_nick in config.palette_handler.default_palette_list:
+        return config.palette_handler.default_palette_list[id_or_nick]
+    elif id_or_nick in config.palette_handler.custom_palette_list:
+        return config.palette_handler.custom_palette_list[id_or_nick]
+    elif id_or_nick in config.palette_handler.custom_palette_nickname_list:
+        return config.palette_handler.custom_palette_nickname_list[id_or_nick]
     else:
         raise ValueError('palette_grabber(): This value is not present.')
 
@@ -173,9 +173,9 @@ def _add_custom_palette_direct(name, description, color_set, distance, date_crea
     '''
 
     new_palette = CustomPalette(name, description, color_set, distance, date_created, id, nickname)
-    config.color_handler.custom_palette_list[id] = new_palette
+    config.palette_handler.custom_palette_list[id] = new_palette
 
     if nickname:
-        config.color_handler.custom_palette_nickname_list[nickname] = new_palette
+        config.palette_handler.custom_palette_nickname_list[nickname] = new_palette
 
-    config.save_session()
+    config._save_session()

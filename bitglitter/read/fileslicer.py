@@ -59,7 +59,7 @@ def file_slicer(file_to_input, active_path, output_path, block_height_override, 
                         else:
                             logging.warning(f'Bad frame strike # {bad_frames_this_session}')
 
-                config_object.save_session()
+                config_object._save_session()
 
             else:
                 logging.info(f'Breaking out of video after reaching {bad_frame_strikes} bad frame strikes...')
@@ -75,6 +75,6 @@ def file_slicer(file_to_input, active_path, output_path, block_height_override, 
             logging.debug('Breaking out of file_slicer(), checkpoint_passed == False')
             return False
 
-        config_object.save_session()
+        config_object._save_session()
         logging.info("Image successfully processed.")
         return True

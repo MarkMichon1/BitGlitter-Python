@@ -15,16 +15,16 @@ def _dict_popper(id_or_nick):
     (if available), and  then return the object to optionally be modified (or otherwise discarded)
     '''
 
-    if id_or_nick in config.color_handler.custom_palette_nickname_list:
-        temp_holder = config.color_handler.custom_palette_nickname_list[id_or_nick]
-        del config.color_handler.custom_palette_list[temp_holder.id]
-        return config.color_handler.custom_palette_nickname_list.pop(id_or_nick)
+    if id_or_nick in config.palette_handler.custom_palette_nickname_list:
+        temp_holder = config.palette_handler.custom_palette_nickname_list[id_or_nick]
+        del config.palette_handler.custom_palette_list[temp_holder.id]
+        return config.palette_handler.custom_palette_nickname_list.pop(id_or_nick)
 
-    elif id_or_nick in config.color_handler.custom_palette_list:
-        temp_holder = config.color_handler.custom_palette_list[id_or_nick]
-        if temp_holder.nickname in config.color_handler.custom_palette_nickname_list:
-            del config.color_handler.custom_palette_nickname_list[temp_holder.nickname]
-        return config.color_handler.custom_palette_list.pop(id_or_nick)
+    elif id_or_nick in config.palette_handler.custom_palette_list:
+        temp_holder = config.palette_handler.custom_palette_list[id_or_nick]
+        if temp_holder.nickname in config.palette_handler.custom_palette_nickname_list:
+            del config.palette_handler.custom_palette_nickname_list[temp_holder.nickname]
+        return config.palette_handler.custom_palette_list.pop(id_or_nick)
 
     else:
         raise ValueError(f"'{id_or_nick}' does not exist.")
@@ -47,8 +47,8 @@ def add_custom_palette(palette_name, palette_description, color_set, optional_ni
 
     # Is nickname legal characters?  Is the name available?
     proper_string_syntax(nickname_string)
-    if optional_nickname in config.color_handler.custom_palette_nickname_list or optional_nickname in \
-            config.color_handler.custom_palette_list or optional_nickname in config.color_handler.default_palette_list:
+    if optional_nickname in config.palette_handler.custom_palette_nickname_list or optional_nickname in \
+            config.palette_handler.custom_palette_list or optional_nickname in config.palette_handler.default_palette_list:
         raise ValueError(f"'{optional_nickname}' is already taken, please choose another nickname.")
 
     # Verifying color set parameters.  2^n length, 3 values per color, values are type int, values are 0-255.  Finally,
@@ -85,21 +85,21 @@ def remove_custom_palette(id_or_nick):
     '''Removes custom palette completely from the config file.'''
 
     _dict_popper(id_or_nick)
-    config.save_session()
+    config._save_session()
 
 
 def edit_nickname_to_custom_palette(id_or_nick, new_name):
     '''This changes the nickname of the given palette to something new, first checking if it's valid.'''
 
-    if new_name not in config.color_handler.custom_palette_list \
-            and new_name not in config.color_handler.custom_palette_nickname_list \
-            and new_name not in config.color_handler.default_palette_list:
+    if new_name not in config.palette_handler.custom_palette_list \
+            and new_name not in config.palette_handler.custom_palette_nickname_list \
+            and new_name not in config.palette_handler.default_palette_list:
 
         temp_holder = _dict_popper(id_or_nick)
         temp_holder.nickname = new_name
-        config.color_handler.custom_palette_list[temp_holder.id] = temp_holder
-        config.color_handler.custom_palette_nickname_list[temp_holder.nickname] = temp_holder
-        config.save_session()
+        config.palette_handler.custom_palette_list[temp_holder.id] = temp_holder
+        config.palette_handler.custom_palette_nickname_list[temp_holder.nickname] = temp_holder
+        config._save_session()
 
     else:
         raise ValueError(f"'{new_name}' is already being used, please try another.")
@@ -112,22 +112,22 @@ def remove_custom_palette_nickname(id_or_nick):
 
     temp_holder = _dict_popper(id_or_nick)
     temp_holder.nickname = ""
-    config.color_handler.custom_palette_list[temp_holder.id] = temp_holder
-    config.save_session()
+    config.palette_handler.custom_palette_list[temp_holder.id] = temp_holder
+    config._save_session()
 
 
 def clear_custom_palette_nicknames():
     '''Clears all custom palette nicknames.  This does not delete the palettes themselves.'''
 
-    config.color_handler.custom_palette_nickname_list = {}
+    config.palette_handler.custom_palette_nickname_list = {}
 
-    for palette in config.color_handler.custom_palette_list:
+    for palette in config.palette_handler.custom_palette_list:
 
-        temp_holder = config.color_handler.custom_palette_list.pop(palette)
+        temp_holder = config.palette_handler.custom_palette_list.pop(palette)
         temp_holder.nickname = ""
-        config.color_handler.custom_palette_list[temp_holder.id] = temp_holder
+        config.palette_handler.custom_palette_list[temp_holder.id] = temp_holder
 
-    config.save_session()
+    config._save_session()
 
 
 def print_full_palette_list(path):
@@ -139,15 +139,15 @@ def print_full_palette_list(path):
 
         writer.write('*' * 21 + '\nDefault Palettes\n' + '*' * 21 + '\n')
 
-        for some_key in config.color_handler.default_palette_list:
-            writer.write('\n' + str(config.color_handler.default_palette_list[some_key]) + '\n')
+        for some_key in config.palette_handler.default_palette_list:
+            writer.write('\n' + str(config.palette_handler.default_palette_list[some_key]) + '\n')
 
         writer.write('*' * 21 + '\nCustom Palettes\n' + '*' * 21 + '\n')
 
-        if config.color_handler.custom_palette_list:
+        if config.palette_handler.custom_palette_list:
 
-            for some_key in config.color_handler.custom_palette_list:
-                writer.write('\n' + str(config.color_handler.custom_palette_list[some_key]) + '\n')
+            for some_key in config.palette_handler.custom_palette_list:
+                writer.write('\n' + str(config.palette_handler.custom_palette_list[some_key]) + '\n')
 
         else:
             writer.write('\nNo custom palettes (yet)')
@@ -158,4 +158,4 @@ def clear_all_custom_palettes():
 
     config.colorHandler.custom_palette_nickname_list = {}
     config.colorHandler.custom_palette_list = {}
-    config.save_session()
+    config._save_session()

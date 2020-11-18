@@ -223,8 +223,8 @@ class Decoder:
             self.stream_header_cleared = True
 
             # Does stream palette already exist as a custom or default color?
-            if save_object[1] in self.config_object.color_handler.custom_palette_list or save_object[1] in \
-                    self.config_object.color_handler.default_palette_list:
+            if save_object[1] in self.config_object.palette_handler.custom_palette_list or save_object[1] in \
+                    self.config_object.palette_handler.default_palette_list:
 
                 self.stream_palette = palette_grabber(save_object[1])
                 logging.info(f'Palette ID {save_object[1]} already saved in system... successfully loaded!')
@@ -260,8 +260,8 @@ class Decoder:
 
         self.protocol_version, self.primary_palette = read_initializer(self.frame_handler.return_initializer(),
                                                                        self.block_height, self.block_width,
-                                                                       self.config_object.color_handler.custom_palette_list,
-                                                                       self.config_object.color_handler.default_palette_list)
+                                                                       self.config_object.palette_handler.custom_palette_list,
+                                                                       self.config_object.palette_handler.default_palette_list)
         if self.protocol_version == False:
             return False
         logging.debug(f'primary_palette ID loaded: {self.primary_palette.id}')
@@ -278,8 +278,8 @@ class Decoder:
 
         self.protocol_version, self.header_palette = read_initializer(self.frame_handler.return_initializer(),
                                                                       self.block_height, self.block_width,
-                                                                      self.config_object.color_handler.custom_palette_list,
-                                                                      self.config_object.color_handler.default_palette_list)
+                                                                      self.config_object.palette_handler.custom_palette_list,
+                                                                      self.config_object.palette_handler.default_palette_list)
         if self.protocol_version == False:
             return False
         logging.debug(f'header_palette ID loaded: {self.header_palette.id}')

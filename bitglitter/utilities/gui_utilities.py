@@ -15,7 +15,7 @@ def return_all_palette_objects():
     # Thought- import may have to be in the function itself.  Otherwise future changes to the pickle object may not
     # properly load.  Test this further into development.
 
-    default_palettes = config.color_handler.default_palette_list
-    custom_palettes = config.color_handler.custom_palette_list
+    default_palettes = config.palette_handler.default_palette_list
+    custom_palettes = config.palette_handler.custom_palette_list
 
     return list(default_palettes.values()), list(custom_palettes.values())

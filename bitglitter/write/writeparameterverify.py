@@ -5,6 +5,7 @@ from bitglitter.config.config import config
 from bitglitter.utilities.generalverifyfunctions import is_bool, is_valid_directory, is_int_over_zero, \
     proper_string_syntax
 
+
 def palette_verify(header_type, bit_length, block_width, block_height, output_type, fps=0):
     '''This function calculates the necessary overhead for both images and videos for subsequent frames after 1.  It
     returns a number between 0-100%, for what percentage the overhead occupies.  The lower the value, the higher the
@@ -33,16 +34,16 @@ def palette_verify(header_type, bit_length, block_width, block_height, output_ty
     if output_type == 'video' and header_type == 'stream_palette':
         output_per_sec = bits_available * fps
 
-    return ((round(100 - (occupied_blocks / total_blocks * 100), 2)), bits_available, output_per_sec)
+    return (round(100 - (occupied_blocks / total_blocks * 100), 2)), bits_available, output_per_sec
 
 
 def verify_write_parameters(file_list, stream_name, stream_description, stream_output_path, output_mode, output_name,
                             compression_enabled, file_mask_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette,
                             header_palette, pixel_width, block_height, block_width, frames_per_second):
-    '''This function verifies all write() parameters for Protocol v1.  Look at this as the gatekeeper that stops
+    """This function verifies all write() parameters for Protocol v1.  Look at this as the gatekeeper that stops
     invalid arguments from proceeding through the process, potentially breaking the stream (or causing BitGlitter to
     crash).
-    '''
+    """
 
     logging.info("Verifying write parameters...")
 
@@ -55,7 +56,6 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
         if header_palette == '24' or stream_palette == '24':
             raise ValueError("24 bit palettes can not be used with videos at this time due to codec issues.  This is"
                              "\nbeing worked on and will be restored soon!  This palette will still work on images.")
-
 
     proper_string_syntax(stream_name, 'stream_name')
     proper_string_syntax(stream_description, 'stream_description')
@@ -75,16 +75,16 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
     is_int_over_zero('scrypt_p', scrypt_p)
 
     # is stream_palette valid?  We're simultaneously setting up a variable for a geometry just check below.
-    def does_palette_exist(palette, type):
-        if palette in config.color_handler.default_palette_list:
-            palette_to_return = config.color_handler.default_palette_list[palette]
-        elif palette in config.color_handler.custom_palette_list:
-            palette_to_return = config.color_handler.custom_palette_list[palette]
-        elif palette in config.color_handler.custom_palette_nickname_list:
-            palette_to_return = config.color_handler.custom_palette_nickname_list[palette]
+    def does_palette_exist(palette, palette_type):
+        if palette in config.palette_handler.default_palette_list:
+            palette_to_return = config.palette_handler.default_palette_list[palette]
+        elif palette in config.palette_handler.custom_palette_list:
+            palette_to_return = config.palette_handler.custom_palette_list[palette]
+        elif palette in config.palette_handler.custom_palette_nickname_list:
+            palette_to_return = config.palette_handler.custom_palette_nickname_list[palette]
         else:
-            raise ValueError(f"Argument {type} in write() is not a valid ID or nickname.  Verify that exact value "
-                             "exists.")
+            raise ValueError(f"Argument {palette_type} in write() is not a valid ID or nickname.  Verify that exact "
+                             f"value exists.")
         return palette_to_return
 
     active_header_palette = does_palette_exist(header_palette, 'header_palette')
@@ -118,3 +118,24 @@ def verify_write_parameters(file_list, stream_name, stream_description, stream_o
 
     logging.info('Minimum geometry requirements met.')
     logging.info("Write parameters validated.")
+
+
+def verify_write_params_output_mode(output_mode):
+    pass
+
+
+def verify_write_params_setup_bools(compression_enabled, file_mask_enabled):
+    pass
+
+
+def verify_write_params_scrypt(scrypt_n, scrypt_r, scrypt_p):
+    pass
+
+
+def verify_write_params_render_values(header_palette_id, stream_palette_id, pixel_width, block_height, block_width,
+                                      frames_per_second):
+    pass
+
+
+def verify_write_params_logging_values(logging_level, logging_stdout_output, logging_txt_output):
+    pass

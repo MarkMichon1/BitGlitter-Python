@@ -5,7 +5,7 @@ import zlib
 
 def decode_stream_header_ascii_compressed(bitstream, custom_color_enabled, encryption_enabled):
     '''This function encodes the raw bit string taken from the frame(s) back into ASCII, and returns the split
-    components inside of it.
+    managers inside of it.
     '''
 
     logging.debug('Reading stream header...')

@@ -262,10 +262,10 @@ Finally we have several arguments to control logging.
 default and only shows core status data during `read()` and `write()`.  `'debug'`  shows INFO level messages as well as
 lower level messages from the various processes.  Boolean `False` disables logging altogether.
 
-`logging_screen_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
+`logging_stdout_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
 Enabled by default.
 
-`logging_save_output=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
+`logging_txt_output=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
 Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved there.
 
 These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to

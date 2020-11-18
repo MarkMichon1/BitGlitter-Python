@@ -16,7 +16,7 @@ def clear_stats():
     '''Resets statistics back to zero in all fields.'''
 
     config.stats_handler.clear_stats()
-    config.save_session()
+    config._save_session()
 
 
 def clear_session():
