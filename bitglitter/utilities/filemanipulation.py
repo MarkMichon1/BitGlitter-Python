@@ -148,3 +148,6 @@ def format_file_list(file_string):
     broken_apart = file_string.split('|')[1:]
     for position in range(int(len(broken_apart) / 2)):
         print(f"    {broken_apart[2 * position]} - {broken_apart[2 * position + 1]} B")
+
+
+encrypt_file('/home/m/Desktop/5c0202880d2d88c0e7464f82ea6bb4365136fd88bb725ae79ccab885b65d6ef3.png', '/home/m/Desktop/encryptedoutput.bin', 'test', remove_input=False)

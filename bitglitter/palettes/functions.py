@@ -3,7 +3,7 @@ import time
 
 from bitglitter.config.config import config
 from bitglitter.palettes.utilities import _add_custom_palette_direct, color_distance, return_palette_id
-from bitglitter.utilities.generalverifyfunctions import proper_string_syntax
+from bitglitter.verification.generalverifyfunctions import proper_string_syntax
 
 # All of these functions are for end users except for _dict_popper.
 
@@ -48,7 +48,7 @@ def add_custom_palette(palette_name, palette_description, color_set, optional_ni
     # Is nickname legal characters?  Is the name available?
     proper_string_syntax(nickname_string)
     if optional_nickname in config.palette_handler.custom_palette_nickname_list or optional_nickname in \
-            config.palette_handler.custom_palette_list or optional_nickname in config.palette_handler.default_palette_list:
+            config.palette_handler.custom_palette_list or optional_nickname in config.palette_handler.DEFAULT_PALETTE_LIST:
         raise ValueError(f"'{optional_nickname}' is already taken, please choose another nickname.")
 
     # Verifying color set parameters.  2^n length, 3 values per color, values are type int, values are 0-255.  Finally,
@@ -93,7 +93,7 @@ def edit_nickname_to_custom_palette(id_or_nick, new_name):
 
     if new_name not in config.palette_handler.custom_palette_list \
             and new_name not in config.palette_handler.custom_palette_nickname_list \
-            and new_name not in config.palette_handler.default_palette_list:
+            and new_name not in config.palette_handler.DEFAULT_PALETTE_LIST:
 
         temp_holder = _dict_popper(id_or_nick)
         temp_holder.nickname = new_name
@@ -139,8 +139,8 @@ def print_full_palette_list(path):
 
         writer.write('*' * 21 + '\nDefault Palettes\n' + '*' * 21 + '\n')
 
-        for some_key in config.palette_handler.default_palette_list:
-            writer.write('\n' + str(config.palette_handler.default_palette_list[some_key]) + '\n')
+        for some_key in config.palette_handler.DEFAULT_PALETTE_LIST:
+            writer.write('\n' + str(config.palette_handler.DEFAULT_PALETTE_LIST[some_key]) + '\n')
 
         writer.write('*' * 21 + '\nCustom Palettes\n' + '*' * 21 + '\n')
 

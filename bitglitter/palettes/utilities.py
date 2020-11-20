@@ -102,8 +102,8 @@ class ColorsToValue:
 def palette_grabber(id_or_nick):
     '''Goes through each of the dictionaries to return the color object.'''
 
-    if id_or_nick in config.palette_handler.default_palette_list:
-        return config.palette_handler.default_palette_list[id_or_nick]
+    if id_or_nick in config.palette_handler.DEFAULT_PALETTE_LIST:
+        return config.palette_handler.DEFAULT_PALETTE_LIST[id_or_nick]
     elif id_or_nick in config.palette_handler.custom_palette_list:
         return config.palette_handler.custom_palette_list[id_or_nick]
     elif id_or_nick in config.palette_handler.custom_palette_nickname_list:

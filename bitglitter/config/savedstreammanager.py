@@ -8,7 +8,6 @@ class SavedStreamManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-
         self._SAVE_FILE_NAME = 'savedstreammanager'
 
         self._delete_save_folder()

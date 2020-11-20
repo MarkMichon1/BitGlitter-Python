@@ -5,7 +5,7 @@ import time
 from bitstring import BitStream, ConstBitStream
 from PIL import Image, ImageDraw
 
-from bitglitter.write.renderassets import render_calibrator, generate_initializer, \
+from bitglitter.write.headers import render_calibrator, generate_initializer, \
     generate_frame_header, generate_stream_header_binary_preamble, loop_generator
 
 

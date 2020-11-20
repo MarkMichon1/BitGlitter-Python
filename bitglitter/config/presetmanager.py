@@ -1,6 +1,7 @@
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
+from bitglitter.validation.validate_write import write_preset_validate
 
 
 class PresetManager(BaseManager):
@@ -14,14 +15,37 @@ class PresetManager(BaseManager):
 
         self._save()
 
-    def validate_preset(self, preset):
-        # some validation
+    def add_preset(self,
+                   nickname,
+                   output_mode='video',
+                   compression_enabled=True,
+                   scrypt_n=14,
+                   scrypt_r=8,
+                   scrypt_p=1,
+                   stream_palette_id='6',
+                   header_palette_id='6',
+                   pixel_width=24,
+                   block_height=45,
+                   block_width=80,
+                   frames_per_second=30):
 
-        if self.preset_dict[preset.nickname]:
-            raise ValueError(f'\'{preset.nickname}\' already exists as a preset nickname.  Please choose a new name or'
+        write_preset_validate(output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette_id,
+                              header_palette_id, pixel_width, block_height, block_width, frames_per_second)
+        if self.preset_dict[nickname]:
+            raise ValueError(f'\'{nickname}\' already exists as a preset nickname.  Please choose a new name or'
                              f'delete the existing preset.')
-        self.preset_dict[preset.nickname] = preset
+
+        validated_preset = Preset(nickname, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p,
+                                  stream_palette_id, header_palette_id, pixel_width, block_height, block_width,
+                                  frames_per_second)
+        self.preset_dict[nickname] = validated_preset
         self._save()
+
+    def return_preset(self, nickname):
+        try:
+            return self.preset_dict[nickname]
+        except:
+            raise ValueError(f'write() preset \'{nickname}\' does not exist.')
 
 
 class Preset:
@@ -33,27 +57,21 @@ class Preset:
 
                  output_mode='video',
                  compression_enabled=True,
-                 file_mask_enabled=True,  # todo revisit
                  scrypt_n=14,
                  scrypt_r=8,
                  scrypt_p=1,
 
-                 header_palette_id='6',
                  stream_palette_id='6',
+                 header_palette_id='6',
                  pixel_width=24,
                  block_height=45,
                  block_width=80,
                  frames_per_second=30,
-
-                 logging_level='info',
-                 logging_stdout_output=True,
-                 logging_txt_output=False,
                  ):
         self.nickname = nickname
 
         self.output_mode = output_mode
         self.compression_enabled = compression_enabled
-        self.file_mask_enabled = file_mask_enabled
         self.scrypt_n = scrypt_n
         self.scrypt_r = scrypt_r
         self.scrypt_p = scrypt_p
@@ -64,10 +82,6 @@ class Preset:
         self.block_height = block_height
         self.block_width = block_width
         self.frames_per_second = frames_per_second
-
-        self.logging_level = logging_level
-        self.logging_stdout_output = logging_stdout_output
-        self.logging_txt_output = logging_txt_output
 
 
 try:

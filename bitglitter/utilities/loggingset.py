@@ -2,6 +2,8 @@ import datetime
 import logging
 import os
 
+from bitglitter.validation.utilities import logging_config_validate
+
 
 def logging_setter(logging_level, logging_stdout_output, logging_txt_output):
     """This is what the logging level and output during the write operation.  It's worth nothing that this is the ONLY
@@ -9,25 +11,12 @@ def logging_setter(logging_level, logging_stdout_output, logging_txt_output):
     the configuration for logging.
     """
 
-    # First, we're checking the parameters are valid.
-    acceptable_level_words = [False, 'debug', 'info']
-    if logging_level not in acceptable_level_words:
-        raise ValueError(f"{logging_level} is not a valid input for loggingLevel.  Only 'info', 'debug', and False are "
-                         f"allowed.")
 
-    if not isinstance(logging_stdout_output, bool):
-        raise ValueError("Only booleans are allowed for loggingPrint.")
-
-    if not isinstance(logging_txt_output, bool):
-        raise ValueError("Only booleans are allowed for loggingSaveOutput.")
-
-    logging_level_dict = {False: None, 'debug': logging.DEBUG, 'info': logging.INFO}
-
-    # Next, we're setting each of the loggers if they are enabled.
+    logging_config_validate(logging_level, logging_stdout_output, logging_txt_output)
+    logging_level_dict = {None: None, False: None, 'debug': logging.DEBUG, 'info': logging.INFO}
     if logging_txt_output:
-
         if not os.path.isdir('logs'):
-            os.mkdir('logs')
+            os.mkdir('logs') #todo fix path w/ pathlib, and plug into settingmngr txt log path value
         log_output_name = f"logs\\{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.txt"
         output_log = logging.getLogger()
         output_log_handler = logging.FileHandler(log_output_name)

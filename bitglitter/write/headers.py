@@ -97,6 +97,7 @@ def generate_frame_header(stream_sha, frame_hashable_bits, frame_number, blocks_
     return full_bit_string
 
 
+#todo- remove non-header functions out of here
 def how_many_frames(block_height, block_width, ascii_compressed_size, size_in_bytes, stream_palette, header_palette,
                     output_mode):
     '''This method returns how many frames will be required to complete the rendering process.'''

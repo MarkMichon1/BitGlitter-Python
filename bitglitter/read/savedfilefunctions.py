@@ -1,7 +1,7 @@
 import os
 
 from bitglitter.config.config import config
-from bitglitter.utilities.generalverifyfunctions import is_int_over_zero, is_valid_directory, proper_string_syntax
+from bitglitter.verification.generalverifyfunctions import is_int_over_zero, is_valid_directory, proper_string_syntax
 
 # These functions are for end users.
 

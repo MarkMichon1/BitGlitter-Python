@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2019 - ∞ Mark Michon
+# Copyright (c) 2020 - ∞ Mark Michon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 # Official project page (Python library):
 # https://github.com/MarkMichon1/BitGlitter
 #
-# Official project page (Executable GUI)
+# Official project page (Desktop app in progress)
 # https://github.com/MarkMichon1/BitGlitter-GUI
 #
 # Guides and roadmap (under construction!):
@@ -40,23 +40,23 @@
 # ===============================================================================
 
 # CORE USES
-from bitglitter.write.write import write
-from bitglitter.read.read import read
-
-
-# GENERAL CONFIGURATION
-from bitglitter.config.configfunctions import clear_session, clear_stats, output_stats
-
-
-# PARTIAL SAVE CONTROL
-from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_list, remove_partial_save, \
-    update_partial_save, remove_all_partial_saves
-
-
-# CUSTOM PALETTE
-from bitglitter.palettes.functions import add_custom_palette, edit_nickname_to_custom_palette, \
-    clear_all_custom_palettes, clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, \
-    remove_custom_palette_nickname
+from bitglitter.write.write import write, test
+# from bitglitter.read.read import read
+#
+#
+# # GENERAL CONFIGURATION
+# from bitglitter.config.configfunctions import clear_session, clear_stats, output_stats
+#
+#
+# # PARTIAL SAVE CONTROL
+# from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_list, remove_partial_save, \
+#     update_partial_save, remove_all_partial_saves
+#
+#
+# # CUSTOM PALETTE
+# from bitglitter.palettes.functions import add_custom_palette, edit_nickname_to_custom_palette, \
+#     clear_all_custom_palettes, clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, \
+#     remove_custom_palette_nickname
 
 # GUI interface
-# TBA
+# Coming to a repository near you...

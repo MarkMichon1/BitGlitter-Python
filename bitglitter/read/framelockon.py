@@ -19,7 +19,7 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
     initializer_palette_b_dict = ColorsToValue(initializer_palette_b)
     combined_colors = initializer_palette_a.color_set + initializer_palette_b.color_set
 
-    if block_height_override and block_width_override: # Jump straight to verification
+    if block_height_override and block_width_override: # Jump straight to validation
         logging.info("block_height_override and block_width_override parameters detected.  Attempting to lock with "
                      "these values...")
         pixel_width = ((frame_width / block_width_override) + (frame_height / block_height_override)) / 2
@@ -91,7 +91,7 @@ def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, i
             logging.warning('block_width_override is not equal to what was read on calibrator.  Aborting...')
 
         else:
-            logging.warning('block_width verification does not match initial read.  This could be the result of \n'
+            logging.warning('block_width validation does not match initial read.  This could be the result of \n'
                             'sufficiently distorted frames.  Aborting...')
 
         return False
@@ -131,7 +131,7 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
             logging.warning('block_height_override is not equal to what was read on calibrator.  Aborting...')
 
         else:
-            logging.warning('block_height verification does not match initial read.  This could be the result of \n'
+            logging.warning('block_height validation does not match initial read.  This could be the result of \n'
                             'sufficiently distorted frames.  Aborting...')
 
         return False

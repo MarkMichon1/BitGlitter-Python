@@ -9,6 +9,7 @@ class StatisticsManager(BaseManager):
     def __init__(self):
         super().__init__()
         self._SAVE_FILE_NAME = 'statsmanager'
+
         self.blocks_wrote = 0
         self.frames_wrote = 0
         self.data_wrote = 0

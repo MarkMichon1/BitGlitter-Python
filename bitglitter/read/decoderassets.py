@@ -119,7 +119,7 @@ def read_initializer(bit_stream, blockHeight, block_width, custom_palette_list, 
 
 
 def read_frame_header(bit_stream):
-    '''While read_initializer is mostly used for verification of values, this function's purpose is to return values
+    '''While read_initializer is mostly used for validation of values, this function's purpose is to return values
     needed for the reading process, once verified.  Returns stream_sha, frame_sha, frame_number, and blocks_to_read.
     '''
 

@@ -13,7 +13,8 @@ class PaletteManager(BaseManager):
     def __init__(self):
         super().__init__()
         self._SAVE_FILE_NAME = 'palettemanager'
-        self.default_palette_list = {'1': DefaultPalette("1 Bit Default",
+
+        self.DEFAULT_PALETTE_LIST = {'1': DefaultPalette("1 Bit Default",
                                                          "Two colors, black and white.  While it has the lowest "
                                                          "density of one bit of data per "
                                                          "pixel, it has the highest reliability.",

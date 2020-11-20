@@ -1,7 +1,7 @@
 import logging
 import time
 
-from bitglitter.write.preprocessobjects import Packager, Compressor, Encryptor
+from bitglitter.write.preprocess.preprocessobjects import Packager, Compressor, Encryptor
 from bitglitter.utilities.filemanipulation import refresh_working_folder, return_file_size, return_hash_from_file
 
 
@@ -11,16 +11,18 @@ class PreProcessor:
     headers during the render process.
     '''
 
-    def __init__(self, active_path, file_list, crypto_key, mask_files, compression_enabled, scrypt_n, scrypt_r,
+    def __init__(self, temp_write_path, file_list, crypto_key, mask_files, compression_enabled, scrypt_n, scrypt_r,
                  scrypt_p):
 
-        logging.info("Preprocess initializing...")
         self.date_created = round(time.time())
+        self.active_folder = refresh_working_folder(temp_write_path)
+        logging.info("Preprocess initializing...")
 
-        self.active_folder = refresh_working_folder(active_path)
+
+
         packager = Packager(self.active_folder, file_list, mask_files)
         compressor = Compressor(packager.pass_through, self.active_folder, compression_enabled)
-        self.stream_sha = return_hash_from_file(compressor.pass_through)
+        self.stream_sha = return_hash_from_file(compressor.pass_through) #todo move to render
         logging.info(f"SHA-256: {self.stream_sha}")
         encryptor = Encryptor(compressor.pass_through, self.active_folder, crypto_key, scrypt_n, scrypt_r,
                               scrypt_p)
