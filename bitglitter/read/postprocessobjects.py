@@ -2,7 +2,7 @@ import logging
 import os
 
 from bitglitter.filepackager_pending_delete.filepackager_pending_delete import unpackage
-from bitglitter.utilities.filemanipulation import decrypt_file, return_hash_from_file, decompress_file
+from bitglitter.utilities.filemanipulation import decrypt_file, get_hash_from_file, decompress_file
 
 
 class Decryptor:
@@ -27,7 +27,7 @@ class Decryptor:
                              remove_input=False)
 
                 # Checking if password is valid
-                if stream_sha == return_hash_from_file(self.pass_through):
+                if stream_sha == get_hash_from_file(self.pass_through):
 
                     logging.info('Successfully decrypted.')
                     self.is_satisfied = True

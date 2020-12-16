@@ -6,7 +6,7 @@ from bitglitter.validation.validate_write import write_parameter_validate
 
 
 def write(  # Basic setup
-        file_list,
+        input_path,
         preset_nickname=None,
         stream_name="",
         stream_description="",
@@ -47,8 +47,8 @@ def write(  # Basic setup
     logging_setter(logging_level, logging_stdout_output, logging_txt_output)
 
     if preset_nickname:
-        write_parameter_validate(file_list, stream_name, stream_description, output_path, output_name,
-                                 file_mask_enabled, preset_used=True)
+        write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
+                                 file_mask_enabled, encryption_key, preset_used=True)
 
         preset = preset_manager.return_preset(preset_nickname)
         output_mode = preset.output_mode
@@ -64,13 +64,13 @@ def write(  # Basic setup
         frames_per_second = preset.frames_per_second
 
     else:
-        write_parameter_validate(file_list, stream_name, stream_description, output_path, output_name,
-                                 file_mask_enabled, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p,
-                                 stream_palette_id, header_palette_id, pixel_width, block_height, block_width,
-                                 frames_per_second, preset_used=False)
+        write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
+                                 file_mask_enabled, encryption_key, output_mode, compression_enabled, scrypt_n,
+                                 scrypt_r, scrypt_p, stream_palette_id, header_palette_id, pixel_width, block_height,
+                                 block_width, frames_per_second, preset_used=False)
 
     # This sets the name of the temporary folder while the file is being written.
-    temp_write_path = settings_manager.DEFAULT_TEMP_WRITE_PATH
+    working_dir = settings_manager.WRITE_WORKING_DIR
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     # pre_processor = PreProcessor(temp_write_path, file_list, encryption_key, file_mask_enabled,

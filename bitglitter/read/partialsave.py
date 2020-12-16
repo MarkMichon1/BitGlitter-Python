@@ -7,7 +7,7 @@ from bitstring import BitStream
 from bitglitter.read.postprocess import PostProcessor
 from bitglitter.read.partialsaveassets import format_file_list, decode_stream_header_ascii_compressed, \
     decode_stream_header_binary_preamble
-from bitglitter.utilities.filemanipulation import compress_file, decompress_file, return_hash_from_file
+from bitglitter.utilities.filemanipulation import compress_file, decompress_file, get_hash_from_file
 
 
 class PartialSave:
@@ -175,7 +175,7 @@ class PartialSave:
                             to_byte_type = bit_merge.tobytes()
                             assemble_package.write(to_byte_type)
 
-                if return_hash_from_file(assembled_path) != self.assembled_sha:
+                if get_hash_from_file(assembled_path) != self.assembled_sha:
                     logging.critical(f'Assembled frames do not match self.packageSHA.  Cannot continue.')
                     return False
 

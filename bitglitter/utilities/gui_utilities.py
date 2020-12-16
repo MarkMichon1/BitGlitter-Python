@@ -5,7 +5,7 @@ functionality will be exposed to any end users using this library, but this is t
 this.  If you know of a better way, let us know on the official Discord server:  https://discord.gg/t9uv2pZ
 '''
 
-from bitglitter.config.config import config
+from bitglitter.config.palettemanager import palette_manager
 
 def return_all_palette_objects():
     '''This function is used both in the write 'wizard' when selecting a color, and in the palette settings menu.  This
@@ -15,7 +15,7 @@ def return_all_palette_objects():
     # Thought- import may have to be in the function itself.  Otherwise future changes to the pickle object may not
     # properly load.  Test this further into development.
 
-    default_palettes = config.palette_handler.DEFAULT_PALETTE_LIST
-    custom_palettes = config.palette_handler.custom_palette_list
+    default_palettes = palette_manager.DEFAULT_PALETTE_LIST
+    custom_palettes = palette_manager.custom_palette_list
 
     return list(default_palettes.values()), list(custom_palettes.values())

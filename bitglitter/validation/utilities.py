@@ -3,6 +3,7 @@ import os
 import string
 
 from bitglitter.config.palettemanager import palette_manager
+from bitglitter.utilities.display import humanize_file_size
 from bitglitter.validation.validate_palette import palette_verify
 
 def is_valid_directory(argument, path):
@@ -94,12 +95,12 @@ def verify_write_params_render_values(header_palette_id, stream_palette_id, pixe
     returned_stream_values = palette_verify('stream_palette', active_stream_palette.bit_length, block_width,
                                             block_height, output_mode, frames_per_second)
     if not preset_validation:
-        logging.info(f'{returned_stream_values[1]} B, or {returned_stream_values[0]}% of subsequent frames is allocated'
-                     f' for frame payload (higher is better)')
+        logging.info(f'{humanize_file_size(returned_stream_values[1])}, or {returned_stream_values[0]}% of subsequent '
+                     f'frames is allocated for frame payload (higher is better)')
 
         if output_mode == 'video':
-            logging.info(f'As a video, it will effectively be transporting {round(returned_stream_values[2] / 8)} B/sec'
-                         f' of data.')
+            logging.info(f'As a video, it will effectively be transporting '
+                         f'{humanize_file_size(round(returned_stream_values[2] / 8))}/sec of data.')
         logging.info('Minimum geometry requirements met.')
 
 

@@ -195,10 +195,7 @@ We'll go a bit more in depth now.
 `write()` is the function that inputs files and turns them into a BitGlitter stream.  There are quite a few arguments
 to customize the stream, but there is only one required argument.  Everything else has defaults.
 
-Not surprisingly, that required argument defines what files or folders you wish to embed in the stream.  If and only if
-you're sending a single file or folder path, argument `fileList` takes a string of the path.  BitGlitter also supports
-sending multiple files and folder together, of which there is no limit!  This would require using a tuple or list item
-filled with strings of the file or folder paths.  File or folder paths that don't exist are automatically ignored.
+`input_path` defines what file or folder you wish to embed in the stream.  It must be an absolute path.
 
 `stream_name=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.

@@ -40,7 +40,7 @@
 # ===============================================================================
 
 # CORE USES
-from bitglitter.write.write import write, test
+from bitglitter.write.write import write
 # from bitglitter.read.read import read
 #
 #

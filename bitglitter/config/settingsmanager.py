@@ -12,7 +12,7 @@ class SettingsManager(BaseManager):
 
         # Constants
         self.BG_VERSION = '1.1'  # Change this during version updates!  Used for internal/debug stuff.
-        self.DEFAULT_TEMP_WRITE_PATH = 'Temp'
+        self.WRITE_WORKING_DIR = 'Temp'
         self.DEFAULT_PARTIAL_SAVE_PATH = 'Partial Stream Saves'
         self.VALID_VIDEO_FORMATS = ['.avi', '.flv', '.mov', '.mp4', '.wmv']
         self.VALID_IMAGE_FORMATS = ['.bmp', '.jpg', '.png']
