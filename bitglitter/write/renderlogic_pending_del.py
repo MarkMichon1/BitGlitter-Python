@@ -1,7 +1,7 @@
 import logging
 
 from bitglitter.write.headers import ascii_header_process, how_many_frames
-from bitglitter.write.renderloop import render_loop
+from bitglitter.write.renderloop_pending_del import render_loop
 from bitglitter.write.ffmpeg_render import render_video
 
 # Todo: remove- either merge with write() or some other module.

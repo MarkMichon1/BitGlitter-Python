@@ -57,6 +57,7 @@ class Preset:
 
                  output_mode='video',
                  compression_enabled=True,
+                 error_correction=False,
                  scrypt_n=14,
                  scrypt_r=8,
                  scrypt_p=1,
@@ -72,6 +73,7 @@ class Preset:
 
         self.output_mode = output_mode
         self.compression_enabled = compression_enabled
+        self.error_correction = error_correction
         self.scrypt_n = scrypt_n
         self.scrypt_r = scrypt_r
         self.scrypt_p = scrypt_p

@@ -26,7 +26,7 @@ def ascii_header_process(file_mask_enabled, active_path, stream_palette, bg_vers
     custom_palette_string = ""
     if stream_palette.palette_type == 'custom':
         custom_palette_attribute_list = [stream_palette.name, stream_palette.description,
-                                      str(stream_palette.date_created), str(stream_palette.color_set)]
+                                         str(stream_palette.datetime_started), str(stream_palette.color_set)]
         custom_palette_string = "\\".join(custom_palette_attribute_list) + "\\"
 
     crypto_string = ""

@@ -1,10 +1,8 @@
 import logging
 import shutil
 
-from bitglitter.config.config import config
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 
-#todo- revisit, refactor.
 
 class RenderHandler:
     '''This is where the rendering process is set up, and fed into the appropriate protocol objects and objects.  While
@@ -80,9 +78,6 @@ class RenderHandler:
                                             self.date_created, self.stream_name, self.stream_description,
                                             self.post_encryption_hash)
 
-        config.stats_handler.write_update(((self.protocol.total_frames - 1) * (self.block_height * self.block_width) +
-                                         self.protocol.remainder_blocks), self.protocol.total_frames,
-                                          self.size_in_bytes)
 
         self.cleanup()
 

@@ -178,9 +178,6 @@ ffmpeg.exe is all that is needed.
 + `opencv-python` - Video loading and frame manipulation.
 + `Pillow` - Frame creation and output, as well as loading images and reading pixel values.
 
-Thanks to Tanmay Mishra for giving me a pre-release version of his upcoming library `filepackager`.  It has been heavily
-modified and stripped down to suit this library.  The code is included with BitGlitter; there is no need to download it.
-
 **BitGlitter in 60 seconds**
 
 Even though it comes shipped with a lot of functionality, all you need to use it is `write()` (creates the streams) and 
@@ -214,6 +211,18 @@ name.
 
 `compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
 by default.
+
+[comment]: <> (`error_correction=False` toggles Reed Solomon error-correcting from being applied on the stream payload.  This will)
+
+[comment]: <> (further protect against frame corruption and distortion, at the tradeoff of a greater stream size and increased)
+
+[comment]: <> (encoding and decoding time.  This is set to disabled by default because the default configuration for `write&#40;&#41;` has been)
+
+[comment]: <> (extensively tested and tweaked to get 100% readability on many popular video hosts without any error correcting code)
+
+[comment]: <> (whatsoever.  But if your application could benefit from this, or you'd simply want the peace of mind, by all means)
+
+[comment]: <> (enable this. TODO: uncomment when implemented)
 
 `file_mask_enabled=False` is where you can omit the listing of files/folders from the stream header.  This effectively
 hides the contents of the stream, unless it is fully read.  By default, this is disabled.  What this means is when
@@ -417,6 +426,10 @@ file size.*  While BitGlitter will detect corruption and perform an "emergency s
 that, and neither do the people you're sharing with.
 
 In closing, know the environment the video will be used in to ensure success in reading it.
+
+# Acknowledgements
+Thank you to Tanmay Mishra for giving me guidance during planning of the library, as well as its initial development.
+A big thank you to Jack Robison as well for his continued advice.
 
 # MIT License
 © 2019 - ∞ Mark Michon

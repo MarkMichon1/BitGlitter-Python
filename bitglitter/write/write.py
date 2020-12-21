@@ -1,8 +1,13 @@
+import time
+
+from bitglitter.config.pastwritemanager import past_write_manager
 from bitglitter.config.presetmanager import preset_manager
 from bitglitter.config.settingsmanager import settings_manager
-
+from bitglitter.config.statisticsmanager import stats_manager
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validate_write import write_parameter_validate
+from bitglitter.write.preprocess.preprocessor import PreProcessor
+from bitglitter.write.render import RenderHandler
 
 
 def write(  # Basic setup
@@ -16,6 +21,7 @@ def write(  # Basic setup
 
         # Stream configuration
         compression_enabled=True,
+        # error_correction=False, -> to be implemented
         file_mask_enabled=False,
 
         # Encryption
@@ -38,6 +44,10 @@ def write(  # Basic setup
         logging_level='info',
         logging_stdout_output=True,
         logging_txt_output=False,
+
+        # Session Data
+        save_session_overview=False, #todo readme
+        save_statistics=False #todo readme
 ):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
     information.
@@ -73,22 +83,24 @@ def write(  # Basic setup
     working_dir = settings_manager.WRITE_WORKING_DIR
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
-    # pre_processor = PreProcessor(temp_write_path, file_list, encryption_key, file_mask_enabled,
-    #                            compression_enabled, scrypt_override_n, scrypt_override_r,
-    #                            scrypt_override_p)
-    #
-    # render_handler = RenderHandler(EncodeFrame(), block_height, block_width, header_palette_id, pre_processor.stream_sha,
-    #                                pre_processor.size_in_bytes, compression_enabled, encryption_key != "",
-    #                                file_mask_enabled, pre_processor.date_created, stream_palette_id, BG_VERSION,
-    #                                stream_name, stream_description, pre_processor.post_encryption_hash, pixel_width,
-    #                                output_mode, output_path, frames_per_second, temp_write_path, pre_processor.pass_through,
-    #                                output_name)
-    #
-    # new_render = None
+    pre_processor = PreProcessor(working_dir, input_path, encryption_key, file_mask_enabled, compression_enabled,
+                                 scrypt_n, scrypt_r, scrypt_p)
 
-    # config.finish_write(render_handler.statistics, etc) <- todo - update stats after config refactor
-    #
+    render_handler = RenderHandler()
 
-    # Returns the SHA of the preprocessed file in string format for optional storage of it.
-    # return pre_processor.stream_sha
-    return {} #eventually dict with write data
+    # clean_temporary_directory(working_dir) todo
+
+    if save_session_overview:
+        past_write_manager.add_new() #todo values
+
+    if save_statistics:
+        stats_manager.write_update() #todo
+
+    # Putting together a dictionary to return with an overview of the write session.
+    returned_write_overview = { #todo fill out
+        'write_start': pre_processor.datetime_started,
+        'write_end': time.time(),
+
+    }
+
+    return returned_write_overview

@@ -3,9 +3,10 @@ import time
 
 import ffmpeg
 
+
 def render_video(stream_output_path, output_name, date_created, image_output_path, frame_number_formatted,
                  frames_per_second):
-    '''Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 .'''
+    """Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 ."""
 
     logging.info('Rendering video...')
     video_output_path = ''

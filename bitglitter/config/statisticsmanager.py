@@ -36,6 +36,7 @@ class StatisticsManager(BaseManager):
         self.blocks_wrote += blocks
         self.frames_wrote += frames
         self.data_wrote += data
+        self._save()
 
     def read_update(self, blocks, frames, data):
         """Deprecated.  May be removed."""
@@ -43,6 +44,7 @@ class StatisticsManager(BaseManager):
         self.blocks_read += blocks
         self.frames_read += frames
         self.data_read += data
+        self._save()
 
     def clear_stats(self):
         self.blocks_wrote = 0
@@ -51,6 +53,7 @@ class StatisticsManager(BaseManager):
         self.blocks_read = 0
         self.frames_read = 0
         self.data_read = 0
+        self._save()
 
 
 try:

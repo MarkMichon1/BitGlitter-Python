@@ -13,11 +13,11 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
                 stream_palette, output_mode, stream_output_path, output_name, active_path, pass_through, size_in_bytes,
                 total_frames, compression_enabled, encryption_enabled, file_mask_enabled, date_created,
                 ascii_compressed, stream_sha, initializer_palette_dict, header_palette_dict, stream_palette_dict):
-    '''This function iterates over the preProcessed data, and assembles and renders the frames.  There are plenty of
+    '''This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     # comments in this function that describe what each part is doing, to follow along.
     '''
 
-    logging.debug('Entering render_loop...')
+    logging.debug('Entering render loop...')
 
     # Determining output for images.
     if output_mode == 'image':

@@ -1,3 +1,5 @@
+import pickle
+
 from bitglitter.config.basemanager import BaseManager
 
 class PastWriteManager(BaseManager):
@@ -11,9 +13,28 @@ class PastWriteManager(BaseManager):
         self._save()
 
     def add_new(self):
-        pass
+        self.past_write_dict[self.next_write_id] = PastWrite() #todo
+        self.next_write_id += 1
+        self._save()
+
+    def remove_one(self, id):
+        del self.past_write_dict[id]
+        self._save()
+
+    def clear_all(self):
+        self.next_write_id = 1
+        self.past_write_dict = {}
+        self._save()
 
 
 class PastWrite:
     def __init__(self):
-        pass
+        pass #todo
+
+
+try:
+    with open('pastwritemanager.bin', 'rb') as unpickler:
+        past_write_manager = pickle.load(unpickler)
+
+except:
+    past_write_manager = PastWriteManager()

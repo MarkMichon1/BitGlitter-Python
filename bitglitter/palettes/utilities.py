@@ -5,7 +5,6 @@ import math
 
 from bitstring import BitArray, ConstBitStream
 
-from bitglitter.config.config import config
 from bitglitter.palettes.palettes import CustomPalette
 
 
