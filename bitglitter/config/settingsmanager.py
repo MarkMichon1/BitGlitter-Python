@@ -1,3 +1,4 @@
+import pathlib
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
@@ -12,7 +13,7 @@ class SettingsManager(BaseManager):
 
         # Constants
         self.BG_VERSION = '1.1'  # Change this during version updates!  Used for internal/debug stuff.
-        self.WRITE_WORKING_DIR = 'Temp'
+        self.WRITE_WORKING_DIR = 'Temp' #todo- do this in library, up one dir lvl?
         self.DEFAULT_PARTIAL_SAVE_PATH = 'Partial Stream Saves'
         self.VALID_VIDEO_FORMATS = ['.avi', '.flv', '.mov', '.mp4', '.wmv']
         self.VALID_IMAGE_FORMATS = ['.bmp', '.jpg', '.png']
@@ -21,7 +22,7 @@ class SettingsManager(BaseManager):
         self.default_bad_frame_strikes = 10
         self.write_path = None  # todo: implement and add as utility external function
         self.log_txt_path = None  # todo... implement
-        self.maximum_cpu_cores = None # ^^^
+        self.maximum_cpu_cores = 0
         self.save_past_write_data = None
 
         self._save()

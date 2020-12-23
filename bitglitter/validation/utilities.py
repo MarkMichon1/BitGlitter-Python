@@ -4,7 +4,7 @@ import string
 
 from bitglitter.config.palettemanager import palette_manager
 from bitglitter.utilities.display import humanize_file_size
-from bitglitter.validation.validate_palette import palette_verify
+from bitglitter.validation.validatepalette import palette_verify
 
 def is_valid_directory(argument, path):
     '''Checks whether the inputted directory exists or not.'''

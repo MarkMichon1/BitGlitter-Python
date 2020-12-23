@@ -1,7 +1,7 @@
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
-from bitglitter.validation.validate_write import write_preset_validate
+from bitglitter.validation.validatewrite import write_preset_validate
 
 
 class PresetManager(BaseManager):

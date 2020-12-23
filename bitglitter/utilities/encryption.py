@@ -109,7 +109,10 @@ def get_hash_from_file(file_path):
     return sha256.hexdigest()
 
 
-def get_hash_from_bytes(input_bytes):
+def get_hash_from_bytes(input_bytes, byte_output=False):
     sha256 = hashlib.sha256()
     sha256.update(input_bytes)
-    return sha256.hexdigest()
+    if byte_output:
+        return sha256.digest()
+    else:
+        return sha256.hexdigest()

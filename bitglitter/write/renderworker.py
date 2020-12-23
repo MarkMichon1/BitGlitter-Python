@@ -1,25 +1,26 @@
 import logging
 import math
+import pathlib
 import time
 
 from bitstring import BitStream, ConstBitStream
 from PIL import Image, ImageDraw
 
-from bitglitter.write.headers import render_calibrator, generate_initializer, \
-    generate_frame_header, generate_stream_header_binary_preamble, loop_generator
+from bitglitter.write.headers import calibrator_header_process, initializer_header_process, frame_header_process, \
+    stream_header_process
+from bitglitter.write.renderutilities import loop_generator
 
 
-def render_loop(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
-                stream_palette, output_mode, stream_output_path, output_name, active_path, pass_through, size_in_bytes,
-                total_frames, compression_enabled, encryption_enabled, file_mask_enabled, date_created,
-                ascii_compressed, stream_sha, initializer_palette_dict, header_palette_dict, stream_palette_dict):
+def render_cycle(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
+                 stream_palette, output_mode, stream_output_path, output_name, active_path, pass_through, total_frames,
+                 date_created, ascii_compressed, stream_sha, initializer_palette_dict, header_palette_dict,
+                 stream_palette_dict):
     '''This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     # comments in this function that describe what each part is doing, to follow along.
     '''
 
-    logging.debug('Entering render loop...')
 
-    # Determining output for images.
+    # Determining output for images. todo: moved to pre-render, figure out if needed w/ pathlib
     if output_mode == 'image':
         if stream_output_path:
             image_output_path = stream_output_path + '\\'
@@ -33,10 +34,10 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
     # Constants
     TOTAL_BLOCKS = block_height * block_width
     INITIALIZER_OVERHEAD = block_height + block_width + 323
-    INITIALIZER_DATA_BITS = 324
-    FRAME_HEADER_OVERHEAD = 608
+    INITIALIZER_BIT_OVERHEAD = 324
+    FRAME_HEADER_BIT_OVERHEAD = 608
 
-    active_payload = ConstBitStream(filename=pass_through)
+    payload = ConstBitStream(filename=pass_through)
     frame_number = 1
     primary_frame_palette_dict, primary_read_length = header_palette_dict, header_palette.bit_length
     active_palette = header_palette
@@ -44,15 +45,12 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
     last_frame = False
 
     # Final preparations for stream header parts.
-    stream_header_binary_preamble = generate_stream_header_binary_preamble(size_in_bytes, total_frames,
-                                                            compression_enabled, encryption_enabled, file_mask_enabled,
-                                                            stream_palette.palette_type == "custom", date_created,
-                                                            stream_palette.id, len(ascii_compressed))
-    stream_header_combined = BitStream(stream_header_binary_preamble)
+    stream_header = None #figure out what is happening here
+    stream_header_combined = BitStream(stream_header)
     stream_header_combined.append(ascii_compressed)
 
     # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
-    while active_payload.bitpos != active_payload.length:
+    while payload.bitpos != payload.length:
 
         logging.info(f'Rendering frame {frame_number} of {total_frames} ...')
 
@@ -66,8 +64,8 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
         remainder_blocks_into_bits = BitStream()
         bits_to_pad = BitStream()
 
-        max_allowable_payload_bits = len(active_payload) - active_payload.bitpos
-        bits_consumed = FRAME_HEADER_OVERHEAD
+        max_allowable_payload_bits = len(payload) - payload.bitpos
+        bits_consumed = FRAME_HEADER_BIT_OVERHEAD
         blocks_left = TOTAL_BLOCKS
         initializer_enabled = False
         blocks_used = 0
@@ -82,13 +80,13 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
         # initializer is on or not.
         initializer_holder = BitStream()
         if frame_number == 1 or output_mode == 'image':
-            image = render_calibrator(image, block_height, block_width, pixel_width)
-            initializer_holder = generate_initializer(block_height, block_width, protocol_version, active_palette)
-            initializer_palette_blocks_used += INITIALIZER_DATA_BITS
+            image = calibrator_header_process(image, block_height, block_width, pixel_width)
+            initializer_holder = initializer_header_process(block_height, block_width, protocol_version, active_palette)
+            initializer_palette_blocks_used += INITIALIZER_BIT_OVERHEAD
             blocks_left -= INITIALIZER_OVERHEAD
             initializer_enabled = True
 
-        bits_left_this_frame = (blocks_left * active_palette.bit_length) - FRAME_HEADER_OVERHEAD
+        bits_left_this_frame = (blocks_left * active_palette.bit_length) - FRAME_HEADER_BIT_OVERHEAD
 
         # Here, we're calculating how many bits we can fit into the stream based on the palettes used.
         # Normal frame_payload frames.
@@ -96,12 +94,12 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
 
             # Standard frame_payload frame in the middle of the stream.
             if bits_left_this_frame <= max_allowable_payload_bits:
-                payload_holder = active_payload.read(bits_left_this_frame)
+                payload_holder = payload.read(bits_left_this_frame)
 
             # Payload Frame terminates on this frame.
             else:
                 logging.debug('Payload termination frame')
-                payload_holder = active_payload.read(max_allowable_payload_bits)
+                payload_holder = payload.read(max_allowable_payload_bits)
                 last_frame = True
 
 
@@ -111,7 +109,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
             # This frame has more bits left for the streamHeader than capacity.
             if len(stream_header_combined) - stream_header_combined.bitpos > bits_left_this_frame:
                 stream_header_chunk = stream_header_combined.read(bits_left_this_frame)
-                stream_header_blocks_used = math.ceil(len(stream_header_chunk + FRAME_HEADER_OVERHEAD)
+                stream_header_blocks_used = math.ceil(len(stream_header_chunk + FRAME_HEADER_BIT_OVERHEAD)
                                                    / active_palette.bitLength)
 
 
@@ -134,7 +132,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
 
                 if final_block_partial_fill > 0:
                     attachment_bits = active_palette.bit_length - (final_block_partial_fill)
-                    attachment_bits_append = active_payload.read(attachment_bits)
+                    attachment_bits_append = payload.read(attachment_bits)
 
                     bits_consumed += attachment_bits
                     max_allowable_payload_bits -= attachment_bits
@@ -146,15 +144,15 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
                     bits_left_this_frame = remaining_blocks_left * active_palette.bit_length
 
                     if max_allowable_payload_bits > bits_left_this_frame: # Payload continues on in next frame(s)
-                        remainder_blocks_into_bits = active_payload.read(bits_left_this_frame)
+                        remainder_blocks_into_bits = payload.read(bits_left_this_frame)
 
                     else: # Full frame_payload can terminate on streamHeader termination frame.
-                        remainder_blocks_into_bits = active_payload.read(max_allowable_payload_bits)
+                        remainder_blocks_into_bits = payload.read(max_allowable_payload_bits)
                         last_frame = True
 
         frame_hashable_bits = stream_header_chunk + attachment_bits_append + remainder_blocks_into_bits + payload_holder
-        combined_frame_length = frame_hashable_bits.len + FRAME_HEADER_OVERHEAD
-        blocks_used = (int(initializer_enabled) * INITIALIZER_DATA_BITS) + math.ceil(combined_frame_length
+        combined_frame_length = frame_hashable_bits.len + FRAME_HEADER_BIT_OVERHEAD
+        blocks_used = (int(initializer_enabled) * INITIALIZER_BIT_OVERHEAD) + math.ceil(combined_frame_length
                                                                                    / active_palette.bit_length)
 
         #On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
@@ -168,7 +166,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
             bits_to_pad = BitStream(bin=f"{'0' * remainder_bits}")
             frame_hashable_bits.append(bits_to_pad)
 
-        frame_header_holder = generate_frame_header(stream_sha, frame_hashable_bits, frame_number, blocks_used)
+        frame_header_holder = frame_header_process(stream_sha, frame_hashable_bits, frame_number, blocks_used)
         combining_bits = initializer_holder + frame_header_holder + stream_header_chunk + attachment_bits_append \
                         + remainder_blocks_into_bits + payload_holder + bits_to_pad
 
@@ -189,7 +187,7 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
 
             # Here to signal something has broken.
             else:
-                raise Exception('Something has gone wrong in matching block position to palette.  This state'
+                raise RuntimeError('Something has gone wrong in matching block position to palette.  This state'
                                 '\nis reached only if something is broken.')
 
             # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
@@ -197,8 +195,8 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
             color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
 
             # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
-            active_coordinates = next(next_coordinates)
-            draw.rectangle((active_coordinates[0], active_coordinates[1], active_coordinates[2], active_coordinates[3]),
+            block_coordinates = next(next_coordinates)
+            draw.rectangle((block_coordinates[0], block_coordinates[1], block_coordinates[2], block_coordinates[3]),
                            fill=f'rgb{str(color_value)}')
 
             block_position += 1
@@ -215,8 +213,8 @@ def render_loop(block_height, block_width, pixel_width, protocol_version, initia
             else:
                 file_name = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(date_created)) + ' - ' + str(frame_number)
 
+        number_of_frame_digits = len(str(frame_number))
         image.save(f'{image_output_path}{str(file_name)}.png')
         frame_number += 1
 
-    logging.debug('Render complete, running cleanup()...')
-    return block_position, image_output_path, str(frame_number)
+    return block_position, number_of_frame_digits

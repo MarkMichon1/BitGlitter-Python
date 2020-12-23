@@ -5,6 +5,7 @@ import math
 
 from bitstring import BitArray, ConstBitStream
 
+from bitglitter.config.palettemanager import palette_manager
 from bitglitter.palettes.palettes import CustomPalette
 
 
@@ -101,12 +102,12 @@ class ColorsToValue:
 def palette_grabber(id_or_nick):
     '''Goes through each of the dictionaries to return the color object.'''
 
-    if id_or_nick in config.palette_handler.DEFAULT_PALETTE_LIST:
-        return config.palette_handler.DEFAULT_PALETTE_LIST[id_or_nick]
-    elif id_or_nick in config.palette_handler.custom_palette_list:
-        return config.palette_handler.custom_palette_list[id_or_nick]
-    elif id_or_nick in config.palette_handler.custom_palette_nickname_list:
-        return config.palette_handler.custom_palette_nickname_list[id_or_nick]
+    if id_or_nick in palette_manager.DEFAULT_PALETTE_LIST:
+        return palette_manager.DEFAULT_PALETTE_LIST[id_or_nick]
+    elif id_or_nick in palette_manager.custom_palette_list:
+        return palette_manager.custom_palette_list[id_or_nick]
+    elif id_or_nick in palette_manager.custom_palette_nickname_list:
+        return palette_manager.custom_palette_nickname_list[id_or_nick]
     else:
         raise ValueError('palette_grabber(): This value is not present.')
 
@@ -172,9 +173,7 @@ def _add_custom_palette_direct(name, description, color_set, distance, date_crea
     '''
 
     new_palette = CustomPalette(name, description, color_set, distance, date_created, id, nickname)
-    config.palette_handler.custom_palette_list[id] = new_palette
+    palette_manager.custom_palette_list[id] = new_palette
 
     if nickname:
-        config.palette_handler.custom_palette_nickname_list[nickname] = new_palette
-
-    config._save_session()
+        palette_manager.custom_palette_nickname_list[nickname] = new_palette

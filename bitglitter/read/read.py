@@ -1,7 +1,7 @@
 from bitglitter.config.defaultvalues import DEFAULT_READ_PATH, DEFAULT_BAD_FRAME_STRIKES, DEFAULT_SCRYPT_N, DEFAULT_SCRYPT_R, \
     DEFAULT_SCRYPT_P
 from bitglitter.utilities.loggingset import logging_setter
-from bitglitter.validation.validate_read import verify_read_parameters
+from bitglitter.validation.validateread import verify_read_parameters
 
 def read(file_to_input,
          output_path = None,

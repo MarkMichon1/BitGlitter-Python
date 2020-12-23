@@ -209,6 +209,9 @@ named 'custom_name.mp4', while images will be named 'custom_name.png - 1', 'cust
 each frame number.  If left blank, it will use the current date and time of the `write()` function starting as the file
 name.
 
+`max_cpu_cores=0` determines how many CPU cores you'd like to use when rendering frames.  0 is default, which is
+maximum.
+
 `compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
 by default.
 
@@ -272,6 +275,14 @@ Enabled by default.
 
 `logging_txt_output=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
 Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved there.
+
+`save_session_overview=False` saves an overview of the write session as an object, storing some key information about
+it such as files rendered, stream size, configuration settings, etc.  Its main use will be for the desktop app coming
+soon, but you can still call it with `tba`.  Function for both an ID, and all of them.
+
+`save_statistics=False` saves some fun statistics about your usage of the program- total number of blocks rendered,
+total frames rendered, and total payload data rendered.  This updates after each successful write session.  You can
+see these statistics by `tba` read and write.
 
 These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to
 corruption.

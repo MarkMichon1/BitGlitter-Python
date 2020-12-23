@@ -17,7 +17,7 @@ def compress_file(input_file, output_file, remove_input=True):
 
 
 def compress_bytes(input_bytes):
-    compressed = zlib.compress(input_bytes)
+    compressed = zlib.compress(input_bytes, level=9)
     return compressed
 
 
