@@ -64,20 +64,41 @@ def process_file(file_abs_path, processed_path, crypto_key, scrypt_n, scrypt_r, 
     raw_file_hash = get_hash_from_file(file_abs_path)
     manifest['rh'] = raw_file_hash
 
+    # with open(processed_path, 'ab') as byte_write:
+    #     with open(file_abs_path, 'rb') as file_read:
+    #         file_data = file_read.read()
+    #         if compression_enabled or crypto_key:
+    #             if compression_enabled:
+    #                 file_data = compress_bytes(file_data)
+    #             if crypto_key:
+    #                 file_data = encrypt_bytes(file_data, crypto_key, scrypt_n, scrypt_r, scrypt_p)
+    #             processed_file_size = len(file_data)
+    #             processed_file_hash = get_hash_from_bytes(file_data)
+    #             manifest['ps'] = processed_file_size
+    #             manifest['ph'] = processed_file_hash
+    #
+    #         byte_write.write(file_data)
+
     with open(processed_path, 'ab') as byte_write:
         with open(file_abs_path, 'rb') as file_read:
-            file_data = file_read.read()
-            if compression_enabled or crypto_key:
-                if compression_enabled:
-                    file_data = compress_bytes(file_data)
-                if crypto_key:
-                    file_data = encrypt_bytes(file_data, crypto_key, scrypt_n, scrypt_r, scrypt_p)
-                processed_file_size = len(file_data)
-                processed_file_hash = get_hash_from_bytes(file_data)
-                manifest['ps'] = processed_file_size
-                manifest['ph'] = processed_file_hash
-
-            byte_write.write(file_data)
+            chunk = 1024
+            while True:
+                piece = file_read.read(chunk)
+                if not piece:
+                    break
+                print(len(piece))
+            # file_data = file_read.read()
+            # if compression_enabled or crypto_key:
+            #     if compression_enabled:
+            #         file_data = compress_bytes(file_data)
+            #     if crypto_key:
+            #         file_data = encrypt_bytes(file_data, crypto_key, scrypt_n, scrypt_r, scrypt_p)
+            #     processed_file_size = len(file_data)
+            #     processed_file_hash = get_hash_from_bytes(file_data)
+            #     manifest['ps'] = processed_file_size
+            #     manifest['ph'] = processed_file_hash
+            #
+            # byte_write.write(file_data)
     return manifest
 
 
@@ -85,3 +106,7 @@ def process_file(file_abs_path, processed_path, crypto_key, scrypt_n, scrypt_r, 
 # processed_path = Path('/home/m/Desktop/testing.bin')
 # returned_manifest = directory_crawler(dir_path, processed_path, True, 'testing', 14, 8, 1)
 # print(returned_manifest) todo remove
+
+# exact_path = Path('/home/m/Desktop/test.mp4')
+# processed_path = Path('/home/m/Desktop/testing.bin')
+# f = process_file(exact_path, processed_path, 'testpass', 14, 8, 1, True)
