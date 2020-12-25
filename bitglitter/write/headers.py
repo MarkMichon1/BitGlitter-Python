@@ -15,26 +15,29 @@ def text_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, scryp
                         stream_name, stream_description, manifest):
 
 
+    logging.debug('Building text header...')
     custom_palette_string = ""
     if stream_palette.palette_type == 'custom':
         custom_palette_attribute_list = [stream_palette.id, stream_palette.name, stream_palette.description,
                                          str(stream_palette.datetime_started), str(stream_palette.color_set)]
-        custom_palette_string = "\\".join(custom_palette_attribute_list) + "\\"
-    meta_data_string = "\\\\".join([stream_name, stream_description, bg_version, manifest])
+        custom_palette_string = "\\\\".join(custom_palette_attribute_list) + "\\\\"
+    meta_data_string = "\\\\".join([stream_name, stream_description, bg_version])
 
     json_manifest = json.dumps(manifest)
+    logging.debug(f'Manifest JSON:\n\n{json_manifest}')
 
     raw_header = "".join([meta_data_string, custom_palette_string, json_manifest])
     logging.debug(f'Text Header merged: {raw_header}')
 
     raw_header_to_bytes = bytes(raw_header, 'UTF-8')
-    raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes)
+    raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes, byte_output=True)
 
     processed_header = compress_bytes(raw_header_to_bytes)
     if file_mask_enabled and crypto_key:
-        logging.info('Encrypting manifest...')
+        logging.debug('Encrypting...')
         processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
 
+    logging.debug('Text header ready.')
     return processed_header, raw_header_hash_bytes
 
 
@@ -60,7 +63,7 @@ def stream_header_process(size_in_bytes, total_frames, compression_enabled, encr
         adding_bits.append(BitArray(uint=int(stream_palette_id), length=256))
 
     adding_bits.append(BitArray(uint=text_header_processed_length, length=32))
-    adding_bits.append(BitArray(raw_text_header_hash_bytes))
+    adding_bits.append(BitArray(bytes=raw_text_header_hash_bytes))
 
     assert len(bytes(adding_bits)) == 678
 

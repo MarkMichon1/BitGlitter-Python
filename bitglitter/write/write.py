@@ -7,7 +7,7 @@ from bitglitter.config.statisticsmanager import stats_manager
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
 from bitglitter.write.preprocess.preprocessor import PreProcessor
-from bitglitter.write.render import RenderHandler
+from bitglitter.write.renderhandler import RenderHandler
 
 
 def write(
@@ -78,11 +78,12 @@ def write(
 
     else:
         write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
-                                 file_mask_enabled, encryption_key, output_mode, compression_enabled, scrypt_n,
+                                 file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled, scrypt_n,
                                  scrypt_r, scrypt_p, stream_palette_id, header_palette_id, pixel_width, block_height,
-                                 block_width, frames_per_second, max_cpu_cores, preset_used=False)
+                                 block_width, frames_per_second, preset_used=False)
 
     # This sets the name of the temporary folder while the file is being written.
+
     working_dir = settings_manager.WRITE_WORKING_DIR
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
@@ -94,7 +95,8 @@ def write(
                                    stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, settings_manager.BG_VERSION,
-                                   pre_processor.manifest, frames_per_second, output_mode, output_path, output_name)
+                                   pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,
+                                   output_mode, output_path, output_name)
 
     # clean_temporary_directory(working_dir) todo
 

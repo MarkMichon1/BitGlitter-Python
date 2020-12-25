@@ -1,16 +1,13 @@
-import json
 import logging
 import os
-from pathlib import Path
-import time
 
-from bitglitter.utilities.compression import compress_bytes
-from bitglitter.utilities.encryption import encrypt_bytes, get_hash_from_bytes, get_hash_from_file
+from bitglitter.utilities.compression import compress_file
+from bitglitter.utilities.encryption import encrypt_file, get_hash_from_file
 
 
-def directory_crawler(directory_path, processed_path, compression_enabled, crypto_key, scrypt_n,
+def directory_crawler(directory_path, payload_directory, compression_enabled, crypto_key, scrypt_n,
                       scrypt_r, scrypt_p):
-    logging.info(f'Exploring {directory_path}...')
+    logging.info(f'Scanning {directory_path}...')
     manifest = {}
     # Directory keys:
     # n = directory name
@@ -31,23 +28,23 @@ def directory_crawler(directory_path, processed_path, compression_enabled, crypt
     file_manifests = []
     if files:
         for file in files:
-            returned_manifest = process_file(file, processed_path, crypto_key, scrypt_n, scrypt_r, scrypt_p,
-                                              compression_enabled)
+            returned_manifest = process_file(file, payload_directory, crypto_key, scrypt_n, scrypt_r, scrypt_p,
+                                             compression_enabled)
             file_manifests.append(returned_manifest)
         manifest['f'] = file_manifests
 
     directory_manifests = []
     if subdirectories:
         for subdirectory in subdirectories:
-            returned_manifest =  directory_crawler(subdirectory, processed_path, compression_enabled, crypto_key,
-                                                   scrypt_n, scrypt_r, scrypt_p)
+            returned_manifest = directory_crawler(subdirectory, payload_directory, compression_enabled, crypto_key,
+                                                  scrypt_n, scrypt_r, scrypt_p)
             directory_manifests.append(returned_manifest)
         manifest['s'] = directory_manifests
 
     return manifest
 
 
-def process_file(file_abs_path, processed_path, crypto_key, scrypt_n, scrypt_r, scrypt_p, compression_enabled):
+def process_file(file_abs_path, payload_directory, crypto_key, scrypt_n, scrypt_r, scrypt_p, compression_enabled):
     manifest = {}
     # File keys:
     # fn = file name
@@ -64,49 +61,50 @@ def process_file(file_abs_path, processed_path, crypto_key, scrypt_n, scrypt_r, 
     raw_file_hash = get_hash_from_file(file_abs_path)
     manifest['rh'] = raw_file_hash
 
-    # with open(processed_path, 'ab') as byte_write:
-    #     with open(file_abs_path, 'rb') as file_read:
-    #         file_data = file_read.read()
-    #         if compression_enabled or crypto_key:
-    #             if compression_enabled:
-    #                 file_data = compress_bytes(file_data)
-    #             if crypto_key:
-    #                 file_data = encrypt_bytes(file_data, crypto_key, scrypt_n, scrypt_r, scrypt_p)
-    #             processed_file_size = len(file_data)
-    #             processed_file_hash = get_hash_from_bytes(file_data)
-    #             manifest['ps'] = processed_file_size
-    #             manifest['ph'] = processed_file_hash
-    #
-    #         byte_write.write(file_data)
+    if compression_enabled or crypto_key:
 
-    with open(processed_path, 'ab') as byte_write:
-        with open(file_abs_path, 'rb') as file_read:
-            chunk = 1024
+        if compression_enabled:
+            compressed_file_path = payload_directory / 'temp_compressed.bin'
+            compress_file(file_abs_path, compressed_file_path, 'write', remove_input=False)
+            active_processing_path = compressed_file_path
+        if crypto_key:
+            encrypted_file_path = payload_directory / 'temp_encrypted.bin'
+            if compression_enabled:
+                encrypt_file(compressed_file_path, encrypted_file_path, 'write', crypto_key, scrypt_n, scrypt_r,
+                             scrypt_p, remove_input=True)
+            else:
+                encrypt_file(file_abs_path, encrypted_file_path, 'write', crypto_key, scrypt_n, scrypt_r, scrypt_p,
+                             remove_input=False)
+            active_processing_path = encrypted_file_path
+
+        # print(f'ding {active_processing_path}')
+        processed_file_size = active_processing_path.stat().st_size
+        processed_file_hash = get_hash_from_file(active_processing_path)
+        manifest['ps'] = processed_file_size
+        manifest['ph'] = processed_file_hash
+    else:
+        active_processing_path = file_abs_path
+
+    stream_payload_write_path = payload_directory / 'processed.bin'
+    # print(f'stream_payload_write_path {stream_payload_write_path}')
+    # print(f'active_processing_path {active_processing_path}')
+    with open(stream_payload_write_path, 'ab') as byte_write:
+        with open(active_processing_path, 'rb') as byte_read:
+            chunk_size = 1000000
             while True:
-                piece = file_read.read(chunk)
-                if not piece:
+                chunk = byte_read.read(chunk_size)
+                if chunk:
+                    byte_write.write(chunk)
+                else:
                     break
-                print(len(piece))
-            # file_data = file_read.read()
-            # if compression_enabled or crypto_key:
-            #     if compression_enabled:
-            #         file_data = compress_bytes(file_data)
-            #     if crypto_key:
-            #         file_data = encrypt_bytes(file_data, crypto_key, scrypt_n, scrypt_r, scrypt_p)
-            #     processed_file_size = len(file_data)
-            #     processed_file_hash = get_hash_from_bytes(file_data)
-            #     manifest['ps'] = processed_file_size
-            #     manifest['ph'] = processed_file_hash
-            #
-            # byte_write.write(file_data)
+    if compression_enabled or crypto_key:
+        os.remove(active_processing_path)
+
     return manifest
 
-
-# dir_path = Path('/home/m/Desktop/test')
-# processed_path = Path('/home/m/Desktop/testing.bin')
-# returned_manifest = directory_crawler(dir_path, processed_path, True, 'testing', 14, 8, 1)
-# print(returned_manifest) todo remove
-
-# exact_path = Path('/home/m/Desktop/test.mp4')
-# processed_path = Path('/home/m/Desktop/testing.bin')
+# exact_path = Path('/home/m/Desktop/gbo1.jpg')
+# processed_path = Path('/home/m/Desktop/')
+# print('fileprocess')
 # f = process_file(exact_path, processed_path, 'testpass', 14, 8, 1, True)
+# print(f)
+# print('end of file')

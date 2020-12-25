@@ -25,24 +25,16 @@ class PreProcessor:
         logging.info("Preprocess initializing...")
 
         input_path = Path(input_path)
-        self.processed_binary_path = working_directory / 'processed.bin'
         if input_path.is_file():
-            self.manifest = process_file(input_path, self.processed_binary_path, crypto_key, scrypt_n, scrypt_r,
+            self.manifest = process_file(input_path, working_directory, crypto_key, scrypt_n, scrypt_r,
                                          scrypt_p, compression_enabled)
         else:
-            self.manifest = directory_crawler(input_path, self.processed_binary_path, compression_enabled, crypto_key,
+            self.manifest = directory_crawler(input_path, working_directory, compression_enabled, crypto_key,
                                               scrypt_n, scrypt_r, scrypt_p)
 
+        self.processed_binary_path = working_directory / 'processed.bin'
         self.stream_sha = get_hash_from_file(self.processed_binary_path)
-        logging.info(f"SHA-256: {self.stream_sha}")
-
+        logging.info(f"Stream SHA-256 Hash: {self.stream_sha}")
         self.size_in_bytes = return_file_size(self.processed_binary_path)
-        logging.info(f'Pre-processed payload size: {humanize_file_size(self.size_in_bytes)}')
-
-        self.manifest = bytes(json.dumps(self.manifest), 'UTF-8')
-        self.manifest = compress_bytes(self.manifest)
-        if self.encryption_enabled and mask_enabled:
-            logging.info('Encrypting manifest...')
-            self.manifest = encrypt_bytes(self.manifest, crypto_key, scrypt_n, scrypt_r, scrypt_p)
-
+        logging.info(f'Pre-Processed Payload Size: {humanize_file_size(self.size_in_bytes)}')
         logging.info("Preprocess complete.")

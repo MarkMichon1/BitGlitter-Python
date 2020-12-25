@@ -1,5 +1,3 @@
-from bitstring import BitStream, ConstBitStream
-
 import logging
 from multiprocessing import cpu_count, Pool
 from pathlib import Path
@@ -7,8 +5,8 @@ import time
 
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 from bitglitter.write.headers import stream_header_process, text_header_process
-from bitglitter.write.renderworker import render_cycle
-from bitglitter.write.renderutilities import total_frames_estimator
+from bitglitter.write.framestategenerator import frame_state_generator
+from bitglitter.write.renderutilities import draw_frame, total_frames_estimator
 from bitglitter.write.videorender import render_video
 
 
@@ -24,7 +22,7 @@ class RenderHandler:
 
                  # Header
                  stream_sha, size_in_bytes, compression_enabled, encryption_enabled, file_mask_enabled,
-                 datetime_started, bg_version, manifest,
+                 datetime_started, bg_version, manifest, protocol_version,
 
                  # Render Output
                  frames_per_second, output_mode, output_path, output_name
@@ -57,52 +55,38 @@ class RenderHandler:
                                               file_mask_enabled, stream_palette.palette_type == "custom",
                                               datetime_started, stream_palette.id, len(text_header_bytes),
                                               raw_text_header_hash_bytes)
-        if output_mode == 'image':
-            if output_path:
-                frame_output_path = None
-            else:
-                frame_output_path = None
-        else:
-            frame_output_path = working_dir
+        logging.info('Pre-render complete.')
 
         # Render
+        state_generator = frame_state_generator(block_height, block_width, pixel_width, protocol_version,
+                                                initializer_palette, header_palette, stream_palette, output_mode,
+                                                output_path, output_name, working_dir, self.frames_wrote,
+                                                datetime_started, stream_header, text_header_bytes, stream_sha,
+                                                initializer_palette_dict, header_palette_dict, stream_palette_dict)
 
-        # Constants
-        TOTAL_BLOCKS = block_height * block_width
-        INITIALIZER_OVERHEAD = block_height + block_width + 323
-        INITIALIZER_BIT_OVERHEAD = 324
-        FRAME_HEADER_BIT_OVERHEAD = 608
+        # for temp in state_generator:
+        # for i in range(self.frames_wrote):
+        #     draw_frame(*next(state_generator))
 
-        # Final Setup
-        payload = ConstBitStream(filename=Path(working_dir / 'processed.bin'))
-        frame_number = 1
-        primary_frame_palette_dict = header_palette_dict
-        primary_read_length = header_palette.bit_length
-        active_palette = header_palette
-        stream_palette_used = False
-        last_frame = False
-        stream_header = None #refer to unchanged renderloop...
-        stream_header_combined = BitStream(stream_header)
-        stream_header_combined.append(text_header_bytes)
 
         # Multicore Setup
         if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
             pool_size = cpu_count()
         else:
             pool_size = max_cpu_cores
-        worker_pool = Pool(processes=pool_size)
+        with Pool(processes=pool_size) as worker_pool:
+            logging.info(f'Beginning rendering on {pool_size} CPU cores...')
+            worker_pool.starmap(draw_frame, state_generator)
 
-        logging.info(f'Beginning rendering on {None} cores...')
-        frame_number = 1
         last_frame_blocks = 0
 
 
 
         ##########
 
-        if output_mode == 'video':
-            render_video(self.stream_output_path, output_name, datetime_started, working_dir,
-                         self.frame_number_formatted, frames_per_second)
+        # if output_mode == 'video': todo
+        #     render_video(self.stream_output_path, output_name, datetime_started, working_dir,
+        #                  self.frame_number_formatted, frames_per_second)
 
         # Wrap-up
 

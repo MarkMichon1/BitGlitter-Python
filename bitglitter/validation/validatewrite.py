@@ -13,7 +13,6 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
     """This function verifies all write() parameters.  Look at this as the gatekeeper that stops invalid arguments from
      proceeding through the process, potentially breaking the stream (or causing BitGlitter to crash).
     """
-
     logging.info("Verifying write parameters...")
 
     path = Path(input_path)

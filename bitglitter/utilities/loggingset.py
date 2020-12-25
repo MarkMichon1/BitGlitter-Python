@@ -22,7 +22,8 @@ def logging_setter(logging_level, logging_stdout_output, logging_txt_output):
         output_log_handler = logging.FileHandler(log_output_name)
         output_log_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
         output_log_handler.setFormatter(output_log_formatter)
-        output_log.addHandler(output_log_handler)
+        if not output_log.handlers:
+            output_log.addHandler(output_log_handler)
         output_log.setLevel(logging_level_dict[logging_level])
 
     if logging_stdout_output:
@@ -30,5 +31,6 @@ def logging_setter(logging_level, logging_stdout_output, logging_txt_output):
         print_log_handler = logging.StreamHandler()
         print_log_formatter = logging.Formatter("%(asctime)s.%(msecs)03d %(levelname)s %(message)s", "%H:%M:%S")
         print_log_handler.setFormatter(print_log_formatter)
-        print_log.addHandler(print_log_handler)
+        if not print_log.handlers:
+            print_log.addHandler(print_log_handler)
         print_log.setLevel(logging_level_dict[logging_level])

@@ -92,10 +92,7 @@ def _encrypt_bytes_chunk(key, initialization_vector, data, backend, chunk_size=N
     cipher = Cipher(AES(key), modes.CBC(initialization_vector), backend=backend)
     padder = PKCS7(AES.block_size).padder()
     encryptor = cipher.encryptor()
-    if len(data) == chunk_size:
-        return encryptor.update(padder.update(data))
-    else:
-        return encryptor.update(padder.update(data) + padder.finalize()) + encryptor.finalize()
+    return encryptor.update(padder.update(data) + padder.finalize()) + encryptor.finalize()
 
 
 def _decrypt_bytes_chunk(key, initialization_vector_aes, data, backend, chunk_size=None):
@@ -107,7 +104,7 @@ def _decrypt_bytes_chunk(key, initialization_vector_aes, data, backend, chunk_si
     unpadder = PKCS7(AES.block_size).unpadder()
     decryptor = cipher.decryptor()
     if len(data) == chunk_size:
-        return unpadder.update(decryptor.update(data))
+        return unpadder.update(decryptor.update(data) + decryptor.finalize())
     else:
         return unpadder.update(decryptor.update(data) + decryptor.finalize()) + unpadder.finalize()
 
@@ -143,11 +140,3 @@ def get_hash_from_bytes(input_bytes, byte_output=False):
         return sha256.digest()
     else:
         return sha256.hexdigest()
-
-
-import pathlib
-in_file = pathlib.Path('/home/m/Desktop/test.mp4')
-out_file = pathlib.Path('/home/m/Desktop/encrypted.bin')
-final = pathlib.Path('/home/m/Desktop/test2.mp4')
-encrypt_file(in_file, out_file, 'write', 'thepass', 14, 8, 1, remove_input=False)
-decrypt_file(out_file, final, 'thepass', 14, 8, 1, remove_input=False)

@@ -57,7 +57,7 @@ class StatisticsManager(BaseManager):
 
 
 try:
-    with open('statsmanager.bin', 'rb') as unpickler:
+    with open('statisticsmanager.bin', 'rb') as unpickler:
         stats_manager = pickle.load(unpickler)
 
 except:
