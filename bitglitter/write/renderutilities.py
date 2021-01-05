@@ -69,7 +69,7 @@ def total_frames_estimator(block_height, block_width, text_header, size_in_bytes
 
     total_frames = math.ceil(data_left / payload_bits_per_frame) + frame_number
     logging.info(f'{total_frames} frame(s) required for this operation.')
-    return total_frames
+    return total_frames #todo return leftover blocks, bits on last frame
 
 
 def render_coords_generator(block_height, block_width, pixel_width, initializer_enabled):
@@ -83,10 +83,29 @@ def render_coords_generator(block_height, block_width, pixel_width, initializer_
                    (pixel_width * int(initializer_enabled)) + (pixel_width * (yRange + 1) - 1))
 
 
-def draw_frame(block_height, block_width, pixel_width, frame_payload, date_created, initializer_palette_blocks_used,
-               primary_frame_palette_dict, primary_read_length, initializer_palette_dict, initializer_palette,
-               output_mode, output_name, initializer_enabled, frame_number, total_frames, image_output_path):
-    logging.info(f'Rendering frame {frame_number} of {total_frames} ...')
+def draw_frame(dict_obj):
+
+    # Unpacking dictionary object into variables to easier reading of function.  A single argument must be passed
+    # here because multiprocessing's imap requires it.
+    block_height = dict_obj['block_height']
+    block_width = dict_obj['block_width']
+    pixel_width = dict_obj['pixel_width']
+    frame_payload = dict_obj['frame_payload']
+    date_created = dict_obj['date_created']
+    initializer_palette_blocks_used = dict_obj['initializer_palette_blocks_used']
+    primary_frame_palette_dict = dict_obj['primary_frame_palette_dict']
+    primary_read_length = dict_obj['primary_read_length']
+    initializer_palette_dict = dict_obj['initializer_palette_dict']
+    initializer_palette = dict_obj['initializer_palette']
+    output_mode = dict_obj['output_mode']
+    output_name = dict_obj['output_name']
+    initializer_enabled = dict_obj['initializer_enabled']
+    frame_number = dict_obj['frame_number']
+    total_frames = dict_obj['total_frames']
+    image_output_path = dict_obj['image_output_path']
+
+
+    logging.debug(f'Rendering {frame_number} of {total_frames} ...')
 
     image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'white')
     draw = ImageDraw.Draw(image)

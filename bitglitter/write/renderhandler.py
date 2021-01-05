@@ -58,25 +58,29 @@ class RenderHandler:
         logging.info('Pre-render complete.')
 
         # Render
-        state_generator = frame_state_generator(block_height, block_width, pixel_width, protocol_version,
-                                                initializer_palette, header_palette, stream_palette, output_mode,
-                                                output_path, output_name, working_dir, self.frames_wrote,
-                                                datetime_started, stream_header, text_header_bytes, stream_sha,
-                                                initializer_palette_dict, header_palette_dict, stream_palette_dict)
-
-        # for temp in state_generator:
-        # for i in range(self.frames_wrote):
-        #     draw_frame(*next(state_generator))
-
+        # state_generator = frame_state_generator(block_height, block_width, pixel_width, protocol_version,
+        #                                         initializer_palette, header_palette, stream_palette, output_mode,
+        #                                         output_path, output_name, working_dir, self.frames_wrote,
+        #                                         datetime_started, stream_header, text_header_bytes, stream_sha,
+        #                                         initializer_palette_dict, header_palette_dict, stream_palette_dict)
 
         # Multicore Setup
         if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
             pool_size = cpu_count()
         else:
             pool_size = max_cpu_cores
+
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU cores...')
-            worker_pool.starmap(draw_frame, state_generator)
+            count = 1
+            for frame in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width, pixel_width,
+                                            protocol_version, initializer_palette, header_palette, stream_palette,
+                                            output_mode, output_path, output_name, working_dir, self.frames_wrote,
+                                            datetime_started, stream_header, text_header_bytes, stream_sha,
+                                            initializer_palette_dict, header_palette_dict, stream_palette_dict),
+                                            chunksize=1):
+                logging.info(f'Processing frame {count} of {self.frames_wrote}...')
+                count += 1
 
         last_frame_blocks = 0
 

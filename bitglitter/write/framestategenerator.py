@@ -47,7 +47,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
     # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
     while payload.bitpos != payload.length:
 
-        logging.info(f'Rendering frame {frame_number} of {total_frames} ...')
+        logging.debug(f'Generating frame data for {frame_number} of {total_frames} ...')
 
         stream_header_chunk = BitStream()
         payload_holder = BitStream()
@@ -91,7 +91,6 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
                 logging.debug('Payload termination frame')
                 payload_holder = payload.read(max_allowable_payload_bits)
                 last_frame = True
-
 
         # Frames that need stream_header_combined added to them.
         else:
@@ -146,7 +145,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
         # On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
         # cleanly fits into the block.
-        if last_frame == True:
+        if last_frame:
 
             remainder_bits = active_palette.bit_length - (combined_frame_length % active_palette.bit_length)
             if remainder_bits == active_palette.bit_length:
@@ -160,8 +159,14 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
                          + remainder_blocks_into_bits + payload_holder + bits_to_pad
         frame_payload = ConstBitStream(combining_bits)
 
-        yield block_height, block_width, pixel_width, frame_payload, date_created, initializer_palette_blocks_used, \
-              primary_frame_palette_dict, primary_read_length, initializer_palette_dict, initializer_palette, \
-              output_mode, output_name, initializer_enabled, frame_number, total_frames, image_output_path
+        yield {
+            'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
+            frame_payload, 'date_created': date_created, 'initializer_palette_blocks_used':
+            initializer_palette_blocks_used, 'primary_frame_palette_dict': primary_frame_palette_dict,
+            'primary_read_length': primary_read_length, 'initializer_palette_dict': initializer_palette_dict,
+            'initializer_palette': initializer_palette, 'output_mode': output_mode, 'output_name': output_name,
+            'initializer_enabled': initializer_enabled, 'frame_number': frame_number, 'total_frames': total_frames,
+            'image_output_path': image_output_path,
+        }
 
         frame_number += 1
