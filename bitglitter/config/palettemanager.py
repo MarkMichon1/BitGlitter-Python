@@ -1,3 +1,4 @@
+from pathlib import Path
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
@@ -121,7 +122,9 @@ class PaletteManager(BaseManager):
 
 
 try:
-    with open('palettemanager.bin', 'rb') as unpickler:
+    current_directory = Path(__file__).resolve().parent
+    pickle_path = current_directory / 'palettemanager.bin'
+    with open(pickle_path, 'rb') as unpickler:
         palette_manager = pickle.load(unpickler)
 
 except:

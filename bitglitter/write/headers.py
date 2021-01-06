@@ -21,7 +21,7 @@ def text_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, scryp
         custom_palette_attribute_list = [stream_palette.id, stream_palette.name, stream_palette.description,
                                          str(stream_palette.datetime_started), str(stream_palette.color_set)]
         custom_palette_string = "\\\\".join(custom_palette_attribute_list) + "\\\\"
-    meta_data_string = "\\\\".join([stream_name, stream_description, bg_version])
+    meta_data_string = "\\\\".join([stream_name, stream_description, bg_version]) + '\\\\'
 
     json_manifest = json.dumps(manifest)
     logging.debug(f'Manifest JSON:\n\n{json_manifest}')

@@ -15,27 +15,27 @@ def total_frames_estimator(block_height, block_width, text_header, size_in_bytes
 
     logging.debug("Calculating how many frames to render...")
 
-    total_blocks = block_height * block_width
-    stream_header_overhead_in_bits = 678 + (len(text_header) * 8)
-    stream_size_in_bits = (size_in_bytes * 8)
-    header_bit_length = header_palette.bit_length
-    stream_bit_length = stream_palette.bit_length
+    TOTAL_BLOCKS = block_height * block_width
+    STREAM_HEADER_OVERHEAD_IN_BITS = 678 + (len(text_header) * 8)
+    STREAM_SIZE_IN_BITS = (size_in_bytes * 8)
+    HEADER_BIT_LENGTH = header_palette.bit_length
+    STREAM_BIT_LENGTH = stream_palette.bit_length
 
     # Overhead constants
-    initializer_overhead = block_height + block_width + 323
-    frame_header_overhead = 608
+    INITIALIZER_OVERHEAD = block_height + block_width + 323
+    FRAME_HEADER_OVERHEAD = 608
 
-    data_left = stream_size_in_bits
+    data_left = STREAM_SIZE_IN_BITS
     frame_number = 0
-    stream_header_bits_left = stream_header_overhead_in_bits  # subtract until zero
+    stream_header_bits_left = STREAM_HEADER_OVERHEAD_IN_BITS  # subtract until zero
 
     while stream_header_bits_left:
 
-        bits_consumed = frame_header_overhead
-        blocks_left = total_blocks
-        blocks_left -= (initializer_overhead * int(output_mode == 'image' or frame_number == 0))
+        bits_consumed = FRAME_HEADER_OVERHEAD
+        blocks_left = TOTAL_BLOCKS
+        blocks_left -= (INITIALIZER_OVERHEAD * int(output_mode == 'image' or frame_number == 0))
 
-        stream_header_bits_available = (blocks_left * header_bit_length) - frame_header_overhead
+        stream_header_bits_available = (blocks_left * HEADER_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
 
         if stream_header_bits_left >= stream_header_bits_available:
             stream_header_bits_left -= stream_header_bits_available
@@ -52,7 +52,7 @@ def total_frames_estimator(block_height, block_width, text_header, size_in_bytes
                 data_left -= attachment_bits
 
             remaining_blocks_left = blocks_left - stream_header_blocks_used
-            leftover_frame_bits = remaining_blocks_left * header_bit_length
+            leftover_frame_bits = remaining_blocks_left * HEADER_BIT_LENGTH
 
             if leftover_frame_bits > data_left:
                 data_left = 0
@@ -64,23 +64,23 @@ def total_frames_estimator(block_height, block_width, text_header, size_in_bytes
 
     # Calculating how much data can be embedded in a regular frame_payload frame, and returning the total frame count
     # needed.
-    blocks_left = total_blocks - (initializer_overhead * int(output_mode == 'image'))
-    payload_bits_per_frame = (blocks_left * stream_bit_length) - frame_header_overhead
-
+    blocks_left = TOTAL_BLOCKS - (INITIALIZER_OVERHEAD * int(output_mode == 'image'))
+    payload_bits_per_frame = (blocks_left * STREAM_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
     total_frames = math.ceil(data_left / payload_bits_per_frame) + frame_number
+
     logging.info(f'{total_frames} frame(s) required for this operation.')
-    return total_frames #todo return leftover blocks, bits on last frame
+    return total_frames
 
 
 def render_coords_generator(block_height, block_width, pixel_width, initializer_enabled):
     """This generator yields the coordinates for each of the blocks used, depending on the geometry of the frame."""
 
-    for yRange in range(block_height - int(initializer_enabled)):
-        for xRange in range(block_width - int(initializer_enabled)):
-            yield ((pixel_width * int(initializer_enabled)) + (pixel_width * xRange),
-                   (pixel_width * int(initializer_enabled)) + (pixel_width * yRange),
-                   (pixel_width * int(initializer_enabled)) + (pixel_width * (xRange + 1) - 1),
-                   (pixel_width * int(initializer_enabled)) + (pixel_width * (yRange + 1) - 1))
+    for y_range in range(block_height - int(initializer_enabled)):
+        for x_range in range(block_width - int(initializer_enabled)):
+            yield ((pixel_width * int(initializer_enabled)) + (pixel_width * x_range),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * y_range),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * (x_range + 1) - 1),
+                   (pixel_width * int(initializer_enabled)) + (pixel_width * (y_range + 1) - 1))
 
 
 def draw_frame(dict_obj):
@@ -103,11 +103,12 @@ def draw_frame(dict_obj):
     frame_number = dict_obj['frame_number']
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
+    stream_sha = dict_obj['stream_sha']
 
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
 
-    image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'white')
+    image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
     draw = ImageDraw.Draw(image)
 
     if initializer_enabled:
@@ -151,11 +152,9 @@ def draw_frame(dict_obj):
         if output_name:
             file_name = output_name + ' - ' + str(frame_number)
         else:
-            file_name = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(date_created)) + ' - ' + str(frame_number)
+            file_name = stream_sha + ' - ' + str(frame_number)
 
-    number_of_frame_digits = len(str(frame_number))
     save_path = Path(image_output_path / f'{str(file_name)}.png')
     image.save(save_path)
-    frame_number += 1
 
-    return block_position, number_of_frame_digits
+    return block_position

@@ -12,28 +12,31 @@ class SettingsManager(BaseManager):
         self._SAVE_FILE_NAME = 'settingsmanager'
 
         # Constants
-        self.BG_VERSION = '1.1'  # Change this during version updates!  Used for internal/debug stuff.
+        self.BG_VERSION = '2.0'  # Change this during version updates!  Used for internal/debug stuff.
         self.PROTOCOL_VERSION = 1 # This will be moved when we have more protocols.
         self.WRITE_WORKING_DIR = Path(__file__).resolve().parent.parent / 'Temp'
-        self.DEFAULT_PARTIAL_SAVE_PATH = Path(__file__).resolve().parent.parent / 'Partial Stream Saves'
+        self.DEFAULT_OUTPUT_PATH = Path(__file__).resolve().parent.parent / 'Render Output'
+        self.DEFAULT_PARTIAL_SAVE_PATH = Path(__file__).resolve().parent.parent / 'Partial Stream Data'
         self.VALID_VIDEO_FORMATS = ['.avi', '.flv', '.mov', '.mp4', '.wmv']
         self.VALID_IMAGE_FORMATS = ['.bmp', '.jpg', '.png']
 
-        # 
+        # Configurable
         self.default_bad_frame_strikes = 10
-        self.write_path = None  # todo: implement and add as utility external function
-        self.log_txt_path = None  # todo... implement
-        self.maximum_cpu_cores = 0
-        self.save_past_write_data = None
+        self.write_path = self.DEFAULT_OUTPUT_PATH # Desktop
+        self.log_txt_path = Path(__file__).resolve().parent.parent / 'Logs'
+        self.maximum_cpu_cores = 0 # unused for library, will be used in Desktop version.
+        self.save_statistics = True # Desktop
 
         self._save()
 
     def ffmpeg_verify(self):
-        pass  # todo
+        pass  # Desktop
 
 
 try:
-    with open('settingsmanager.bin', 'rb') as unpickler:
+    current_directory = Path(__file__).resolve().parent
+    pickle_path = current_directory / 'settingsmanager.bin'
+    with open(pickle_path, 'rb') as unpickler:
         settings_manager = pickle.load(unpickler)
 
 except:

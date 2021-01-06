@@ -1,6 +1,9 @@
+import logging
+from pathlib import Path
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
+from bitglitter.utilities.display import humanize_file_size
 
 
 class StatisticsManager(BaseManager):
@@ -20,14 +23,14 @@ class StatisticsManager(BaseManager):
 
         self._save()
 
-    def __str__(self):  # todo strip?
+    def __str__(self):
         """This is used by output_stats() in configfunctions to output a nice formatted text file showing usage
         statistics.
         """
 
         return ('*' * 21 + '\nStatistics\n' + '*' * 21 + f'\n\nTotal Blocks Wrote: {self.blocks_wrote}'
                                                          f'\nTotal Frames Wrote: {self.frames_wrote}'
-                                                         f'\nTotal Data Wrote: {int(self.data_wrote / 8)} B'
+                                                         f'\nTotal Data Wrote: {humanize_file_size(self.data_wrote)}'
                                                          f'\n\nTotal Blocks Read: {self.blocks_read}'
                                                          f'\nTotal Frames Read: {self.frames_read}'
                                                          f'\nTotal Data Read: {int(self.data_read / 8)} B')
@@ -37,14 +40,19 @@ class StatisticsManager(BaseManager):
         self.frames_wrote += frames
         self.data_wrote += data
         self._save()
+        logging.debug(f'Write stats update:\n{blocks} new blocks, {frames} frames, {humanize_file_size(data)} data ->'
+                      f' {self.blocks_wrote} total blocks, {self.frames_wrote} frames, '
+                      f'{humanize_file_size(self.data_wrote)} data.')
 
     def read_update(self, blocks, frames, data):
-        """Deprecated.  May be removed."""
 
-        self.blocks_read += blocks
+        self.blocks_read += blocks #todo add this to read
         self.frames_read += frames
         self.data_read += data
         self._save()
+        logging.debug(f'Read stats update:\n{blocks} new blocks, {frames} frames, {humanize_file_size(data)} data ->'
+                      f' {self.blocks_read} total blocks, {self.frames_read} frames,'
+                      f' {humanize_file_size(self.data_read)} data.')
 
     def clear_stats(self):
         self.blocks_wrote = 0
@@ -57,7 +65,9 @@ class StatisticsManager(BaseManager):
 
 
 try:
-    with open('statisticsmanager.bin', 'rb') as unpickler:
+    current_directory = Path(__file__).resolve().parent
+    pickle_path = current_directory / 'statsmanager.bin'
+    with open(pickle_path, 'rb') as unpickler:
         stats_manager = pickle.load(unpickler)
 
 except:

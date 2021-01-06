@@ -1,3 +1,4 @@
+from pathlib import Path
 import pickle
 
 from bitglitter.config.basemanager import BaseManager
@@ -10,7 +11,7 @@ class PresetManager(BaseManager):
         super().__init__()
         self._SAVE_FILE_NAME = 'presetmanager'
 
-        self.base_preset = Preset('base')
+        self.base_preset = Preset('base') #desktop
         self.preset_dict = {}
 
         self._save()
@@ -46,6 +47,15 @@ class PresetManager(BaseManager):
             return self.preset_dict[nickname]
         except:
             raise ValueError(f'write() preset \'{nickname}\' does not exist.')
+
+    def remove_preset(self, nickname):
+        if not self.preset_dict[nickname]:
+            raise ValueError(f'\'{nickname}\' does not exist as a preset nickname')
+        del self.preset_dict[nickname]
+
+    def remove_all_presets(self):
+        self.preset_dict = {}
+        self._save()
 
 
 class Preset:
@@ -87,7 +97,9 @@ class Preset:
 
 
 try:
-    with open('presetmanager.bin', 'rb') as unpickler:
+    current_directory = Path(__file__).resolve().parent
+    pickle_path = current_directory / 'presetmanager.bin'
+    with open(pickle_path, 'rb') as unpickler:
         preset_manager = pickle.load(unpickler)
 
 except:

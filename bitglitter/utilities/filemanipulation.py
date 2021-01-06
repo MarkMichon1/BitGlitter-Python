@@ -19,6 +19,17 @@ def refresh_working_folder(active_path):
     return activeFolder
 
 
+def remove_working_folder(working_directory):
+    if os.path.isdir(working_directory):
+        logging.debug('Purging working directory...')
+        shutil.rmtree(working_directory)
+
+def create_default_output_folder(default_output_path):
+    if not os.path.isdir(default_output_path):
+        logging.debug('Default output directory does not exist.  Creating...')
+        os.mkdir(default_output_path)
+
+
 def return_file_size(file_path):
     '''This is taking the final size of the pre-processed file, and this number will be used in the rendering process.
     '''

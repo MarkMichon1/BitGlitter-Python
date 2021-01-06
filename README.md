@@ -162,25 +162,21 @@ In addition to downloading the code from Github, you can also grab it directly f
 
 `pip install bitglitter`
 
-**IMPORTANT:** The only part you will need to grab manually is a copy of ffmpeg.exe .  Place it in the same folder the 
-code will be running, and you'll be set.  This will be done automatically in the near future.  Get the package here on
-the left side of the screen:
+<span style="color:red">**IMPORTANT:**</span> FFmpeg, a free small library must be installed on your machine in order to properly render video.
+.
+Installing on Ubuntu is fast and easy:
 
-[https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+`sudo apt update`
 
-ffmpeg.exe is all that is needed.
+`sudo apt install ffmpeg`
 
-**Required Third Party Libraries**
+Windows takes a few more steps, but its still quite fast.  This will show you how:
 
-+ `bitstring` - Bit manipulation.
-+ `cryptography` - Cryptographic functions.
-+ `ffmpeg-python` - Video rendering and output.
-+ `opencv-python` - Video loading and frame manipulation.
-+ `Pillow` - Frame creation and output, as well as loading images and reading pixel values.
+[https://www.wikihow.com/Install-FFmpeg-on-Windows](https://www.wikihow.com/Install-FFmpeg-on-Windows)
 
-**BitGlitter in 60 seconds**
+###**BitGlitter in 20 seconds**
 
-Even though it comes shipped with a lot of functionality, all you need to use it is `write()` (creates the streams) and 
+While theres a lot of functionality, all you *need* to use it is `write()` (creates the streams) and 
 `read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
 wish to input in string format.
 
@@ -436,11 +432,20 @@ position and color value; *a codec's purpose is to blur those precise values to 
 file size.*  While BitGlitter will detect corruption and perform an "emergency stop," I know you don't want to deal with
 that, and neither do the people you're sharing with.
 
-In closing, know the environment the video will be used in to ensure success in reading it.
+In closing, know the environment the video will be used in to ensure success in reading it.  And fortunately, the
+ability to finely control the stream to accomodate the environment is not just possible, but simple.  :)
 
 # Acknowledgements
 Thank you to Tanmay Mishra for giving me guidance during planning of the library, as well as its initial development.
 A big thank you to Jack Robison as well for his continued advice.
+
+**The third party libraries that make BitGlitter possible:**
+
++ `bitstring` - Bit manipulation
++ `cryptography` - Cryptographic functions
++ `ffmpeg-python` - Video rendering and output
++ `opencv-python` - Video loading and frame manipulation
++ `Pillow` - Frame creation and output, as well as loading images and reading pixel values
 
 # MIT License
 © 2019 - ∞ Mark Michon

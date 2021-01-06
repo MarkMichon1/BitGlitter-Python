@@ -1,9 +1,9 @@
 import time
 
-from bitglitter.config.pastwritemanager import past_write_manager
 from bitglitter.config.presetmanager import preset_manager
 from bitglitter.config.settingsmanager import settings_manager
 from bitglitter.config.statisticsmanager import stats_manager
+from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
 from bitglitter.write.preprocess.preprocessor import PreProcessor
@@ -49,8 +49,7 @@ def write(
         logging_txt_output=False,
 
         # Session Data
-        save_session_overview=False, #todo readme
-        save_statistics=False #todo readme
+        save_statistics=False
 ):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
     information.
@@ -85,33 +84,28 @@ def write(
     # This sets the name of the temporary folder while the file is being written.
 
     working_dir = settings_manager.WRITE_WORKING_DIR
+    default_output_path = settings_manager.DEFAULT_OUTPUT_PATH
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     pre_processor = PreProcessor(working_dir, input_path, encryption_key, file_mask_enabled, compression_enabled,
                                  scrypt_n, scrypt_r, scrypt_p)
 
-    render_handler = RenderHandler(stream_name, stream_description, working_dir, encryption_key, scrypt_n, scrypt_r,
-                                   scrypt_p, block_height, block_width, pixel_width, header_palette_id,
-                                   stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
+    render_handler = RenderHandler(stream_name, stream_description, working_dir, default_output_path, encryption_key,
+                                   scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
+                                   header_palette_id, stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, settings_manager.BG_VERSION,
                                    pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,
                                    output_mode, output_path, output_name)
 
-    # clean_temporary_directory(working_dir) todo
+    #remove_working_folder(working_dir)
 
-    if save_session_overview:
-        past_write_manager.add_new() #todo values
 
     if save_statistics:
         stats_manager.write_update(render_handler.blocks_wrote, render_handler.frames_wrote,
                                    pre_processor.size_in_bytes)
 
-    # Putting together a dictionary to return with an overview of the write session.
-    returned_write_overview = { #todo fill out
-        'write_start': pre_processor.datetime_started,
-        'write_end': time.time(),
-
-    }
-
-    return returned_write_overview
+    print(pre_processor.datetime_started)
+    print(time.time()) #todo temp
+    print(time.time()-pre_processor.datetime_started)
+    return pre_processor.stream_sha

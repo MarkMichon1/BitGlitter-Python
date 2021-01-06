@@ -1,23 +1,27 @@
 import logging
+from pathlib import Path
 import time
 
 import ffmpeg
 
 
-def render_video(stream_output_path, output_name, date_created, image_input_path, frame_number_formatted,
-                 frames_per_second):
+def render_video(stream_output_path, default_output_path, output_name, date_created, working_directory, total_frames,
+                 frames_per_second, stream_sha):
     """Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 ."""
 
     logging.info('Rendering video...')
-    video_output_path = ''
     if stream_output_path:
-        video_output_path = stream_output_path + '\\'
+        video_output_path = stream_output_path
+    else:
+        video_output_path = default_output_path
     if output_name:
         video_name = output_name
     else:
-        video_name = {time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(date_created))}
-    logging.info(f'{video_output_path}{video_name}.mp4')
-    (ffmpeg
-     .input(f'{image_input_path}%{len(frame_number_formatted)}d.png', framerate=frames_per_second)
-     .output(f'{video_output_path}{video_name}.mp4')
-     .run())
+        video_name = stream_sha
+
+    formatted_input_path = Path(working_directory / f'%{len(str(total_frames))}d.png')
+    save_path = f"{Path(video_output_path / video_name)}.mp4"
+    ffmpeg.input(formatted_input_path, framerate=frames_per_second).output(save_path).run()
+
+    logging.info('Rendering video complete.')
+    logging.info(f'Video save path: {save_path}')

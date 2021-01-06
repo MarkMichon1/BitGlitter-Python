@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
+from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.headers import stream_header_process, text_header_process
 from bitglitter.write.framestategenerator import frame_state_generator
 from bitglitter.write.renderutilities import draw_frame, total_frames_estimator
@@ -15,7 +16,8 @@ class RenderHandler:
     def __init__(self,
 
                  # Basic Setup
-                 stream_name, stream_description, working_dir, crypto_key, scrypt_n, scrypt_r, scrypt_p,
+                 stream_name, stream_description, working_dir, default_output_path, crypto_key, scrypt_n, scrypt_r,
+                 scrypt_p,
 
                  # Stream Rendering
                  block_height, block_width, pixel_width, header_palette_id, stream_palette_id, max_cpu_cores,
@@ -35,6 +37,7 @@ class RenderHandler:
         # Pre render
 
         logging.info('Beginning pre-render processes...')
+        create_default_output_folder(default_output_path)
         initializer_palette = palette_grabber('1')
         header_palette = palette_grabber(header_palette_id)
         stream_palette = palette_grabber(stream_palette_id)
@@ -58,41 +61,38 @@ class RenderHandler:
         logging.info('Pre-render complete.')
 
         # Render
-        # state_generator = frame_state_generator(block_height, block_width, pixel_width, protocol_version,
-        #                                         initializer_palette, header_palette, stream_palette, output_mode,
-        #                                         output_path, output_name, working_dir, self.frames_wrote,
-        #                                         datetime_started, stream_header, text_header_bytes, stream_sha,
-        #                                         initializer_palette_dict, header_palette_dict, stream_palette_dict)
 
-        # Multicore Setup
         if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
             pool_size = cpu_count()
         else:
             pool_size = max_cpu_cores
 
+        block_position = 0
+
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU cores...')
             count = 1
-            for frame in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width, pixel_width,
-                                            protocol_version, initializer_palette, header_palette, stream_palette,
-                                            output_mode, output_path, output_name, working_dir, self.frames_wrote,
-                                            datetime_started, stream_header, text_header_bytes, stream_sha,
-                                            initializer_palette_dict, header_palette_dict, stream_palette_dict),
-                                            chunksize=1):
-                logging.info(f'Processing frame {count} of {self.frames_wrote}...')
+            for frame_process in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
+                                            pixel_width, protocol_version, initializer_palette, header_palette,
+                                            stream_palette, output_mode, output_path, output_name, working_dir,
+                                            self.frames_wrote, datetime_started, stream_header, text_header_bytes,
+                                            stream_sha, initializer_palette_dict, header_palette_dict,
+                                            stream_palette_dict, default_output_path), chunksize=1):
+
+
+                block_position = frame_process
+                logging.info(f'Processing frame {count} of {self.frames_wrote}... '
+                             f'({round(((count/self.frames_wrote) * 100), 2)} %)')
+
                 count += 1
+        logging.info('Rendering frames complete.')
 
-        last_frame_blocks = 0
+        # Video Render
 
-
-
-        ##########
-
-        # if output_mode == 'video': todo
-        #     render_video(self.stream_output_path, output_name, datetime_started, working_dir,
-        #                  self.frame_number_formatted, frames_per_second)
+        if output_mode == 'video':
+            render_video(output_path, default_output_path, output_name, datetime_started, working_dir,
+                         self.frames_wrote, frames_per_second, stream_sha)
 
         # Wrap-up
 
-        self.datetime_finished = time.time()
-        self.blocks_wrote = (block_width * block_height) * self.frames_wrote + last_frame_blocks
+        self.blocks_wrote = (block_width * block_height) * self.frames_wrote + block_position

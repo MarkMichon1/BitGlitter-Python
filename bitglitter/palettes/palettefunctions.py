@@ -1,7 +1,7 @@
 import os
 import time
 
-from bitglitter.config.config import config
+from bitglitter.config.palettemanager import palette_manager
 from bitglitter.palettes.utilities import _add_custom_palette_direct, color_distance, return_palette_id
 from bitglitter.verification.generalverifyfunctions import proper_string_syntax
 
@@ -15,10 +15,10 @@ def _dict_popper(id_or_nick):
     (if available), and  then return the object to optionally be modified (or otherwise discarded)
     '''
 
-    if id_or_nick in config.palette_handler.custom_palette_nickname_list:
-        temp_holder = config.palette_handler.custom_palette_nickname_list[id_or_nick]
-        del config.palette_handler.custom_palette_list[temp_holder.id]
-        return config.palette_handler.custom_palette_nickname_list.pop(id_or_nick)
+    if id_or_nick in palette_manager.custom_palette_nickname_list:
+        temp_holder = palette_manager.custom_palette_nickname_list[id_or_nick]
+        del palette_manager.custom_palette_list[temp_holder.id]
+        return palette_manager.custom_palette_nickname_list.pop(id_or_nick)
 
     elif id_or_nick in config.palette_handler.custom_palette_list:
         temp_holder = config.palette_handler.custom_palette_list[id_or_nick]
