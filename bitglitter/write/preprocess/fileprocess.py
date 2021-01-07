@@ -77,7 +77,6 @@ def process_file(file_abs_path, payload_directory, crypto_key, scrypt_n, scrypt_
                              remove_input=False)
             active_processing_path = encrypted_file_path
 
-        # print(f'ding {active_processing_path}')
         processed_file_size = active_processing_path.stat().st_size
         processed_file_hash = get_hash_from_file(active_processing_path)
         manifest['ps'] = processed_file_size
@@ -86,8 +85,7 @@ def process_file(file_abs_path, payload_directory, crypto_key, scrypt_n, scrypt_
         active_processing_path = file_abs_path
 
     stream_payload_write_path = payload_directory / 'processed.bin'
-    # print(f'stream_payload_write_path {stream_payload_write_path}')
-    # print(f'active_processing_path {active_processing_path}')
+
     with open(stream_payload_write_path, 'ab') as byte_write:
         with open(active_processing_path, 'rb') as byte_read:
             chunk_size = 1000000
@@ -101,10 +99,3 @@ def process_file(file_abs_path, payload_directory, crypto_key, scrypt_n, scrypt_
         os.remove(active_processing_path)
 
     return manifest
-
-# exact_path = Path('/home/m/Desktop/gbo1.jpg')
-# processed_path = Path('/home/m/Desktop/')
-# print('fileprocess')
-# f = process_file(exact_path, processed_path, 'testpass', 14, 8, 1, True)
-# print(f)
-# print('end of file')

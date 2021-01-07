@@ -1,10 +1,11 @@
 import math
 
+
 def palette_verify(header_type, bit_length, block_width, block_height, output_type, fps=0):
-    '''This function calculates the necessary overhead for both images and videos for subsequent frames after 1.  It
+    """This function calculates the necessary overhead for both images and videos for subsequent frames after 1.  It
     returns a number between 0-100%, for what percentage the overhead occupies.  The lower the value, the higher the
     frame efficiency.
-    '''
+    """
 
     total_blocks = block_width * block_height
 

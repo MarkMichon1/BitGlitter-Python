@@ -41,22 +41,28 @@
 
 # CORE USES
 from bitglitter.write.write import write
-# from bitglitter.read.read import read
-#
-#
-# # GENERAL CONFIGURATION
-# from bitglitter.config.configfunctions import clear_session, clear_stats, output_stats
-#
-#
-# # PARTIAL SAVE CONTROL
-# from bitglitter.read.savedfilefunctions import begin_assembly, print_full_save_list, remove_partial_save, \
-#     update_partial_save, remove_all_partial_saves
-#
-#
-# # CUSTOM PALETTE
-# from bitglitter.palettes.functions import add_custom_palette, edit_nickname_to_custom_palette, \
-#     clear_all_custom_palettes, clear_custom_palette_nicknames, print_full_palette_list, remove_custom_palette, \
-#     remove_custom_palette_nickname
+# from bitglitter.read.read import read todo uncomment
 
-# GUI interface
-# Coming to a repository near you...
+
+# GENERAL CONFIGURATION
+from bitglitter.config.configfunctions import remove_session
+
+# READ CONFIGURATION
+# from bitglitter.config.readfunctions import * todo
+
+# PALETTE CONFIGURATION
+from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
+    remove_all_custom_palettes, remove_all_custom_palette_nicknames, remove_custom_palette, \
+    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes
+
+# PRESET CONFIGURATION
+from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
+    return_all_preset_data, return_preset_data
+
+# STATISTICS CONFIGURATION
+from bitglitter.config.statisticsfunctions import clear_stats, output_stats
+
+
+# Desktop App
+# https://github.com/MarkMichon1/BitGlitter-GUI
+# Coming soon!

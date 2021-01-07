@@ -1,8 +1,11 @@
 from pathlib import Path
 import pickle
+import time
 
 from bitglitter.config.basemanager import BaseManager
-from bitglitter.palettes.palettes import DefaultPalette, TwentyFourBitPalette
+from bitglitter.palettes.palettes import CustomPalette, DefaultPalette, TwentyFourBitPalette
+from bitglitter.palettes.utilities import get_color_distance, get_palette_id_from_hash
+from bitglitter.validation.utilities import proper_string_syntax
 
 
 class PaletteManager(BaseManager):
@@ -35,9 +38,9 @@ class PaletteManager(BaseManager):
 
                                      '3': DefaultPalette("3 Bit Default",
                                                          "Eight colors.", (
-                                                         (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255),
-                                                         (255, 255, 0), (0, 255, 255),
-                                                         (255, 0, 255), (255, 255, 255)), 255, 3),
+                                                             (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255),
+                                                             (255, 255, 0), (0, 255, 255),
+                                                             (255, 0, 255), (255, 255, 255)), 255, 3),
 
                                      '4': DefaultPalette("4 Bit Default", "Sixteen colors.",
                                                          ((0, 0, 0), (128, 128, 128),
@@ -115,10 +118,127 @@ class PaletteManager(BaseManager):
                                      '24': TwentyFourBitPalette()
                                      }
 
-        self.custom_palette_list = {}
-        self.custom_palette_nickname_list = {}
+        self.custom_palette_dict = {}
+        self.custom_palette_nickname_dict = {}
+        self._save()
+
+    def _return_popped_palette(self, id_or_nick):
+
+        if id_or_nick in self.custom_palette_dict:
+            palette = self.custom_palette_dict.pop(id_or_nick)
+            if palette.nickname in self.custom_palette_nickname_dict:
+                del self.custom_palette_nickname_dict[palette.nickname]
+            self._save()
+            return palette
+
+        elif id_or_nick in self.custom_palette_nickname_dict:
+            palette = self.custom_palette_nickname_dict.pop(id_or_nick)
+            del self.custom_palette_dict[palette.palette_id]
+            self._save()
+            return palette
+
+        else:
+            raise ValueError(f"'{id_or_nick}' does not exist.")
+
+    def add_custom_palette(self, name, description, color_set, optional_nickname):
+        """Validates and then adds custom palette."""
+
+        date_created = str(round(time.time()))
+        name_string = str(name)
+        description_string = str(description)
+        nickname_string = str(optional_nickname)
+
+        proper_string_syntax(name_string)
+        proper_string_syntax(description_string)
+
+        proper_string_syntax(nickname_string)
+        if optional_nickname in palette_manager.custom_palette_nickname_dict or optional_nickname in \
+                palette_manager.custom_palette_dict or optional_nickname in palette_manager.DEFAULT_PALETTE_LIST:
+            raise ValueError(f"'{optional_nickname}' is already taken, please choose another nickname.")
+
+        # Verifying color set parameters.  2^n length, 3 values per color, values are type int, values are 0-255.
+        # Finally, verify colors aren't overlapping (ie, the same color is used twice).
+        if len(color_set) % 2 != 0 or len(color_set) < 2:
+            raise ValueError(
+                "Length of color set must be 2^n length (2 colors, 4, 8, etc) with a minimum of two colors.")
+
+        for color_tuple in color_set:
+
+            if len(color_tuple) != 3:
+                raise ValueError("Each color needs 3 entries, for red green and blue.")
+
+            for color in color_tuple:
+                if not isinstance(color, int) or color < 0 or color > 255:
+                    raise ValueError("For each RGB value, it must be an integer between 0 and 255.")
+
+        min_distance = get_color_distance(color_set)
+        if min_distance == 0:
+            raise ValueError("Calculated color distance is 0.  This occurs when you have two identical colors in your"
+                             "\npalette.  This breaks the communication protocol.  See BitGlitter guide for more "
+                             "information.")
+
+        id = get_palette_id_from_hash(name_string, description_string, date_created, color_set)
+
+        new_palette = CustomPalette(name_string, description_string, color_set, min_distance, date_created, id,
+                                    nickname_string)
+        self.custom_palette_dict[id] = new_palette
+        if nickname_string:
+            self.custom_palette_nickname_dict[nickname_string] = new_palette
+        self._save()
+
+        return id
+
+    def edit_nickname_to_custom_palette(self, id_or_nick, new_nickname):
+        if new_nickname not in self.custom_palette_dict \
+                and new_nickname not in self.custom_palette_nickname_dict \
+                and new_nickname not in self.DEFAULT_PALETTE_LIST:
+
+            palette = self._return_popped_palette(id_or_nick)
+            palette.nickname = new_nickname
+            self.custom_palette_dict[palette.palette_id] = palette
+            self.custom_palette_nickname_dict[palette.nickname] = palette
+            self._save()
+
+        else:
+            raise ValueError(f"'{new_nickname}' is already being used, please try another.")
+
+    def remove_custom_palette_nickname(self, id_or_nick):
+        palette = self._return_popped_palette(id_or_nick)
+        palette.nickname = ""
+        self.custom_palette_dict[palette.palette_id] = palette
+        self._save()
+
+    def remove_all_custom_palette_nicknames(self):
+
+        self.custom_palette_nickname_dict = {}
+
+        for palette in self.custom_palette_dict:
+            returned_palette = self.custom_palette_dict.pop(palette)
+            returned_palette.nickname = ""
+            self.custom_palette_dict[returned_palette.palette_id] = returned_palette
 
         self._save()
+
+    def remove_custom_palette(self, id_or_nick):
+        self._return_popped_palette(id_or_nick)
+        self._save()
+
+    def remove_all_custom_palettes(self):
+        self.custom_palette_dict = {}
+        self.custom_palette_nickname_dict = {}
+        self._save()
+
+    def return_default_palettes(self):
+        returned_list = []
+        for palette in self.DEFAULT_PALETTE_LIST.values():
+            returned_list.append(palette.return_as_dict())
+        return returned_list
+
+    def return_custom_palettes(self):
+        returned_list = []
+        for palette in self.custom_palette_dict.values():
+            returned_list.append(palette.return_as_dict())
+        return returned_list
 
 
 try:
@@ -127,5 +247,5 @@ try:
     with open(pickle_path, 'rb') as unpickler:
         palette_manager = pickle.load(unpickler)
 
-except:
+except FileNotFoundError:
     palette_manager = PaletteManager()

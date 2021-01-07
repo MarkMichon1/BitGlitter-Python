@@ -1,17 +1,15 @@
-import os
-
-from bitglitter.config.config import config #todo
-
-# These functions are for end users.
-
-
+from bitglitter.config.palettemanager import palette_manager
+from bitglitter.config.presetmanager import preset_manager
+from bitglitter.config.readmanager import read_manager
+from bitglitter.config.settingsmanager import settings_manager
+from bitglitter.config.statisticsmanager import stats_manager
 
 
 def remove_session():
-    '''Tries to remove the session pickle if it exists, clearing all statistics and custom colors.'''
+    """Triggers all managers to reset their state."""
 
-    try:
-        config.assembler.clear_partial_saves()
-        os.remove('config.pickle')
-    except:
-        pass
+    palette_manager.remove_all_custom_palettes()
+    preset_manager.remove_all_presets()
+    read_manager.delete_all_streams()
+    settings_manager.reset_defaults()
+    stats_manager.clear_stats()

@@ -5,18 +5,17 @@ import os
 from bitglitter.validation.utilities import logging_config_validate
 
 
-def logging_setter(logging_level, logging_stdout_output, logging_txt_output):
+def logging_setter(logging_level, logging_stdout_output, logging_txt_output, logging_save_path):
     """This is what the logging level and output during the write operation.  It's worth nothing that this is the ONLY
     function that checks parameters outside of verify_write_parameters, because that function's logging outputs hinge in
     the configuration for logging.
     """
 
-
     logging_config_validate(logging_level, logging_stdout_output, logging_txt_output)
     logging_level_dict = {None: None, False: None, 'debug': logging.DEBUG, 'info': logging.INFO}
     if logging_txt_output:
-        if not os.path.isdir('logs'):
-            os.mkdir('logs') #todo fix path w/ pathlib, and plug into settingmngr txt log path value
+        if not os.path.isdir(logging_save_path):
+            os.mkdir(logging_save_path) #todo test
         log_output_name = f"logs\\{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.txt"
         output_log = logging.getLogger()
         output_log_handler = logging.FileHandler(log_output_name)

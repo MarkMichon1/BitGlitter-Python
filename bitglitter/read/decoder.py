@@ -223,7 +223,7 @@ class Decoder:
             self.stream_header_cleared = True
 
             # Does stream palette already exist as a custom or default color?
-            if save_object[1] in self.config_object.palette_handler.custom_palette_list or save_object[1] in \
+            if save_object[1] in self.config_object.palette_handler.custom_palette_dict or save_object[1] in \
                     self.config_object.palette_handler.DEFAULT_PALETTE_LIST:
 
                 self.stream_palette = palette_grabber(save_object[1])
@@ -260,11 +260,11 @@ class Decoder:
 
         self.protocol_version, self.primary_palette = read_initializer(self.frame_handler.return_initializer(),
                                                                        self.block_height, self.block_width,
-                                                                       self.config_object.palette_handler.custom_palette_list,
+                                                                       self.config_object.palette_handler.custom_palette_dict,
                                                                        self.config_object.palette_handler.DEFAULT_PALETTE_LIST)
         if self.protocol_version == False:
             return False
-        logging.debug(f'primary_palette ID loaded: {self.primary_palette.id}')
+        logging.debug(f'primary_palette ID loaded: {self.primary_palette.palette_id}')
 
         self.primary_palette_dict = ColorsToValue(self.primary_palette)
         self.frame_handler.primary_palette_bit_length = self.primary_palette.bit_length
@@ -278,11 +278,11 @@ class Decoder:
 
         self.protocol_version, self.header_palette = read_initializer(self.frame_handler.return_initializer(),
                                                                       self.block_height, self.block_width,
-                                                                      self.config_object.palette_handler.custom_palette_list,
+                                                                      self.config_object.palette_handler.custom_palette_dict,
                                                                       self.config_object.palette_handler.DEFAULT_PALETTE_LIST)
         if self.protocol_version == False:
             return False
-        logging.debug(f'header_palette ID loaded: {self.header_palette.id}')
+        logging.debug(f'header_palette ID loaded: {self.header_palette.palette_id}')
 
         # Now with header_palette loaded, we can get its color set as well as generate its ColorsToValue dictionary,
         # As well as propagate these values to frame_handler.

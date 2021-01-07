@@ -9,7 +9,7 @@ from bitglitter.write.headers import initializer_header_process, frame_header_pr
 
 def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
                           stream_palette, output_mode, stream_output_path, output_name, working_directory, total_frames,
-                          date_created, stream_header, text_header_processed, stream_sha, initializer_palette_dict,
+                          stream_header, text_header_processed, stream_sha, initializer_palette_dict,
                           header_palette_dict, stream_palette_dict, default_output_path):
     """This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     comments in this function that describe what each part is doing, to follow along.
@@ -23,8 +23,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             image_output_path = default_output_path
 
     if output_mode == 'video':
-            image_output_path = working_directory
-
+        image_output_path = working_directory
 
     # Constants
     TOTAL_BLOCKS = block_height * block_width
@@ -63,7 +62,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         initializer_palette_blocks_used = 0
         stream_header_blocks_used = 0
 
-        if stream_palette_used == True:
+        if stream_palette_used:
             primary_frame_palette_dict, primary_read_length = stream_palette_dict, stream_palette.bit_length
             active_palette = stream_palette
 
@@ -161,12 +160,12 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
         yield {
             'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
-            frame_payload, 'date_created': date_created, 'initializer_palette_blocks_used':
-            initializer_palette_blocks_used, 'primary_frame_palette_dict': primary_frame_palette_dict,
-            'primary_read_length': primary_read_length, 'initializer_palette_dict': initializer_palette_dict,
-            'initializer_palette': initializer_palette, 'output_mode': output_mode, 'output_name': output_name,
-            'initializer_enabled': initializer_enabled, 'frame_number': frame_number, 'total_frames': total_frames,
-            'image_output_path': image_output_path, 'stream_sha': stream_sha
+            frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
+            'primary_frame_palette_dict': primary_frame_palette_dict, 'primary_read_length': primary_read_length,
+            'initializer_palette_dict': initializer_palette_dict, 'initializer_palette': initializer_palette,
+            'output_mode': output_mode, 'output_name': output_name, 'initializer_enabled': initializer_enabled,
+            'frame_number': frame_number, 'total_frames': total_frames, 'image_output_path': image_output_path,
+            'stream_sha': stream_sha
         }
 
         frame_number += 1

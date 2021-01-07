@@ -1,11 +1,10 @@
 import logging
 from pathlib import Path
-import time
 
 import ffmpeg
 
 
-def render_video(stream_output_path, default_output_path, output_name, date_created, working_directory, total_frames,
+def render_video(stream_output_path, default_output_path, output_name, working_directory, total_frames,
                  frames_per_second, stream_sha):
     """Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 ."""
 

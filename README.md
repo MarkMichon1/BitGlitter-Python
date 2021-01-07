@@ -7,7 +7,7 @@ stuff.  This will put BitGlitter in a much better place for future development a
 
 **[Discord Server](https://discord.gg/t9uv2pZ)**
 
-![BitGlitter Logo](https://i.imgur.com/3GJ4bDx.png)
+![BitGlitter Logo](https://i.imgur.com/pX8b4Dy.png)
 
 # The basics
 
@@ -148,15 +148,15 @@ Write from command line:
       `-o` - Output path
 
 ### Applications
-To be determined.  This will be updated as time progresses!
+To be determined by you, the end user!  This will be updated as the library becomes more popular.
 
-# How to use
+# Using BitGlitter
 
 All of the functions to run this library are explained below.  I'm also working on several Wikipedia pages, explaining
 BitGlitter in greater detail (how it works, etc) with some included illustrations.  These are not yet complete, 
 [but here is the link to the project's Wiki if you'd like to see it!](https://github.com/MarkMichon1/BitGlitter/wiki/Using-BitGlitter)
 
-### Installation
+## Installation
 
 In addition to downloading the code from Github, you can also grab it directly from PyPI:
 
@@ -174,13 +174,15 @@ Windows takes a few more steps, but its still quite fast.  This will show you ho
 
 [https://www.wikihow.com/Install-FFmpeg-on-Windows](https://www.wikihow.com/Install-FFmpeg-on-Windows)
 
-###**BitGlitter in 20 seconds**
+##**BitGlitter in 20 seconds**
 
 While theres a lot of functionality, all you *need* to use it is `write()` (creates the streams) and 
 `read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
 wish to input in string format.
 
-### write(), converting files into BitGlitter streams
+#Creating streams, and reading from them
+
+## write(), converting files into BitGlitter streams
 
 We'll go a bit more in depth now.
 
@@ -188,6 +190,9 @@ We'll go a bit more in depth now.
 to customize the stream, but there is only one required argument.  Everything else has defaults.
 
 `input_path` defines what file or folder you wish to embed in the stream.  It must be an absolute path.
+
+`preset_nickname` allows you to use a saved assortment of `write` arguments with a `str` nickname for easy switching between
+preferred configs.  Learn more below in the **Preset Configuration** section.
 
 `stream_name=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.
@@ -277,15 +282,17 @@ it such as files rendered, stream size, configuration settings, etc.  Its main u
 soon, but you can still call it with `tba`.  Function for both an ID, and all of them.
 
 `save_statistics=False` saves some fun statistics about your usage of the program- total number of blocks rendered,
-total frames rendered, and total payload data rendered.  This updates after each successful write session.  You can
-see these statistics by `tba` read and write.
+total frames rendered, and total payload data rendered.  This updates after each successful write session.  Functions
+to interact with this data are below.
 
-These default values have an 81KB/s transmission rate.  This is only a starting point that should be pretty resistant to
+These default values have an 81KB/s transmission rate.  This is a safe starting point that should be pretty resistant to
 corruption.
 
-### read(), converting streams back into data
+## read(), converting streams back into data
 
-`read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.
+`read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.  While this 
+is the basic function to decode streams, there are several other functions included to interact with these streams (inputting
+the password, removing one or all streams, changing its save path, etc).  Please check **Read Functions** below.
 
 Like with `write()`, the only argument required is the BitGlitter-encoded file, whether that's an image or a video.
 `file_to_input` is the only required argument.  We'll go over the other ones.
@@ -307,10 +314,7 @@ attempt to lock onto the screen given these parameters.  Both must be filled in 
 `encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only
 need this argument once, and it will bind to that save.
 
-Arguments `scrypt_n=14`, `scrypt_r=8` and `scrypt_p=1`
-
-`logging_level = 'info'`, `logging_screen_output = True`, `logging_save_output = False` - Please see the full explanation at
-`write().`
+## Configuration Functions
 
 ### Color Palettes
 
@@ -319,11 +323,11 @@ If you wish to make your own custom color palettes, BitGlitter gives you the abi
 `add_custom_palette(palette_name, palette_description, color_set, optional_nickname = "")`  This function adds custom palettes
 to use.  
 
-Argument `palette_name` takes a string and is the name of the palette that gets displayed and transmitted. 
+`palette_name` takes a string and is the name of the palette that gets displayed and transmitted. 
 
-Argument`palette_description` takes a string as well, and is the description of the palette, if you wish to add it.  
+`palette_description` takes a string as well, and is the description of the palette, if you wish to add it.  
 
-Argument `color_set` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
+`color_set` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
 a simple example of what it would look like using two colors: `color_set=((0, 255, 0), (0, 0, 255))`.  There are a few
 requirements to these tuples:
 + No two identical values can be added.  For instance, the color black with the same RGB values twice.  Each color used
@@ -331,7 +335,7 @@ must be unique!  The more 'different' the colors are, the better.
 + You must have a minimum of two colors.
 + It must be 2^n colors used, so 2, 4, 8, 16, etc.
 
-Argument `optional_nickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
+`optional_nickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
   how you select this palette to specifically run on your stream.  Internally, custom palettes have a 64 character ID 
   code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
   well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
@@ -339,12 +343,14 @@ Argument `optional_nickname=""` allows you to use an easy to input nickname for 
 `edit_nickname_to_custom_palette(id_or_nick, new_name)` This function allows you to edit the nickname of your custom palette 
 to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal ID.
 
-`print_full_palette_list(path)` This function outputs a text file to the folder path outlining the palettes available, both
-default palettes and custom.  It shows information such as their name, description, date created, color set, nickname,
-and more.  The required argument is a string of a folder path, which must already exist.  Here's an example of how to
-format it: `C:\Users\Mark\Desktop`
+`return_default_palettes()` Returns a list of dictionary objects, each of which outlines data for each of the default
+(included) palettes.  It shows information such as their name, description, date created, color set, nickname,
+and more.
 
-`clear_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
+`return_custom_palettes()` Behaves exactly like the above function, except returning custom palettes, that were either
+created by you, or "learned" from other streams using their own custom palettes.
+
+`remove_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
 will not be removed.
 
 `remove_custom_palette(id_or_nick)` This function removes the custom palette from your config.  It takes a string argument
@@ -353,9 +359,12 @@ of either it's internal ID, or a nickname you've previously given it.
 `remove_custom_palette_nickname(id_or_nick)` This function strips any nickname associated with a custom palette.  It takes a
 string argument of either the internal ID or a previous nickname.
 
-`clear_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.
+`remove_all_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.  Please note this doesn't
+remove the palette, and it can still be accessible via its ID.
 
-### Partial Save Control
+### Read Functions
+
+# This entire section will be redone!
 
 Once the first frame of a stream is read, a PartialSave object is created.  This is essentially what manages the binary
 strings, and holds various information on it's state.  These functions help better interface with them.
@@ -387,17 +396,35 @@ remove the object from your config, as well as remove all temporary data associa
 
 `remove_all_partial_saves()` All saves are removed from the config object, clearing all temporary data.
 
+### Preset Configuration
+
+Presets allow you to define `write()` behavior (geometry, palettes, etc) and save them with a nickname, so you can quickly
+and easily use your favorite configurations without needing to explictly state all parameters in the arguments.
+
+`add_new_preset(nickname, output_mode='video', compression_enabled=True, scrypt_n=14, scrypt_r=8, scrypt_p=1,
+stream_palette_id='6', header_palette_id='6', pixel_width=24, block_height=45, block_width=80, frames_per_second=30)`
+is how you add a new preset.  Please note all of its default arguments are identical to default `write` arguments.  For
+more information on each of these arguments, check out the `write()` section for arguments above.
+
+`return_preset_data(nickname)` returns a dictionary object returning the full state of the preset.
+
+`return_all_preset_data()` returns a list of all of the presets as dictionaries.
+
+`remove_preset(nickname)` removes the preset with the `nickname` you gave it.
+
+`remove_all_presets()` removes all saved presets.
+
+### Statistics Configuration
+
+`output_stats()` Returns a dictionary object displaying the following data for both reads and writes: blocks processed,
+frames processed, data processed.
+
+`clear_stats()` All statistics reset back to zero.
+
 ### General Configuration
 
-`outputStats(path)` This function gives you a neat bird's eye view of your BitGlitter usage.  During all `read()` and 
-`write()` cycles, the total amount of data transferred, as well as total frames transferred and individual blocks 
-scanned gets added to a running total.  Argument `path` requires a string argument of a folder path that already exists.
-A small text file will be written to this location.
-
-`clear_stats()` All statistics will be reset to zero.
-
-`clear_session()` This wipes all inputted data.  Custom colors, statistics, and partial save objects will all be erased,
-as well as any temporary data for the partially read streams.  This is in essence a hard reset.
+`remove_session()` Resets the entire state of the library.  Removes statistics data, all saved streams, saved presets,
+and saved palettes.  This can't be undone when ran, so exercise caution!
 
 # Contributing
 
@@ -437,7 +464,7 @@ ability to finely control the stream to accomodate the environment is not just p
 
 # Acknowledgements
 Thank you to Tanmay Mishra for giving me guidance during planning of the library, as well as its initial development.
-A big thank you to Jack Robison as well for his continued advice.
+A big thank you to Jack Robison as well for his continued wisdom.
 
 **The third party libraries that make BitGlitter possible:**
 

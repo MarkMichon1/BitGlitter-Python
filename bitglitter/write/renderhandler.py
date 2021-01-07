@@ -1,7 +1,5 @@
 import logging
 from multiprocessing import cpu_count, Pool
-from pathlib import Path
-import time
 
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
@@ -51,12 +49,12 @@ class RenderHandler:
                                                                             stream_palette, stream_name,
                                                                             stream_description, manifest)
         self.frames_wrote = total_frames_estimator(block_height, block_width, text_header_bytes,
-                                                                  size_in_bytes, stream_palette, header_palette,
-                                                                  output_mode)
+                                                   size_in_bytes, stream_palette, header_palette,
+                                                   output_mode)
 
         stream_header = stream_header_process(size_in_bytes, self.frames_wrote, compression_enabled, encryption_enabled,
                                               file_mask_enabled, stream_palette.palette_type == "custom",
-                                              datetime_started, stream_palette.id, len(text_header_bytes),
+                                              datetime_started, stream_palette.palette_id, len(text_header_bytes),
                                               raw_text_header_hash_bytes)
         logging.info('Pre-render complete.')
 
@@ -73,16 +71,20 @@ class RenderHandler:
             logging.info(f'Beginning rendering on {pool_size} CPU cores...')
             count = 1
             for frame_process in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
-                                            pixel_width, protocol_version, initializer_palette, header_palette,
-                                            stream_palette, output_mode, output_path, output_name, working_dir,
-                                            self.frames_wrote, datetime_started, stream_header, text_header_bytes,
-                                            stream_sha, initializer_palette_dict, header_palette_dict,
-                                            stream_palette_dict, default_output_path), chunksize=1):
-
-
+                                                                                    pixel_width, protocol_version,
+                                                                                    initializer_palette, header_palette,
+                                                                                    stream_palette, output_mode,
+                                                                                    output_path, output_name,
+                                                                                    working_dir, self.frames_wrote,
+                                                                                    stream_header, text_header_bytes,
+                                                                                    stream_sha,
+                                                                                    initializer_palette_dict,
+                                                                                    header_palette_dict,
+                                                                                    stream_palette_dict,
+                                                                                    default_output_path), chunksize=1):
                 block_position = frame_process
                 logging.info(f'Processing frame {count} of {self.frames_wrote}... '
-                             f'({round(((count/self.frames_wrote) * 100), 2)} %)')
+                             f'({round(((count / self.frames_wrote) * 100), 2)} %)')
 
                 count += 1
         logging.info('Rendering frames complete.')
@@ -90,8 +92,8 @@ class RenderHandler:
         # Video Render
 
         if output_mode == 'video':
-            render_video(output_path, default_output_path, output_name, datetime_started, working_dir,
-                         self.frames_wrote, frames_per_second, stream_sha)
+            render_video(output_path, default_output_path, output_name, working_dir, self.frames_wrote,
+                         frames_per_second, stream_sha)
 
         # Wrap-up
 

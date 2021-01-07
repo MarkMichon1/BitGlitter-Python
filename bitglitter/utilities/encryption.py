@@ -84,7 +84,7 @@ def decrypt_bytes():
     pass  # todo
 
 
-def _encrypt_bytes_chunk(key, initialization_vector, data, backend, chunk_size=None):
+def _encrypt_bytes_chunk(key, initialization_vector, data, backend):
     """This is an internal function used in encrypt_file(), and for future functionality of this program.  It returns
     32 bytes of encrypted data.
     """

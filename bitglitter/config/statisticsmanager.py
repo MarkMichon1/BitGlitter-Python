@@ -45,8 +45,7 @@ class StatisticsManager(BaseManager):
                       f'{humanize_file_size(self.data_wrote)} data.')
 
     def read_update(self, blocks, frames, data):
-
-        self.blocks_read += blocks #todo add this to read
+        self.blocks_read += blocks  # todo add this to read
         self.frames_read += frames
         self.data_read += data
         self._save()
@@ -63,6 +62,12 @@ class StatisticsManager(BaseManager):
         self.data_read = 0
         self._save()
 
+    def return_stats(self):
+        return {
+            'blocks_wrote': self.blocks_wrote, 'frames_wrote': self.frames_wrote, 'data_wrote': self.data_wrote,
+            'blocks_read': self.blocks_read, 'frames_read': self.frames_read, 'data_read': self.data_read,
+        }
+
 
 try:
     current_directory = Path(__file__).resolve().parent
@@ -70,5 +75,5 @@ try:
     with open(pickle_path, 'rb') as unpickler:
         stats_manager = pickle.load(unpickler)
 
-except:
+except FileNotFoundError:
     stats_manager = StatisticsManager()

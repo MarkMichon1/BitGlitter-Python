@@ -1,5 +1,3 @@
-import time
-
 from bitglitter.config.presetmanager import preset_manager
 from bitglitter.config.settingsmanager import settings_manager
 from bitglitter.config.statisticsmanager import stats_manager
@@ -50,46 +48,47 @@ def write(
 
         # Session Data
         save_statistics=False
-):
-    """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
-    information.
+        ):
+    """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page or project README
+    for more information.
     """
 
     # Initializing logging, must be up front for logging to work properly.
-    logging_setter(logging_level, logging_stdout_output, logging_txt_output)
+    logging_setter(logging_level, logging_stdout_output, logging_txt_output, settings_manager.log_txt_path)
 
+    # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
     if preset_nickname:
         write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
                                  file_mask_enabled, encryption_key, preset_used=True)
-
         preset = preset_manager.return_preset(preset_nickname)
         output_mode = preset.output_mode
         compression_enabled = preset.compression_enabled
         scrypt_n = preset.scrypt_n
         scrypt_r = preset.scrypt_r
         scrypt_p = preset.scrypt_p
+        max_cpu_cores = preset.max_cpu_cores
         header_palette_id = preset.header_palette_id
         stream_palette_id = preset.stream_palette_id
         pixel_width = preset.pixel_width
         block_height = preset.block_height
         block_width = preset.block_width
         frames_per_second = preset.frames_per_second
-
     else:
         write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
-                                 file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled, scrypt_n,
+                                 file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
+                                 scrypt_n,
                                  scrypt_r, scrypt_p, stream_palette_id, header_palette_id, pixel_width, block_height,
                                  block_width, frames_per_second, preset_used=False)
 
-    # This sets the name of the temporary folder while the file is being written.
-
+    # This sets the name of the temporary folder while the file is being written, as well as the default output path.
     working_dir = settings_manager.WRITE_WORKING_DIR
     default_output_path = settings_manager.DEFAULT_OUTPUT_PATH
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
-    pre_processor = PreProcessor(working_dir, input_path, encryption_key, file_mask_enabled, compression_enabled,
-                                 scrypt_n, scrypt_r, scrypt_p)
+    pre_processor = PreProcessor(working_dir, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,
+                                 scrypt_p)
 
+    # This is where the final steps leading up to rendering as well as rendering itself takes place.
     render_handler = RenderHandler(stream_name, stream_description, working_dir, default_output_path, encryption_key,
                                    scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
                                    header_palette_id, stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
@@ -98,14 +97,11 @@ def write(
                                    pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,
                                    output_mode, output_path, output_name)
 
-    #remove_working_folder(working_dir)
-
+    # Removing temporary files
+    remove_working_folder(working_dir)
 
     if save_statistics:
         stats_manager.write_update(render_handler.blocks_wrote, render_handler.frames_wrote,
                                    pre_processor.size_in_bytes)
 
-    print(pre_processor.datetime_started)
-    print(time.time()) #todo temp
-    print(time.time()-pre_processor.datetime_started)
     return pre_processor.stream_sha

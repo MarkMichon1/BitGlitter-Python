@@ -6,23 +6,24 @@ from bitglitter.config.palettemanager import palette_manager
 from bitglitter.utilities.display import humanize_file_size
 from bitglitter.validation.validatepalette import palette_verify
 
+
 def is_valid_directory(argument, path):
-    '''Checks whether the inputted directory exists or not.'''
+    """Checks whether the inputted directory exists or not."""
     if not os.path.isdir(path):
         raise ValueError(f'Folder path for {argument} does not exist.')
 
 
 def is_int_over_zero(argument, some_variable):
-    '''Checks if variable is of type int and is greater than zero.'''
+    """Checks if variable is of type int and is greater than zero."""
 
     if not isinstance(some_variable, int) or some_variable < 0:
         raise ValueError(f"Argument {argument} must be an integer greater than zero.")
 
 
 def proper_string_syntax(argument, inputted_string=""):
-    '''This exists to verify various inputs are using allowed characters.  One such character that isn't allowed is
+    """This exists to verify various inputs are using allowed characters.  One such character that isn't allowed is
     '\\', as that character is what the ASCII part of the stream header uses to divide attributes.
-    '''
+    """
 
     acceptable_chars = string.ascii_letters + string.digits + string.punctuation.replace("\\", "") + " "
     if inputted_string:
@@ -32,7 +33,7 @@ def proper_string_syntax(argument, inputted_string=""):
 
 
 def is_bool(argument, variable):
-    '''Will raise error if argument isn't type bool.  Used in verifying arguments for read() and write()'''
+    """Will raise error if argument isn't type bool.  Used in verifying arguments for read() and write()"""
     if not isinstance(variable, bool):
         raise ValueError(f'Argument {argument} must be type boolean.')
 
@@ -57,10 +58,10 @@ def verify_write_params_render_values(header_palette_id, stream_palette_id, pixe
     def does_palette_exist(palette, palette_type):
         if palette in palette_manager.DEFAULT_PALETTE_LIST:
             palette_to_return = palette_manager.DEFAULT_PALETTE_LIST[palette]
-        elif palette in palette_manager.custom_palette_list:
-            palette_to_return = palette_manager.custom_palette_list[palette]
-        elif palette in palette_manager.custom_palette_nickname_list:
-            palette_to_return = palette_manager.custom_palette_nickname_list[palette]
+        elif palette in palette_manager.custom_palette_dict:
+            palette_to_return = palette_manager.custom_palette_dict[palette]
+        elif palette in palette_manager.custom_palette_nickname_dict:
+            palette_to_return = palette_manager.custom_palette_nickname_dict[palette]
         else:
             raise ValueError(f"Argument {palette_type} in write() is not a valid ID or nickname.  Verify that exact "
                              f"value exists.")

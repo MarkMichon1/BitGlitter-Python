@@ -17,8 +17,7 @@ class PreProcessor:
     processed such as stream size and hash, that will be added into the headers.
     """
 
-    def __init__(self, working_directory, input_path, crypto_key, mask_enabled, compression_enabled, scrypt_n, scrypt_r,
-                 scrypt_p):
+    def __init__(self, working_directory, input_path, crypto_key, compression_enabled, scrypt_n, scrypt_r, scrypt_p):
         self.datetime_started = round(time.time())
         self.active_folder = refresh_working_folder(working_directory)
         self.encryption_enabled = True if crypto_key else False

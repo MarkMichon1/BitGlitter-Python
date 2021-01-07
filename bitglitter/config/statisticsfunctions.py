@@ -1,13 +1,13 @@
-def output_stats(path):
-    '''Writes a text file to a file path outlining usage statistics.'''
+from bitglitter.config.statisticsmanager import stats_manager
 
-    active_path = os.path.join(os.getcwd(), path)
-    with open(active_path + '\\BitGlitter statistics.txt', 'w') as writer:
-        writer.write(str(config.stats_handler))
+
+def output_stats():
+    """Returns a dictionary object containing read and write statistics."""
+
+    return stats_manager.return_stats()
 
 
 def clear_stats():
-    '''Resets statistics back to zero in all fields.'''
+    """Resets all write and read values back to zero."""
 
-    config.stats_handler.clear_stats()
-    config._save_session()
+    stats_manager.clear_stats()

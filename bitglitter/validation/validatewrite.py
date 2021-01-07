@@ -6,7 +6,7 @@ from bitglitter.validation.utilities import is_bool, is_valid_directory, proper_
 
 
 def write_parameter_validate(input_path, stream_name, stream_description, stream_output_path, output_name,
-                             file_mask_enabled, encryption_key, max_cpu_cores, output_mode=None,
+                             file_mask_enabled, encryption_key, max_cpu_cores=None, output_mode=None,
                              compression_enabled=None, scrypt_n=None, scrypt_r=None, scrypt_p=None,
                              stream_palette_id=None, header_palette_id=None, pixel_width=None, block_height=None,
                              block_width=None, frames_per_second=None, preset_used=False):
@@ -44,11 +44,16 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
         raise ValueError('max_cpu_cores must be an integer greater than or equal to 0.')
 
 
-def write_preset_validate(nickname, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p, stream_palette_id,
-                          header_palette_id, pixel_width, block_height, block_width, frames_per_second):
+def write_preset_validate(nickname, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p, max_cpu_cores,
+                          stream_palette_id, header_palette_id, pixel_width, block_height, block_width,
+                          frames_per_second):
     """Validates presets in a nice clean way."""
+
     if not isinstance(nickname, str):
         raise ValueError('Nickname for preset must be type str.')
+
+    if not isinstance(max_cpu_cores, int):
+        raise ValueError('cpu_cores for preset must be type int.')
 
     is_bool('compression_enabled', compression_enabled)
     verify_write_params_output_mode(output_mode)

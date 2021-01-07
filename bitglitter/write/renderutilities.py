@@ -84,14 +84,12 @@ def render_coords_generator(block_height, block_width, pixel_width, initializer_
 
 
 def draw_frame(dict_obj):
-
     # Unpacking dictionary object into variables to easier reading of function.  A single argument must be passed
     # here because multiprocessing's imap requires it.
     block_height = dict_obj['block_height']
     block_width = dict_obj['block_width']
     pixel_width = dict_obj['pixel_width']
     frame_payload = dict_obj['frame_payload']
-    date_created = dict_obj['date_created']
     initializer_palette_blocks_used = dict_obj['initializer_palette_blocks_used']
     primary_frame_palette_dict = dict_obj['primary_frame_palette_dict']
     primary_read_length = dict_obj['primary_read_length']
@@ -104,7 +102,6 @@ def draw_frame(dict_obj):
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
     stream_sha = dict_obj['stream_sha']
-
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
 

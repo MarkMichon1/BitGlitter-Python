@@ -18,7 +18,7 @@ def text_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, scryp
     logging.debug('Building text header...')
     custom_palette_string = ""
     if stream_palette.palette_type == 'custom':
-        custom_palette_attribute_list = [stream_palette.id, stream_palette.name, stream_palette.description,
+        custom_palette_attribute_list = [stream_palette.palette_id, stream_palette.name, stream_palette.description,
                                          str(stream_palette.datetime_started), str(stream_palette.color_set)]
         custom_palette_string = "\\\\".join(custom_palette_attribute_list) + "\\\\"
     meta_data_string = "\\\\".join([stream_name, stream_description, bg_version]) + '\\\\'
@@ -107,10 +107,10 @@ def initializer_header_process(block_height, block_width, protocol_version, head
     full_bit_string.append(BitArray(uint=block_width, length=16))
 
     if header_palette.palette_type == 'default':
-        full_bit_string.append(BitArray(uint=int(header_palette.id), length=256))
+        full_bit_string.append(BitArray(uint=int(header_palette.palette_id), length=256))
 
     else:
-        full_bit_string.append(BitArray(hex=header_palette.id))
+        full_bit_string.append(BitArray(hex=header_palette.palette_id))
 
     full_bit_string_to_hash = full_bit_string.tobytes()
     crc_output = zlib.crc32(full_bit_string_to_hash)
