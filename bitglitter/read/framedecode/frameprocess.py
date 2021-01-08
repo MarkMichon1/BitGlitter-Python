@@ -3,17 +3,16 @@ import math
 
 from bitstring import BitStream
 
-from bitglitter.read.coloranalysis import color_snap
-from bitglitter.read.decoderassets import scan_block
-from bitglitter.config.config import config
+from bitglitter.read.framedecode.framecoloranalysis import color_snap
+from bitglitter.read.framedecode.decoderassets import scan_block
 
 
-class FrameHandler:
+class FrameProcessor:
     '''FrameHandler object is what traverses the actual frame, and returns bit data.  It's designed as an easy to use
     API, hiding much of the moving parts behind the scenes of a frame scan.
     '''
 
-    def __init__(self, initializer_palette, initializer_palette_dict):
+    def __init__(self, initializer_palette, initializer_palette_dict, final_pass=False):
 
         # Setup
         self.image = None

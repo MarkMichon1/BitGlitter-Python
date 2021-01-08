@@ -5,7 +5,7 @@ from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
 from bitglitter.write.preprocess.preprocessor import PreProcessor
-from bitglitter.write.renderhandler import RenderHandler
+from bitglitter.write.render.renderhandler import RenderHandler
 
 
 def write(

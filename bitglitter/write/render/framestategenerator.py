@@ -4,7 +4,7 @@ from pathlib import Path
 
 from bitstring import BitStream, ConstBitStream
 
-from bitglitter.write.headers import initializer_header_process, frame_header_process
+from bitglitter.write.render.headers import initializer_header_process, frame_header_process
 
 
 def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,

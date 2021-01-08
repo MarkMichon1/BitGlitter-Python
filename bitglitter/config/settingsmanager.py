@@ -16,12 +16,13 @@ class SettingsManager(BaseManager):
         self.PROTOCOL_VERSION = 1  # This will be moved when we have more protocols.
         self.WRITE_WORKING_DIR = Path(__file__).resolve().parent.parent / 'Temp'
         self.DEFAULT_OUTPUT_PATH = Path(__file__).resolve().parent.parent / 'Render Output'
-        self.DEFAULT_PARTIAL_SAVE_PATH = Path(__file__).resolve().parent.parent / 'Partial Stream Data'
+        self.DEFAULT_PARTIAL_SAVE_DATA_PATH = Path(__file__).resolve().parent.parent / 'Partial Stream Data'
         self.VALID_VIDEO_FORMATS = ['.avi', '.flv', '.mov', '.mp4', '.wmv']
         self.VALID_IMAGE_FORMATS = ['.bmp', '.jpg', '.png']
 
         # Configurable
-        self.default_bad_frame_strikes = 10
+        self.decoded_files_output_path = Path(__file__).resolve().parent.parent / 'Decoded Files'
+        self.read_bad_frame_strikes = 10
         self.write_path = self.DEFAULT_OUTPUT_PATH  # Desktop
         self.log_txt_path = Path(__file__).resolve().parent.parent / 'Logs'
         self.maximum_cpu_cores = 0  # unused for library, will be used in Desktop version.

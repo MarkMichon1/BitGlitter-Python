@@ -3,9 +3,8 @@ import os
 
 from cv2 import imread
 
-from bitglitter.config.defaultvalues import VALID_VIDEO_FORMATS
-from bitglitter.read.decoder import Decoder
-from bitglitter.read.videoframepuller import VideoFramePuller
+from bitglitter.read.framedecode.decoder import Decoder
+from bitglitter.read.framedecode.videoframepuller import VideoFramePuller
 
 
 def file_slicer(file_to_input, active_path, output_path, block_height_override, block_width_override,

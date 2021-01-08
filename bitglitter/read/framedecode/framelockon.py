@@ -3,8 +3,8 @@ import logging
 from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
-from bitglitter.read.coloranalysis import color_snap, return_distance
-from bitglitter.read.decoderassets import scan_block
+from bitglitter.read.framedecode.framecoloranalysis import color_snap, return_distance
+from bitglitter.read.framedecode.decoderassets import scan_block
 from bitglitter.palettes.utilities import palette_grabber, ColorsToValue
 
 

@@ -4,9 +4,8 @@ from PIL import Image, ImageDraw
 import logging
 import math
 from pathlib import Path
-import time
 
-from bitglitter.write.headers import calibrator_header_process
+from bitglitter.write.render.headers import calibrator_header_process
 
 
 def total_frames_estimator(block_height, block_width, text_header, size_in_bytes, stream_palette, header_palette,

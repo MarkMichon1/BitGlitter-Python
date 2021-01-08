@@ -4,13 +4,13 @@ import os
 
 from bitstring import BitStream
 
-from bitglitter.read.postprocess import PostProcessor
-from bitglitter.read.partialsaveassets import format_file_list, decode_stream_header_ascii_compressed, \
-    decode_stream_header_binary_preamble
+from bitglitter.read.dataprocess.postprocessor import PostProcessor
+from bitglitter.read.dataprocess.headerdecode import format_file_list, decode_text_header, \
+    decode_stream_header
 from bitglitter.utilities.filemanipulation import compress_file, decompress_file, get_hash_from_file
 
 
-class PartialSave:
+class DecodedStream:
     '''PartialSave objects are essentially containers for the state of streams as they are being read, frame by frame.
     This mainly interacts through the Assembler object.  All of the functionality needed to convert raw frame data back
     into the original package is done through it's contained methods.
@@ -317,7 +317,7 @@ class PartialSave:
 
         self.size_in_bytes, self.total_frames, self.compression_enabled, self.encryption_enabled, self.masking_enabled,\
         self.custom_palette_used, self.date_created, self.stream_palette_id, self.ascii_header_byte_size = \
-            decode_stream_header_binary_preamble(self.stream_header_preamble_buffer)
+            decode_stream_header(self.stream_header_preamble_buffer)
         self.stream_header_preamble_buffer = None
         self.date_created = datetime.datetime.fromtimestamp(int(self.date_created)).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -338,8 +338,8 @@ class PartialSave:
         self.bg_version, self.stream_name, self.stream_description, self.file_list, self.custom_color_name, \
         self.custom_color_description, self.custom_color_date_created, self.custom_color_palette, \
         self.post_compression_sha = \
-         decode_stream_header_ascii_compressed(self.stream_header_ascii_buffer, self.custom_palette_used,
-                                               self.encryption_enabled)
+         decode_text_header(self.stream_header_ascii_buffer, self.custom_palette_used,
+                            self.encryption_enabled)
         self.stream_header_ascii_buffer = None
 
         if self.masking_enabled == True:

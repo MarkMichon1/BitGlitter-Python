@@ -3,7 +3,7 @@ import logging
 import zlib
 
 
-def decode_stream_header_ascii_compressed(bitstream, custom_color_enabled, encryption_enabled):
+def decode_text_header(bitstream, custom_color_enabled, encryption_enabled):
     '''This function encodes the raw bit string taken from the frame(s) back into ASCII, and returns the split
     managers inside of it.
     '''
@@ -41,7 +41,7 @@ def decode_stream_header_ascii_compressed(bitstream, custom_color_enabled, encry
            custom_color_date_created,custom_color_palette, post_compression_sha
 
 
-def decode_stream_header_binary_preamble(bitStream):
+def decode_stream_header(bitStream):
     '''This function takes the raw bit string taken from the frame(s) and extracts stream data from it.'''
 
     size_in_bytes = bitStream.read('uint : 64')
@@ -62,14 +62,3 @@ def decode_stream_header_binary_preamble(bitStream):
 
     return size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_masking_enabled, \
            is_custom_palette,  date_created, stream_palette_id, ascii_header_compressed_in_bytes
-
-def format_file_list(file_string):
-    '''This takes in the file manifest inside of the stream header, and prints it in a nice formatted way.'''
-
-    broken_apart = file_string.split('|')[1:]
-    formatted_string = ''
-
-    for position in range(int(len(broken_apart) / 2)):
-        formatted_string +=(f"\n    {broken_apart[2 * position]} - {broken_apart[2 * position + 1]} B")
-
-    return formatted_string

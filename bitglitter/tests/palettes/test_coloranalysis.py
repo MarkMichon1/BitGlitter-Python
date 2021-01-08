@@ -1,5 +1,5 @@
 import unittest
-from bitglitter.read.coloranalysis import color_snap, return_distance
+from bitglitter.read.framedecode.framecoloranalysis import color_snap
 
 
 class Test(unittest.TestCase):

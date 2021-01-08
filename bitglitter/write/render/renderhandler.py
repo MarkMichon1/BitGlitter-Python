@@ -3,10 +3,10 @@ from multiprocessing import cpu_count, Pool
 
 from bitglitter.palettes.utilities import palette_grabber, ValuesToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
-from bitglitter.write.headers import stream_header_process, text_header_process
-from bitglitter.write.framestategenerator import frame_state_generator
-from bitglitter.write.renderutilities import draw_frame, total_frames_estimator
-from bitglitter.write.videorender import render_video
+from bitglitter.write.render.headers import stream_header_process, text_header_process
+from bitglitter.write.render.framestategenerator import frame_state_generator
+from bitglitter.write.render.renderutilities import draw_frame, total_frames_estimator
+from bitglitter.write.render.videorender import render_video
 
 
 class RenderHandler:

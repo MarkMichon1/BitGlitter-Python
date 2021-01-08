@@ -1,9 +1,9 @@
 import logging
 
-from bitglitter.palettes.utilities import palette_grabber, ColorsToValue, _validate_and_add_palette
-from bitglitter.read.decoderassets import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
-from bitglitter.read.framehandler import FrameHandler
-from bitglitter.read.framelockon import frame_lock_on
+from bitglitter.palettes.utilities import palette_grabber, ColorsToValue
+from bitglitter.read.framedecode.decoderassets import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
+from bitglitter.read.framedecode.frameprocess import FrameProcessor
+from bitglitter.read.framedecode.framelockon import frame_lock_on
 
 
 class Decoder:
@@ -69,7 +69,7 @@ class Decoder:
 
         # Auxiliary Components
         self.config_object = config_object
-        self.frame_handler = FrameHandler(self.initializer_palette, self.initializer_palette_dict)
+        self.frame_handler = FrameProcessor(self.initializer_palette, self.initializer_palette_dict)
 
 
     def decode_image(self, file_to_input):

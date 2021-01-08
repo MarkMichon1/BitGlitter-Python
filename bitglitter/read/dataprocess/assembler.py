@@ -2,7 +2,7 @@ import logging
 import shutil
 
 from bitglitter.config.defaultvalues import DEFAULT_READ_PATH
-from bitglitter.read.partialsave import PartialSave
+from bitglitter.read.dataprocess.decodedstream import DecodedStream
 
 
 class Assembler:
@@ -30,8 +30,8 @@ class Assembler:
 
 
     def create_partial_save(self, stream_sha, scrypt_n, scrypt_r, scrypt_p, output_path, encryption_key, assemble_hold):
-        self.save_dict[stream_sha] = PartialSave(stream_sha, self.working_folder, scrypt_n, scrypt_r, scrypt_p, output_path,
-                                                 encryption_key, assemble_hold)
+        self.save_dict[stream_sha] = DecodedStream(stream_sha, self.working_folder, scrypt_n, scrypt_r, scrypt_p, output_path,
+                                                   encryption_key, assemble_hold)
 
 
     def save_frame_into_partial_save(self, stream_sha, payload, frame_number):

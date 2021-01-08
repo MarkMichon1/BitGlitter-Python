@@ -22,7 +22,7 @@ class CliArgumentParser(object):
             output_path = False
         
         if path.isfile(file) == True or path.isdir(file) == True:
-            read(file_to_input=file)
+            read(input_path=file)
         else:
             raise FileNotFoundError('Read first argument must be a valid path to a file or folder.')
 

@@ -1,6 +1,6 @@
 from bitglitter.config.palettemanager import palette_manager
 from bitglitter.config.presetmanager import preset_manager
-from bitglitter.config.readmanager import read_manager
+from bitglitter.config.savemanager import read_manager
 from bitglitter.config.settingsmanager import settings_manager
 from bitglitter.config.statisticsmanager import stats_manager
 

@@ -294,22 +294,27 @@ corruption.
 is the basic function to decode streams, there are several other functions included to interact with these streams (inputting
 the password, removing one or all streams, changing its save path, etc).  Please check **Read Functions** below.
 
-Like with `write()`, the only argument required is the BitGlitter-encoded file, whether that's an image or a video.
-`file_to_input` is the only required argument.  We'll go over the other ones.
+Like with `write()`, the only argument required is the input path (`input_path`), whether it is a file or a directory.
 
-`output_path=None` Is where you can set where this stream will be saved once all frames have been successfully loaded.
+`output_path=False` Is where you can set where files will be written as they become available through decoding.
   It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
-  stick with that stream.  This argument requires a strong of a folder path that already exists.
+  stick with that stream.  This argument requires a string of a folder path that already exists.
 
-`bad_frame_strikes=10` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
+`bad_frame_strikes=25` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
 allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
  iterate over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
  regardless of the level of corruption.
+
+`max_cpu_cores=0` determines the amount of CPU cores to utilize during decoding, like `write()`.  The default value of 0
+sets it to maximum.
 
 `block_height_override=False` and `block_width_override=False` allow you to manually input the stream's block height and 
 block width.  Normally you'll never need to use this, as these values are automatically obtained as the frame is locked
 onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
 attempt to lock onto the screen given these parameters.  Both must be filled in order for the override to work.
+
+`header_palette_id_override=False` and `stream_palette_id_override=False` are something you'd only touch if reading from
+a folder of images (of BitGlitter frames)
 
 `encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only
 need this argument once, and it will bind to that save.
