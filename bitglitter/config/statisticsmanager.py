@@ -11,7 +11,7 @@ class StatisticsManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-        self._SAVE_FILE_NAME = 'statsmanager'
+        self._SAVE_FILE_NAME = 'stats_state'
 
         self.blocks_wrote = 0
         self.frames_wrote = 0
@@ -71,7 +71,7 @@ class StatisticsManager(BaseManager):
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'statsmanager.bin'
+    pickle_path = current_directory / 'stats_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         stats_manager = pickle.load(unpickler)
 

@@ -9,7 +9,7 @@ class SaveManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-        self._SAVE_FILE_NAME = 'readmanager'
+        self._SAVE_FILE_NAME = 'save_state'
 
         self._delete_save_folder()
         self._save()
@@ -29,7 +29,7 @@ class SaveManager(BaseManager):
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'readmanager.bin'
+    pickle_path = current_directory / 'save_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         read_manager = pickle.load(unpickler)
 

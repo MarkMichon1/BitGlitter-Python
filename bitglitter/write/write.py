@@ -32,7 +32,6 @@ def write(
         scrypt_p=1,
 
         # Stream geometry, color, general config
-        header_palette_id='6',
         stream_palette_id='6',
         pixel_width=24,
         block_height=45,
@@ -67,7 +66,6 @@ def write(
         scrypt_r = preset.scrypt_r
         scrypt_p = preset.scrypt_p
         max_cpu_cores = preset.max_cpu_cores
-        header_palette_id = preset.header_palette_id
         stream_palette_id = preset.stream_palette_id
         pixel_width = preset.pixel_width
         block_height = preset.block_height
@@ -76,8 +74,7 @@ def write(
     else:
         write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
                                  file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
-                                 scrypt_n,
-                                 scrypt_r, scrypt_p, stream_palette_id, header_palette_id, pixel_width, block_height,
+                                 scrypt_n, scrypt_r, scrypt_p, stream_palette_id, pixel_width, block_height,
                                  block_width, frames_per_second, preset_used=False)
 
     # This sets the name of the temporary folder while the file is being written, as well as the default output path.
@@ -91,7 +88,7 @@ def write(
     # This is where the final steps leading up to rendering as well as rendering itself takes place.
     render_handler = RenderHandler(stream_name, stream_description, working_dir, default_output_path, encryption_key,
                                    scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
-                                   header_palette_id, stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
+                                   stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, settings_manager.BG_VERSION,
                                    pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,

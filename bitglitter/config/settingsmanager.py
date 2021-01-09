@@ -9,7 +9,7 @@ class SettingsManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-        self._SAVE_FILE_NAME = 'settingsmanager'
+        self._SAVE_FILE_NAME = 'settings_state'
 
         # Constants
         self.BG_VERSION = '2.0'  # Change this during version updates!  Used for internal/debug stuff.
@@ -39,7 +39,7 @@ class SettingsManager(BaseManager):
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'settingsmanager.bin'
+    pickle_path = current_directory / 'settings_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         settings_manager = pickle.load(unpickler)
 

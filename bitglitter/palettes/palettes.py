@@ -91,17 +91,18 @@ class TwentyFourBitPalette:
         self.color_set = None
         self.number_of_colors = 16777216
         self.bit_length = 24
-        self.id = str(self.bit_length)
+        self.palette_id = str(self.bit_length)
         self.color_distance = 0
         self.palette_type = 'default'
 
     def __str__(self):
-        return (f'Name: {self.name}\nIdentification Code: {str(self.id)}\nDescription: {self.description}\nBit Length: '
+        return (f'Name: {self.name}\nIdentification Code: {str(self.palette_id)}\nDescription:'
+                f' {self.description}\nBit Length: '
                 f'{str(self.bit_length)}\nNumber of Colors: {str(self.number_of_colors)}\nColor Set: Too many '
                 f'to list (see directly above)\nColor Distance: {str(self.color_distance)}\n')
 
     def return_as_dict(self):
         return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
-            self.color_distance, 'id': self.id, 'palette_type': self.palette_type, 'number_of_colors':
+            self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
                     self.number_of_colors, 'bit_length': self.bit_length
                 }

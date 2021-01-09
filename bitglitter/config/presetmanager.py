@@ -9,7 +9,7 @@ class PresetManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-        self._SAVE_FILE_NAME = 'presetmanager'
+        self._SAVE_FILE_NAME = 'preset_state'
 
         self.base_preset = Preset('base')  # desktop
         self.preset_dict = {}
@@ -25,22 +25,20 @@ class PresetManager(BaseManager):
                    scrypt_p=1,
                    max_cpu_cores=0,
                    stream_palette_id='6',
-                   header_palette_id='6',
                    pixel_width=24,
                    block_height=45,
                    block_width=80,
                    frames_per_second=30):
 
         write_preset_validate(nickname, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p, max_cpu_cores,
-                              stream_palette_id, header_palette_id, pixel_width, block_height, block_width,
-                              frames_per_second)
+                              stream_palette_id, pixel_width, block_height, block_width, frames_per_second)
         if self.preset_dict[nickname]:
             raise ValueError(f'\'{nickname}\' already exists as a preset nickname.  Please choose a new name or'
                              f'delete the existing preset.')
 
         validated_preset = Preset(nickname, output_mode, compression_enabled, scrypt_n, scrypt_r, scrypt_p,
-                                  max_cpu_cores, stream_palette_id, header_palette_id, pixel_width, block_height,
-                                  block_width, frames_per_second)
+                                  max_cpu_cores, stream_palette_id, pixel_width, block_height, block_width,
+                                  frames_per_second)
         self.preset_dict[nickname] = validated_preset
         self._save()
 
@@ -89,7 +87,6 @@ class Preset:
                  cpu_cores=0,
 
                  stream_palette_id='6',
-                 header_palette_id='6',
                  pixel_width=24,
                  block_height=45,
                  block_width=80,
@@ -105,7 +102,6 @@ class Preset:
         self.scrypt_p = scrypt_p
         self.cpu_cores = cpu_cores
 
-        self.header_palette_id = header_palette_id
         self.stream_palette_id = stream_palette_id
         self.pixel_width = pixel_width
         self.block_height = block_height
@@ -115,16 +111,15 @@ class Preset:
     def return_as_dict(self):
         return {
             'nickname': self.nickname, 'compression_enabled': self.compression_enabled, 'output_mode': self.output_mode,
-            'scrypt_n': self.scrypt_n, 'scrypt_r': self.scrypt_r, 'scrypt_p': self.scrypt_p, 'header_palette_id':
-                self.header_palette_id, 'stream_palette_id': self.stream_palette_id, 'pixel_width': self.pixel_width,
-            'block_height': self.block_height, 'block_width': self.block_width, 'frames_per_second':
-                self.frames_per_second,
+            'scrypt_n': self.scrypt_n, 'scrypt_r': self.scrypt_r, 'scrypt_p': self.scrypt_p, 'stream_palette_id':
+            self.stream_palette_id, 'pixel_width': self.pixel_width, 'block_height': self.block_height, 'block_width':
+            self.block_width, 'frames_per_second': self.frames_per_second,
         }
 
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'presetmanager.bin'
+    pickle_path = current_directory / 'preset_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         preset_manager = pickle.load(unpickler)
 

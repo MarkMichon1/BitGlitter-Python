@@ -3,9 +3,10 @@ import logging
 from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
+from bitglitter.config.palettemanager import palette_manager
 from bitglitter.read.framedecode.framecoloranalysis import color_snap, return_distance
 from bitglitter.read.framedecode.decoderassets import scan_block
-from bitglitter.palettes.utilities import palette_grabber, ColorsToValue
+from bitglitter.palettes.utilities import ColorsToValue
 
 
 def frame_lock_on(image, block_height_override, block_width_override, frame_width, frame_height):
@@ -13,8 +14,8 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
     it will attempt to extract the correct values from the X and Y calibrator on the initial frame.'''
 
     logging.debug('Locking onto frame...')
-    initializer_palette_a = palette_grabber('1')
-    initializer_palette_b = palette_grabber('11')
+    initializer_palette_a = palette_manager.return_selected_palette('1')
+    initializer_palette_b = palette_manager.return_selected_palette('11')
     initializer_palette_a_dict = ColorsToValue(initializer_palette_a)
     initializer_palette_b_dict = ColorsToValue(initializer_palette_b)
     combined_colors = initializer_palette_a.color_set + initializer_palette_b.color_set

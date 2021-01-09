@@ -3,7 +3,7 @@ import logging
 import numpy
 import zlib
 
-from bitglitter.palettes.utilities import palette_grabber
+from bitglitter.config.palettemanager import palette_manager
 
 
 def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_width,
@@ -112,7 +112,7 @@ def read_initializer(bit_stream, blockHeight, block_width, custom_palette_list, 
             logging.debug(f'frame_palette_id: {frame_palette_id}\ndefault_palette_list: {default_palette_list}')
             return False, False
 
-    frame_palette = palette_grabber(str(frame_palette_id))
+    frame_palette = palette_manager.return_selected_palette(str(frame_palette_id))
     logging.debug('read_initializer successfully ran.')
     return protocol_version, frame_palette
 

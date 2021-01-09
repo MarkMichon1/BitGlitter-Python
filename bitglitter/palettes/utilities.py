@@ -5,8 +5,6 @@ import math
 
 from bitstring import BitArray, ConstBitStream
 
-from bitglitter.config.palettemanager import palette_manager
-
 
 class ValuesToColor:
     """This generates a dictionary linking a string binary value to an RGB value.  This is how binary data gets directly
@@ -20,7 +18,6 @@ class ValuesToColor:
         logging.debug(f'Generating binary : color dictionary for {palette_type}...')
         self.palette = palette
         self.bit_length = self.palette.bit_length
-        self.palette_type = palette_type
         self.return_value = self.generate_dictionary()
 
     def generate_dictionary(self):
@@ -90,19 +87,6 @@ class ColorsToValue:
             return self.return_value[color]
         else:
             return self.return_value(color)
-
-
-def palette_grabber(id_or_nick):
-    """Goes through each of the dictionaries to return the color object."""
-
-    if id_or_nick in palette_manager.DEFAULT_PALETTE_LIST:
-        return palette_manager.DEFAULT_PALETTE_LIST[id_or_nick]
-    elif id_or_nick in palette_manager.custom_palette_dict:
-        return palette_manager.custom_palette_dict[id_or_nick]
-    elif id_or_nick in palette_manager.custom_palette_nickname_dict:
-        return palette_manager.custom_palette_nickname_dict[id_or_nick]
-    else:
-        raise ValueError('This value is not present.')
 
 
 def get_color_distance(palette):

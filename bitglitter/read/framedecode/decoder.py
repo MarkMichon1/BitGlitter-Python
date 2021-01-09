@@ -1,6 +1,7 @@
 import logging
 
-from bitglitter.palettes.utilities import palette_grabber, ColorsToValue
+from bitglitter.config.palettemanager import palette_manager
+from bitglitter.palettes.utilities import ColorsToValue
 from bitglitter.read.framedecode.decoderassets import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
 from bitglitter.read.framedecode.frameprocess import FrameProcessor
 from bitglitter.read.framedecode.framelockon import frame_lock_on
@@ -43,7 +44,7 @@ class Decoder:
         self.protocol_version = None
 
         # Palette Variables
-        self.initializer_palette = palette_grabber('1')
+        self.initializer_palette = palette_manager.return_selected_palette('1')
         self.initializer_palette_dict = ColorsToValue(self.initializer_palette)
         self.primary_palette = None
         self.primary_palette_dict = None
@@ -226,7 +227,7 @@ class Decoder:
             if save_object[1] in self.config_object.palette_handler.custom_palette_dict or save_object[1] in \
                     self.config_object.palette_handler.DEFAULT_PALETTE_LIST:
 
-                self.stream_palette = palette_grabber(save_object[1])
+                self.stream_palette = palette_manager.return_selected_palette(save_object[1])
                 logging.info(f'Palette ID {save_object[1]} already saved in system... successfully loaded!')
 
             # This is a new palette which will now be instantiation as a custom palette object.
@@ -240,7 +241,7 @@ class Decoder:
                     return False
 
                 logging.debug('Custom palette successfully instantiated.')
-                self.stream_palette = palette_grabber(save_object[1])
+                self.stream_palette = palette_manager.return_selected_palette(save_object[1])
 
             self.stream_palette_dict = ColorsToValue(self.stream_palette)
             self.frame_handler.update_dictionaries('stream_palette', self.stream_palette_dict, self.stream_palette)

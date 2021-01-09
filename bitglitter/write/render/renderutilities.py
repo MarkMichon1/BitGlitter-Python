@@ -8,31 +8,38 @@ from pathlib import Path
 from bitglitter.write.render.headers import calibrator_header_process
 
 
-def total_frames_estimator(block_height, block_width, text_header, size_in_bytes, stream_palette, header_palette,
-                           output_mode):
+def total_frames_estimator(block_height, block_width, metadata_header_length, palette_header_length, size_in_bytes,
+                           stream_palette, output_mode):
     """This method returns how many frames will be required to complete the rendering process."""
 
     logging.debug("Calculating how many frames to render...")
 
-    TOTAL_BLOCKS = block_height * block_width
-    STREAM_HEADER_OVERHEAD_IN_BITS = 678 + (len(text_header) * 8)
-    STREAM_SIZE_IN_BITS = (size_in_bytes * 8)
-    HEADER_BIT_LENGTH = header_palette.bit_length
-    STREAM_BIT_LENGTH = stream_palette.bit_length
+    # Constants
+    TOTAL_BLOCKS_PER_FRAME = block_height * block_width
+    INITIALIZER_OVERHEAD = block_height + block_width + 835
+    FRAME_HEADER_OVERHEAD = 352
+    STREAM_SETUP_HEADER = 685
+    pre_stream_palette_header_data_left = STREAM_SETUP_HEADER + palette_header_length
+    payload_data_left = (metadata_header_length + size_in_bytes)* 8
+    STREAM_PALETTE_BIT_LENGTH = stream_palette.bit_length
 
-    # Overhead constants
-    INITIALIZER_OVERHEAD = block_height + block_width + 323
-    FRAME_HEADER_OVERHEAD = 608
 
-    data_left = STREAM_SIZE_IN_BITS
-    frame_number = 0
-    stream_header_bits_left = STREAM_HEADER_OVERHEAD_IN_BITS  # subtract until zero
+
+    frame_number = 1
+
+    while pre_stream_palette_header_data_left:
+        remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_OVERHEAD - (INITIALIZER_OVERHEAD *
+                                                                    int(frame_number == 1 or output_mode == 'image'))
+        if remaining_blocks_this_frame >=
+
+
+    stream_header_bits_left = STREAM_SETUP_HEADER  # subtract until zero
 
     while stream_header_bits_left:
 
         bits_consumed = FRAME_HEADER_OVERHEAD
-        blocks_left = TOTAL_BLOCKS
-        blocks_left -= (INITIALIZER_OVERHEAD * int(output_mode == 'image' or frame_number == 0))
+        blocks_left = TOTAL_BLOCKS_PER_FRAME
+        blocks_left -= (INITIALIZER_OVERHEAD * int(output_mode == 'image' or frame_number == 1))
 
         stream_header_bits_available = (blocks_left * HEADER_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
 
@@ -48,24 +55,24 @@ def total_frames_estimator(block_height, block_width, text_header, size_in_bytes
             attachment_bits = header_palette.bit_length - (bits_consumed % header_palette.bit_length)
 
             if attachment_bits > 0:
-                data_left -= attachment_bits
+                payload_data_left -= attachment_bits
 
             remaining_blocks_left = blocks_left - stream_header_blocks_used
             leftover_frame_bits = remaining_blocks_left * HEADER_BIT_LENGTH
 
-            if leftover_frame_bits > data_left:
-                data_left = 0
+            if leftover_frame_bits > payload_data_left:
+                payload_data_left = 0
 
             else:
-                data_left -= leftover_frame_bits
+                payload_data_left -= leftover_frame_bits
 
         frame_number += 1
 
     # Calculating how much data can be embedded in a regular frame_payload frame, and returning the total frame count
     # needed.
-    blocks_left = TOTAL_BLOCKS - (INITIALIZER_OVERHEAD * int(output_mode == 'image'))
-    payload_bits_per_frame = (blocks_left * STREAM_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
-    total_frames = math.ceil(data_left / payload_bits_per_frame) + frame_number
+    blocks_left = TOTAL_BLOCKS_PER_FRAME - (INITIALIZER_OVERHEAD * int(output_mode == 'image'))
+    payload_bits_per_frame = (blocks_left * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
+    total_frames = math.ceil(payload_data_left / payload_bits_per_frame) + frame_number
 
     logging.info(f'{total_frames} frame(s) required for this operation.')
     return total_frames
@@ -101,7 +108,6 @@ def draw_frame(dict_obj):
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
     stream_sha = dict_obj['stream_sha']
-
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
 
     image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
@@ -128,6 +134,7 @@ def draw_frame(dict_obj):
                                '\nis reached only if something is broken.')
 
         # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
+        logging.debug(f'frame {frame_number} block {block_position}')
         next_bits = frame_payload.read(f'bits : {read_length}')
         color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
 

@@ -27,9 +27,9 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
     # Constants
     TOTAL_BLOCKS = block_height * block_width
-    INITIALIZER_OVERHEAD = block_height + block_width + 323
-    INITIALIZER_BIT_OVERHEAD = 324
-    FRAME_HEADER_BIT_OVERHEAD = 608
+    INITIALIZER_OVERHEAD = block_height + block_width + 835
+    INITIALIZER_BIT_OVERHEAD = 836
+    FRAME_HEADER_BIT_OVERHEAD = 422
 
     payload = ConstBitStream(filename=working_directory / 'processed.bin')
     frame_number = 1
@@ -70,7 +70,8 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         # initializer is on or not.
         initializer_holder = BitStream()
         if frame_number == 1 or output_mode == 'image':
-            initializer_holder = initializer_header_process(block_height, block_width, protocol_version, active_palette)
+            initializer_holder = initializer_header_process(block_height, block_width, protocol_version, header_palette,
+                                                            stream_palette, stream_sha)
             initializer_palette_blocks_used += INITIALIZER_BIT_OVERHEAD
             blocks_left -= INITIALIZER_OVERHEAD
             initializer_enabled = True
@@ -153,7 +154,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             bits_to_pad = BitStream(bin=f"{'0' * remainder_bits}")
             frame_hashable_bits.append(bits_to_pad)
 
-        frame_header_holder = frame_header_process(stream_sha, frame_hashable_bits, frame_number, blocks_used)
+        frame_header_holder = frame_header_process(frame_hashable_bits, frame_number, blocks_used)
         combining_bits = initializer_holder + frame_header_holder + stream_header_chunk + attachment_bits_append \
                          + remainder_blocks_into_bits + payload_holder + bits_to_pad
         frame_payload = ConstBitStream(combining_bits)

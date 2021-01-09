@@ -16,7 +16,7 @@ class PaletteManager(BaseManager):
 
     def __init__(self):
         super().__init__()
-        self._SAVE_FILE_NAME = 'palettemanager'
+        self._SAVE_FILE_NAME = 'palette_state'
 
         self.DEFAULT_PALETTE_LIST = {'1': DefaultPalette("1 Bit Default",
                                                          "Two colors, black and white.  While it has the lowest "
@@ -151,6 +151,13 @@ class PaletteManager(BaseManager):
         proper_string_syntax(name_string)
         proper_string_syntax(description_string)
 
+        if len(name_string) > 50:
+            raise ValueError('Custom palette names cannot exceed 50 characters.')
+        if len(description_string) > 100:
+            raise ValueError('Custom palette descriptions cannot exceed 50 characters.')
+        if len(color_set) > 256:
+            raise ValueError('Custom palettes cannot exceed 256 colors.')
+
         proper_string_syntax(nickname_string)
         if optional_nickname in palette_manager.custom_palette_nickname_dict or optional_nickname in \
                 palette_manager.custom_palette_dict or optional_nickname in palette_manager.DEFAULT_PALETTE_LIST:
@@ -240,10 +247,22 @@ class PaletteManager(BaseManager):
             returned_list.append(palette.return_as_dict())
         return returned_list
 
+    def return_selected_palette(self, id_or_nickname):
+        """Goes through each of the dictionaries to return the color object."""
+
+        if id_or_nickname in self.DEFAULT_PALETTE_LIST:
+            return self.DEFAULT_PALETTE_LIST[id_or_nickname]
+        elif id_or_nickname in self.custom_palette_dict:
+            return self.custom_palette_dict[id_or_nickname]
+        elif id_or_nickname in self.custom_palette_nickname_dict:
+            return self.custom_palette_nickname_dict[id_or_nickname]
+        else:
+            raise ValueError(f'No palettes exist with ID or nickname \'{id_or_nickname}\'.')
+
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'palettemanager.bin'
+    pickle_path = current_directory / 'palette_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         palette_manager = pickle.load(unpickler)
 

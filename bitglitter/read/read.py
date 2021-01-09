@@ -14,7 +14,6 @@ def read(input_path,
          # Overrides
          block_height_override=False,
          block_width_override=False,
-         header_palette_id_override=False,
          stream_palette_id_override=False,
 
          # Crypto Input

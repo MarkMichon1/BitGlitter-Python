@@ -243,12 +243,8 @@ function.  If you're a casual user, you'll never need to touch these (and should
  will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end users of the
  stream must know these custom parameters.
 
-`header_palette_id='6'` sets the palette used in the 'setup' frames in the beginning.  It is strongly recommended you use
-a default palette here if you don't know what you're doing, because this is where important information regarding the
-stream is read, and by using a custom palette, it will be impossible for anyone to read it who hasn't already 'learned'
-the palette.
-
-`stream_palette_id='6'` sets the palette used for the payload.  By default, the 4 bit default color set is used.  I'll 
+`stream_palette_id='6'` sets the palette used for the payload after the initialization headers,  By default, the 4 bit
+default color set is used.  I'll 
 explain all about palettes below.
 
 `pixel_width=24` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
@@ -313,7 +309,7 @@ block width.  Normally you'll never need to use this, as these values are automa
 onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
 attempt to lock onto the screen given these parameters.  Both must be filled in order for the override to work.
 
-`header_palette_id_override=False` and `stream_palette_id_override=False` are something you'd only touch if reading from
+`stream_palette_id_override=False` is something you'd only touch if reading from
 a folder of images (of BitGlitter frames)
 
 `encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only

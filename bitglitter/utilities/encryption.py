@@ -34,8 +34,7 @@ def encrypt_file(input_file, output_file, write_mode, encryption_key, scrypt_n=1
             while True:
                 chunk = decrypted.read(chunk_size)
                 if chunk:
-                    encrypted.write(_encrypt_bytes_chunk(key, initialization_vector, chunk, backend,
-                                                         chunk_size=chunk_size))
+                    encrypted.write(_encrypt_bytes_chunk(key, initialization_vector, chunk, backend))
                 else:
                     break
 
