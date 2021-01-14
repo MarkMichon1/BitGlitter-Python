@@ -7,10 +7,10 @@ from bitstring import BitStream, ConstBitStream
 from bitglitter.write.render.headers import initializer_header_process, frame_header_process
 
 
-def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette, header_palette,
+def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette,
                           stream_palette, output_mode, stream_output_path, output_name, working_directory, total_frames,
-                          stream_header, text_header_processed, stream_sha, initializer_palette_dict,
-                          header_palette_dict, stream_palette_dict, default_output_path):
+                          stream_header, metadata_header, palette_header, stream_sha,
+                          initializer_palette_dict, stream_palette_dict, default_output_path):
     """This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     comments in this function that describe what each part is doing, to follow along.
     """
@@ -27,142 +27,112 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
     # Constants
     TOTAL_BLOCKS = block_height * block_width
-    INITIALIZER_OVERHEAD = block_height + block_width + 835
-    INITIALIZER_BIT_OVERHEAD = 836
-    FRAME_HEADER_BIT_OVERHEAD = 422
-
-    payload = ConstBitStream(filename=working_directory / 'processed.bin')
-    frame_number = 1
-    primary_frame_palette_dict, primary_read_length = header_palette_dict, header_palette.bit_length
-    active_palette = header_palette
-    stream_palette_used = False
-    last_frame = False
+    INITIALIZER_BLOCK_OVERHEAD = block_height + block_width + 579
+    INITIALIZER_BIT_OVERHEAD = 580
+    FRAME_HEADER_BIT_OVERHEAD = 352
 
     # Final preparations for stream header parts.
-    stream_header_bitstream = BitStream(stream_header)
-    stream_header_combined = BitStream(stream_header_bitstream)
-    stream_header_combined.append(text_header_processed)
+    stream_payload = ConstBitStream(filename=working_directory / 'processed.bin')
+    pre_stream_palette_headers = BitStream(stream_header)
+    metadata_header_bitstream = BitStream(metadata_header)
+    # logging.info(f'metadata_header {metadata_header_bitstream.len}')
+    pre_stream_palette_headers.append(metadata_header_bitstream)
+    palette_header_bitstream = BitStream(palette_header)
+    # logging.info(f'palette_header_bitstream {palette_header_bitstream.len}')
+    pre_stream_palette_headers.append(palette_header_bitstream)
+    pre_stream_palette_headers = ConstBitStream(pre_stream_palette_headers)
+    #logging.info(f'pre_stream_palette_headers {pre_stream_palette_headers.len}')
 
-    # This is the primary loop where all rendering takes place.  It'll continue until it traverses the entire file.
-    while payload.bitpos != payload.length:
+    frame_number = 1
+    # logging.info(f'{frame_number} metadata_header_bitstream {metadata_header_bitstream.len}') #todo
+
+    # This is the primary loop; it will yield until it traverses the entire file.
+    while stream_payload.bitpos != stream_payload.length:
 
         logging.debug(f'Generating frame data for {frame_number} of {total_frames} ...')
 
-        stream_header_chunk = BitStream()
-        payload_holder = BitStream()
-        attachment_bits_append = BitStream()
-        remainder_blocks_into_bits = BitStream()
-        bits_to_pad = BitStream()
+        initializer_bits = BitStream()
+        setup_headers_bits = BitStream()
+        payload_bits = BitStream()
+        padding_bits = BitStream()
+        stream_sha_bytes = bytes(stream_sha, 'UTF-8')
 
-        max_allowable_payload_bits = len(payload) - payload.bitpos
+        max_allowable_payload_bits = len(stream_payload) - stream_payload.bitpos
+        max_allowable_pre_stream_palette_header_bits = pre_stream_palette_headers.length \
+                                                       - pre_stream_palette_headers.bitpos
         bits_consumed = FRAME_HEADER_BIT_OVERHEAD
-        blocks_left = TOTAL_BLOCKS
+        blocks_left_this_frame = TOTAL_BLOCKS
         initializer_enabled = False
-        blocks_used = 0
         initializer_palette_blocks_used = 0
-        stream_header_blocks_used = 0
+        last_frame = False
 
-        if stream_palette_used:
-            primary_frame_palette_dict, primary_read_length = stream_palette_dict, stream_palette.bit_length
-            active_palette = stream_palette
-
-        # Adding an initializer header if necessity.  initializer_enabled is a boolean that signals whether the
-        # initializer is on or not.
-        initializer_holder = BitStream()
         if frame_number == 1 or output_mode == 'image':
-            initializer_holder = initializer_header_process(block_height, block_width, protocol_version, header_palette,
-                                                            stream_palette, stream_sha)
+            initializer_bits = initializer_header_process(block_height, block_width, protocol_version, stream_palette,
+                                                          stream_sha_bytes)
             initializer_palette_blocks_used += INITIALIZER_BIT_OVERHEAD
-            blocks_left -= INITIALIZER_OVERHEAD
+            blocks_left_this_frame -= INITIALIZER_BLOCK_OVERHEAD
             initializer_enabled = True
 
-        bits_left_this_frame = (blocks_left * active_palette.bit_length) - FRAME_HEADER_BIT_OVERHEAD
+        # Pre stream palette headers to be rendered on these frames
+        if pre_stream_palette_headers.bitpos != pre_stream_palette_headers.length:
+            blocks_left_this_frame -= FRAME_HEADER_BIT_OVERHEAD
 
-        # Here, we're calculating how many bits we can fit into the stream based on the palettes used.
-        # Normal frame_payload frames.
-        if stream_palette_used:
+            # Pre stream palette headers don't have enough room to finish on this frame.
+            if blocks_left_this_frame <= max_allowable_pre_stream_palette_header_bits:
+                setup_headers_bits = pre_stream_palette_headers.read(blocks_left_this_frame)
+                initializer_palette_blocks_used += blocks_left_this_frame
 
-            # Standard frame_payload frame in the middle of the stream.
-            if bits_left_this_frame <= max_allowable_payload_bits:
-                payload_holder = payload.read(bits_left_this_frame)
-
-            # Payload Frame terminates on this frame.
+            # Pre stream palette headers have enough room to finish on this frame.
             else:
-                logging.debug('Payload termination frame')
-                payload_holder = payload.read(max_allowable_payload_bits)
-                last_frame = True
+                setup_headers_bits = pre_stream_palette_headers.read(max_allowable_pre_stream_palette_header_bits)
+                # logging.info(f'max_allowable_pre_stream_palette_header_bits {max_allowable_pre_stream_palette_header_bits}')
+                # logging.info(
+                #     f'initializer_palette_blocks_used {initializer_palette_blocks_used}')
+                initializer_palette_blocks_used += max_allowable_pre_stream_palette_header_bits
+                blocks_left_this_frame -= max_allowable_pre_stream_palette_header_bits
+                # logging.info(f'{frame_number }blocks left {blocks_left_this_frame}') todo
 
-        # Frames that need stream_header_combined added to them.
-        else:
+                # There is room on this pre stream palette header termination frame to start writing the payload
+                if blocks_left_this_frame:
+                    bits_left_this_frame = blocks_left_this_frame * stream_palette.bit_length
+                    payload_bits = stream_payload.read(min(bits_left_this_frame, max_allowable_payload_bits))
 
-            # This frame has more bits left for the streamHeader than capacity.
-            if len(stream_header_combined) - stream_header_combined.bitpos > bits_left_this_frame:
-                stream_header_chunk = stream_header_combined.read(bits_left_this_frame)
-                stream_header_blocks_used = math.ceil(len(stream_header_chunk + FRAME_HEADER_BIT_OVERHEAD)
-                                                      / active_palette.bitLength)
-
-            # stream_header_combined terminates on this frame
-            else:
-
-                logging.debug("Streamheader terminates this frame.")
-
-                stream_header_chunk = stream_header_combined.read(len(stream_header_combined)
-                                                                  - stream_header_combined.bitpos)
-                bits_left_this_frame -= len(stream_header_combined)
-                bits_consumed += len(stream_header_chunk)
-
-                stream_palette_used = True
-                stream_header_blocks_used = math.ceil(bits_consumed / active_palette.bit_length)
-
-                # There may be extra bits available at the end of the blocks used for the header_palette.  If that's
-                # the case, they will be calculated here.
-                final_block_partial_fill = bits_consumed % active_palette.bit_length
-
-                if final_block_partial_fill > 0:
-                    attachment_bits = active_palette.bit_length - final_block_partial_fill
-                    attachment_bits_append = payload.read(attachment_bits)
-
-                    bits_consumed += attachment_bits
-                    max_allowable_payload_bits -= attachment_bits
-
-                remaining_blocks_left = blocks_left - stream_header_blocks_used
-
-                # If there are remaining stream_palette blocks available for this frame, we go here.
-                if remaining_blocks_left > 0:
-                    bits_left_this_frame = remaining_blocks_left * active_palette.bit_length
-
-                    if max_allowable_payload_bits > bits_left_this_frame:  # Payload continues on in next frame(s)
-                        remainder_blocks_into_bits = payload.read(bits_left_this_frame)
-
-                    else:  # Full frame_payload can terminate on streamHeader termination frame.
-                        remainder_blocks_into_bits = payload.read(max_allowable_payload_bits)
+                    # The payload will finish on this frame.
+                    if blocks_left_this_frame >= max_allowable_payload_bits:
                         last_frame = True
 
-        frame_hashable_bits = stream_header_chunk + attachment_bits_append + remainder_blocks_into_bits + payload_holder
+        # Standard frame containing only the payload, frame header, and initializer if enabled.
+        else:
+            bits_left_this_frame = (blocks_left_this_frame * stream_palette.bit_length) - FRAME_HEADER_BIT_OVERHEAD
+            payload_bits = stream_payload.read(min(bits_left_this_frame, max_allowable_payload_bits))
+
+            # Payload will finish on this frame.
+            if bits_left_this_frame >= max_allowable_payload_bits:
+                last_frame = True
+
+        frame_hashable_bits = setup_headers_bits + payload_bits
         combined_frame_length = frame_hashable_bits.len + FRAME_HEADER_BIT_OVERHEAD
         blocks_used = (int(initializer_enabled) * INITIALIZER_BIT_OVERHEAD) + math.ceil(combined_frame_length
-                                                                                        / active_palette.bit_length)
+                                                                                        / stream_palette.bit_length)
 
-        # On the last frame, there may be excess capacity in the final block.  This pads the payload as needed so it
-        # cleanly fits into the block.
+        # On the last frame, there may be excess bit capacity in the final block.  This pads the payload so it cleanly
+        # fits into the final block.
         if last_frame:
-
-            remainder_bits = active_palette.bit_length - (combined_frame_length % active_palette.bit_length)
-            if remainder_bits == active_palette.bit_length:
+            remainder_bits = stream_palette.bit_length - (combined_frame_length % stream_palette.bit_length)
+            if remainder_bits == stream_palette.bit_length:
                 remainder_bits = 0
 
-            bits_to_pad = BitStream(bin=f"{'0' * remainder_bits}")
-            frame_hashable_bits.append(bits_to_pad)
-
+            padding_bits = BitStream(bin=f"{'0' * remainder_bits}")
+            frame_hashable_bits.append(padding_bits)
         frame_header_holder = frame_header_process(frame_hashable_bits, frame_number, blocks_used)
-        combining_bits = initializer_holder + frame_header_holder + stream_header_chunk + attachment_bits_append \
-                         + remainder_blocks_into_bits + payload_holder + bits_to_pad
-        frame_payload = ConstBitStream(combining_bits)
+        merged_pieces = initializer_bits + frame_header_holder + setup_headers_bits + payload_bits + padding_bits
+        #logging.info(f'{frame_number }initializer_bits {initializer_bits.len} frame_header_holder {frame_header_holder.len} setup_headers_bits {setup_headers_bits.len} payload_bits {payload_bits.len}') logo
+        frame_payload = ConstBitStream(merged_pieces)
 
         yield {
             'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
-            frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
-            'primary_frame_palette_dict': primary_frame_palette_dict, 'primary_read_length': primary_read_length,
+                frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
+            'stream_palette_dict': stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length,
             'initializer_palette_dict': initializer_palette_dict, 'initializer_palette': initializer_palette,
             'output_mode': output_mode, 'output_name': output_name, 'initializer_enabled': initializer_enabled,
             'frame_number': frame_number, 'total_frames': total_frames, 'image_output_path': image_output_path,

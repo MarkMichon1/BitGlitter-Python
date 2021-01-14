@@ -57,9 +57,9 @@ class RenderHandler:
                                                    output_mode)
 
         stream_header = stream_setup_header_process(size_in_bytes, self.frames_wrote, compression_enabled,
-                                                    encryption_enabled, file_mask_enabled,
-                                                    stream_palette.palette_type == "custom", datetime_started,
-                                                    len(metadata_header_bytes), metadata_header_hash_bytes)
+                                                    encryption_enabled, file_mask_enabled, metadata_header_bytes,
+                                                    metadata_header_hash_bytes, palette_header_bytes,
+                                                    palette_header_hash_bytes)
         logging.info('Pre-render complete.')
 
         # Render
@@ -76,17 +76,17 @@ class RenderHandler:
             count = 1
             for frame_process in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
                                                                                     pixel_width, protocol_version,
-                                                                                    initializer_palette, header_palette,
-                                                                                    stream_palette, output_mode,
-                                                                                    output_path, output_name,
-                                                                                    working_dir, self.frames_wrote,
-                                                                                    stream_header, metadata_header_bytes,
-                                                                                    stream_sha,
+                                                                                    initializer_palette, stream_palette,
+                                                                                    output_mode, output_path,
+                                                                                    output_name, working_dir,
+                                                                                    self.frames_wrote, stream_header,
+                                                                                    metadata_header_bytes,
+                                                                                    palette_header_bytes, stream_sha,
                                                                                     initializer_palette_dict,
-                                                                                    header_palette_dict,
                                                                                     stream_palette_dict,
                                                                                     default_output_path), chunksize=1):
-                block_position = frame_process
+                if frame_process['frame_number'] == self.frames_wrote:
+                    block_position = frame_process['block_position']
                 logging.info(f'Processing frame {count} of {self.frames_wrote}... '
                              f'({round(((count / self.frames_wrote) * 100), 2)} %)')
 

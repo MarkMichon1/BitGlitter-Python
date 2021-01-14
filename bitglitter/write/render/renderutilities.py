@@ -19,62 +19,29 @@ def total_frames_estimator(block_height, block_width, metadata_header_length, pa
     INITIALIZER_OVERHEAD = block_height + block_width + 835
     FRAME_HEADER_OVERHEAD = 352
     STREAM_SETUP_HEADER = 685
-    pre_stream_palette_header_data_left = STREAM_SETUP_HEADER + palette_header_length
-    payload_data_left = (metadata_header_length + size_in_bytes)* 8
+    pre_stream_palette_header_data_left = STREAM_SETUP_HEADER + palette_header_length + metadata_header_length
+    payload_data_left = size_in_bytes * 8
     STREAM_PALETTE_BIT_LENGTH = stream_palette.bit_length
 
-
-
-    frame_number = 1
+    total_frames = 1
 
     while pre_stream_palette_header_data_left:
         remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_OVERHEAD - (INITIALIZER_OVERHEAD *
-                                                                    int(frame_number == 1 or output_mode == 'image'))
-        if remaining_blocks_this_frame >=
+                                                                    int(total_frames == 1 or output_mode == 'image'))
+        if remaining_blocks_this_frame < pre_stream_palette_header_data_left:
+            pre_stream_palette_header_data_left -= remaining_blocks_this_frame
+            total_frames += 1
+        else:
+            remaining_blocks_this_frame -= pre_stream_palette_header_data_left
+            pre_stream_palette_header_data_left = 0
+            payload_data_left = max(0, payload_data_left - (remaining_blocks_this_frame * STREAM_PALETTE_BIT_LENGTH))
 
+    if payload_data_left:
+        remaining_blocks = TOTAL_BLOCKS_PER_FRAME - (1 * output_mode == 'image')
+        payload_bits_per_frame = (remaining_blocks * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
+        total_frames += math.ceil(payload_data_left / payload_bits_per_frame)
 
-    stream_header_bits_left = STREAM_SETUP_HEADER  # subtract until zero
-
-    while stream_header_bits_left:
-
-        bits_consumed = FRAME_HEADER_OVERHEAD
-        blocks_left = TOTAL_BLOCKS_PER_FRAME
-        blocks_left -= (INITIALIZER_OVERHEAD * int(output_mode == 'image' or frame_number == 1))
-
-        stream_header_bits_available = (blocks_left * HEADER_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
-
-        if stream_header_bits_left >= stream_header_bits_available:
-            stream_header_bits_left -= stream_header_bits_available
-
-        else:  # stream_header_combined terminates on this frame
-            stream_header_bits_available -= stream_header_bits_left
-            bits_consumed += stream_header_bits_left
-            stream_header_bits_left = 0
-
-            stream_header_blocks_used = math.ceil(bits_consumed / header_palette.bit_length)
-            attachment_bits = header_palette.bit_length - (bits_consumed % header_palette.bit_length)
-
-            if attachment_bits > 0:
-                payload_data_left -= attachment_bits
-
-            remaining_blocks_left = blocks_left - stream_header_blocks_used
-            leftover_frame_bits = remaining_blocks_left * HEADER_BIT_LENGTH
-
-            if leftover_frame_bits > payload_data_left:
-                payload_data_left = 0
-
-            else:
-                payload_data_left -= leftover_frame_bits
-
-        frame_number += 1
-
-    # Calculating how much data can be embedded in a regular frame_payload frame, and returning the total frame count
-    # needed.
-    blocks_left = TOTAL_BLOCKS_PER_FRAME - (INITIALIZER_OVERHEAD * int(output_mode == 'image'))
-    payload_bits_per_frame = (blocks_left * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
-    total_frames = math.ceil(payload_data_left / payload_bits_per_frame) + frame_number
-
-    logging.info(f'{total_frames} frame(s) required for this operation.')
+    logging.info(f'{total_frames} frame(s) required for this write process.')
     return total_frames
 
 
@@ -97,8 +64,8 @@ def draw_frame(dict_obj):
     pixel_width = dict_obj['pixel_width']
     frame_payload = dict_obj['frame_payload']
     initializer_palette_blocks_used = dict_obj['initializer_palette_blocks_used']
-    primary_frame_palette_dict = dict_obj['primary_frame_palette_dict']
-    primary_read_length = dict_obj['primary_read_length']
+    stream_palette_dict = dict_obj['stream_palette_dict']
+    stream_palette_bit_length = dict_obj['stream_palette_bit_length']
     initializer_palette_dict = dict_obj['initializer_palette_dict']
     initializer_palette = dict_obj['initializer_palette']
     output_mode = dict_obj['output_mode']
@@ -108,8 +75,9 @@ def draw_frame(dict_obj):
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
     stream_sha = dict_obj['stream_sha']
-    logging.debug(f'Rendering {frame_number} of {total_frames} ...')
-
+    #logging.debug(f'Rendering {frame_number} of {total_frames} ...')
+    #logging.info(f'FRAME {frame_number} frame_payload {frame_payload.len} initializer_palette_blocks_used {initializer_palette_blocks_used}')
+    logging.info(f'frame_payload.len {frame_payload.len} - initializer_palette_blocks_used {initializer_palette_blocks_used} = {frame_payload.len - initializer_palette_blocks_used}')
     image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
     draw = ImageDraw.Draw(image)
 
@@ -119,14 +87,15 @@ def draw_frame(dict_obj):
     next_coordinates = render_coords_generator(block_height, block_width, pixel_width, initializer_enabled)
     block_position = 0
     while len(frame_payload) != frame_payload.bitpos:
+        # logging.info(f'FRAME {frame_number} Block {block_position}')
 
         # Primary palette selection (ie, header_palette or stream_palette depending on where we are in the stream)
         if block_position >= initializer_palette_blocks_used:
-            active_palette_dict, read_length = primary_frame_palette_dict, primary_read_length
+            active_palette_dict, bit_read_length = stream_palette_dict, stream_palette_bit_length
 
         # Initializer palette selection
         elif block_position < initializer_palette_blocks_used:
-            active_palette_dict, read_length = (initializer_palette_dict, initializer_palette.bit_length)
+            active_palette_dict, bit_read_length = (initializer_palette_dict, initializer_palette.bit_length)
 
         # Here to signal something has broken.
         else:
@@ -134,8 +103,7 @@ def draw_frame(dict_obj):
                                '\nis reached only if something is broken.')
 
         # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
-        logging.debug(f'frame {frame_number} block {block_position}')
-        next_bits = frame_payload.read(f'bits : {read_length}')
+        next_bits = frame_payload.read(f'bits : {bit_read_length}')
         color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
 
         # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
@@ -160,4 +128,4 @@ def draw_frame(dict_obj):
     save_path = Path(image_output_path / f'{str(file_name)}.png')
     image.save(save_path)
 
-    return block_position
+    return {'block_position': block_position, 'frame_number': frame_number}

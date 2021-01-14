@@ -24,13 +24,13 @@ def metadata_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, s
 
     raw_header_to_bytes = bytes(meta_data_string, 'UTF-8')
     raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes, byte_output=True)
-    processed_header = compress_bytes(raw_header_to_bytes)
-    if file_mask_enabled and crypto_key:
-        logging.debug('Encrypting...')
-        processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
+    # processed_header = compress_bytes(raw_header_to_bytes)
+    # if file_mask_enabled and crypto_key: TODO FIX
+    #     logging.debug('Encrypting...')
+    #     processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
 
     logging.debug('Metadata header generated.')
-    return processed_header, raw_header_hash_bytes
+    return raw_header_hash_bytes, raw_header_hash_bytes
 
 
 def palette_initialization_header_process(palette):
@@ -46,10 +46,10 @@ def palette_initialization_header_process(palette):
     to_bytes = bytes(adding_bytes)
     hash_bytes = get_hash_from_bytes(to_bytes, byte_output=True)
 
-    processed_header = compress_bytes(raw_header_to_bytes)
+    processed_header = compress_bytes(to_bytes)
 
     logging.debug('Palette initialization header generated.')
-    return to_bytes, hash_bytes
+    return processed_header, hash_bytes
 
 
 def stream_setup_header_process(size_in_bytes, total_frames, compression_enabled, encryption_enabled,
@@ -68,8 +68,10 @@ def stream_setup_header_process(size_in_bytes, total_frames, compression_enabled
     adding_bytes.append(BitArray(bytes=metadata_header_hash, length=256))
 
     adding_bytes.append(BitArray(uint=len(palette_initialization_header), length=10))
-    adding_bytes.append(BitArray(bytes=palette_initialization_header_hash, length=256))
-
+    if palette_initialization_header_hash:
+        adding_bytes.append(BitArray(bytes=palette_initialization_header_hash, length=256))
+    else:
+        adding_bytes.append(BitArray(bytes=bytearray(256), length=256))
     to_bytes = bytes(adding_bytes)
     crc_output = zlib.crc32(to_bytes)
     adding_bytes.append(BitArray(uint=crc_output, length=32))
