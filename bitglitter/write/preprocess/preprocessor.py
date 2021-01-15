@@ -1,12 +1,10 @@
 from pathlib import Path
 
-import json
 import logging
 import time
 
-from bitglitter.utilities.compression import compress_bytes
 from bitglitter.utilities.display import humanize_file_size
-from bitglitter.utilities.encryption import encrypt_bytes, get_hash_from_file
+from bitglitter.utilities.encryption import get_hash_from_file
 from bitglitter.utilities.filemanipulation import refresh_working_folder, return_file_size
 from bitglitter.write.preprocess.fileprocess import directory_crawler, process_file
 

@@ -1,5 +1,4 @@
 import logging
-import math
 from pathlib import Path
 
 from bitstring import BitStream, ConstBitStream
@@ -27,7 +26,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
     # Constants
     TOTAL_BLOCKS = block_height * block_width
-    INITIALIZER_BLOCK_OVERHEAD = block_height + block_width + 579
+    INITIALIZER_CALIBRATOR_BLOCK_OVERHEAD = block_height + block_width + 579
     INITIALIZER_BIT_OVERHEAD = 580
     FRAME_HEADER_BIT_OVERHEAD = 352
 
@@ -35,16 +34,12 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
     stream_payload = ConstBitStream(filename=working_directory / 'processed.bin')
     pre_stream_palette_headers = BitStream(stream_header)
     metadata_header_bitstream = BitStream(metadata_header)
-    # logging.info(f'metadata_header {metadata_header_bitstream.len}')
     pre_stream_palette_headers.append(metadata_header_bitstream)
     palette_header_bitstream = BitStream(palette_header)
-    # logging.info(f'palette_header_bitstream {palette_header_bitstream.len}')
     pre_stream_palette_headers.append(palette_header_bitstream)
     pre_stream_palette_headers = ConstBitStream(pre_stream_palette_headers)
-    #logging.info(f'pre_stream_palette_headers {pre_stream_palette_headers.len}')
 
     frame_number = 1
-    # logging.info(f'{frame_number} metadata_header_bitstream {metadata_header_bitstream.len}') #todo
 
     # This is the primary loop; it will yield until it traverses the entire file.
     while stream_payload.bitpos != stream_payload.length:
@@ -60,7 +55,6 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         max_allowable_payload_bits = len(stream_payload) - stream_payload.bitpos
         max_allowable_pre_stream_palette_header_bits = pre_stream_palette_headers.length \
                                                        - pre_stream_palette_headers.bitpos
-        bits_consumed = FRAME_HEADER_BIT_OVERHEAD
         blocks_left_this_frame = TOTAL_BLOCKS
         initializer_enabled = False
         initializer_palette_blocks_used = 0
@@ -70,12 +64,13 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             initializer_bits = initializer_header_process(block_height, block_width, protocol_version, stream_palette,
                                                           stream_sha_bytes)
             initializer_palette_blocks_used += INITIALIZER_BIT_OVERHEAD
-            blocks_left_this_frame -= INITIALIZER_BLOCK_OVERHEAD
+            blocks_left_this_frame -= INITIALIZER_CALIBRATOR_BLOCK_OVERHEAD
             initializer_enabled = True
 
         # Pre stream palette headers to be rendered on these frames
         if pre_stream_palette_headers.bitpos != pre_stream_palette_headers.length:
             blocks_left_this_frame -= FRAME_HEADER_BIT_OVERHEAD
+            initializer_palette_blocks_used += FRAME_HEADER_BIT_OVERHEAD
 
             # Pre stream palette headers don't have enough room to finish on this frame.
             if blocks_left_this_frame <= max_allowable_pre_stream_palette_header_bits:
@@ -85,12 +80,8 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             # Pre stream palette headers have enough room to finish on this frame.
             else:
                 setup_headers_bits = pre_stream_palette_headers.read(max_allowable_pre_stream_palette_header_bits)
-                # logging.info(f'max_allowable_pre_stream_palette_header_bits {max_allowable_pre_stream_palette_header_bits}')
-                # logging.info(
-                #     f'initializer_palette_blocks_used {initializer_palette_blocks_used}')
                 initializer_palette_blocks_used += max_allowable_pre_stream_palette_header_bits
                 blocks_left_this_frame -= max_allowable_pre_stream_palette_header_bits
-                # logging.info(f'{frame_number }blocks left {blocks_left_this_frame}') todo
 
                 # There is room on this pre stream palette header termination frame to start writing the payload
                 if blocks_left_this_frame:
@@ -112,8 +103,6 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
         frame_hashable_bits = setup_headers_bits + payload_bits
         combined_frame_length = frame_hashable_bits.len + FRAME_HEADER_BIT_OVERHEAD
-        blocks_used = (int(initializer_enabled) * INITIALIZER_BIT_OVERHEAD) + math.ceil(combined_frame_length
-                                                                                        / stream_palette.bit_length)
 
         # On the last frame, there may be excess bit capacity in the final block.  This pads the payload so it cleanly
         # fits into the final block.
@@ -124,9 +113,9 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
             padding_bits = BitStream(bin=f"{'0' * remainder_bits}")
             frame_hashable_bits.append(padding_bits)
-        frame_header_holder = frame_header_process(frame_hashable_bits, frame_number, blocks_used)
+
+        frame_header_holder = frame_header_process(frame_hashable_bits.tobytes(), frame_number)
         merged_pieces = initializer_bits + frame_header_holder + setup_headers_bits + payload_bits + padding_bits
-        #logging.info(f'{frame_number }initializer_bits {initializer_bits.len} frame_header_holder {frame_header_holder.len} setup_headers_bits {setup_headers_bits.len} payload_bits {payload_bits.len}') logo
         frame_payload = ConstBitStream(merged_pieces)
 
         yield {

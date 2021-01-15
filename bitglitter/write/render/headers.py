@@ -2,7 +2,7 @@ import json
 import logging
 import zlib
 
-from bitstring import BitArray, BitStream, ConstBitStream
+from bitstring import Bits, BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
 from bitglitter.config.palettemanager import palette_manager
@@ -24,13 +24,13 @@ def metadata_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, s
 
     raw_header_to_bytes = bytes(meta_data_string, 'UTF-8')
     raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes, byte_output=True)
-    # processed_header = compress_bytes(raw_header_to_bytes)
-    # if file_mask_enabled and crypto_key: TODO FIX
-    #     logging.debug('Encrypting...')
-    #     processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
+    processed_header = compress_bytes(raw_header_to_bytes)
+    if file_mask_enabled and crypto_key:
+        logging.debug('Encrypting...')
+        processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
 
     logging.debug('Metadata header generated.')
-    return raw_header_hash_bytes, raw_header_hash_bytes
+    return processed_header, raw_header_hash_bytes
 
 
 def palette_initialization_header_process(palette):
@@ -82,16 +82,16 @@ def stream_setup_header_process(size_in_bytes, total_frames, compression_enabled
     return ConstBitStream(adding_bytes)
 
 
-def frame_header_process(frame_sha, frame_hashable_bits, frame_number):
+def frame_header_process(frame_hashable_bits, frame_number):
     """This is ran on the top of every frame (after the initializer if used) to give important information specifically
     for this frame, such as the area to scan, and the hash of the frame.
     """
 
+    byte_hash = get_hash_from_bytes(frame_hashable_bits, byte_output=True)
     adding_bytes = BitArray()
-
-    adding_bytes.append(BitArray(bytes=frame_sha, length=256))
+    adding_bytes.append(BitArray(bytes=byte_hash, length=256))
     adding_bytes.append(BitArray(uint=frame_number, length=32))
-    adding_bytes.append(BitArray(uint=frame_hashable_bits, length=32))
+    adding_bytes.append(BitArray(uint=len(frame_hashable_bits * 8), length=32))
     full_bit_string_to_hash = adding_bytes.bytes
 
     crc_output = zlib.crc32(full_bit_string_to_hash)

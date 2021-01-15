@@ -4,11 +4,12 @@ from multiprocessing import cpu_count, Pool
 from bitglitter.config.palettemanager import palette_manager
 from bitglitter.palettes.utilities import ValuesToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
-from bitglitter.write.render.headers import metadata_header_process, palette_initialization_header_process,\
+from bitglitter.write.render.headers import metadata_header_process, palette_initialization_header_process, \
     stream_setup_header_process
 from bitglitter.write.render.framestategenerator import frame_state_generator
 from bitglitter.write.render.renderutilities import draw_frame, total_frames_estimator
 from bitglitter.write.render.videorender import render_video
+
 
 class RenderHandler:
 
@@ -43,10 +44,11 @@ class RenderHandler:
         initializer_palette_dict = ValuesToColor(initializer_palette, 'initializer_palette')
         stream_palette_dict = ValuesToColor(stream_palette, 'stream_palette')
 
-        metadata_header_bytes, metadata_header_hash_bytes = metadata_header_process(file_mask_enabled, crypto_key, scrypt_n,
-                                                                                scrypt_r, scrypt_p, bg_version,
-                                                                                stream_name, datetime_started,
-                                                                                stream_description, manifest)
+        metadata_header_bytes, metadata_header_hash_bytes = metadata_header_process(file_mask_enabled, crypto_key,
+                                                                                    scrypt_n,
+                                                                                    scrypt_r, scrypt_p, bg_version,
+                                                                                    stream_name, datetime_started,
+                                                                                    stream_description, manifest)
         palette_header_bytes = b''
         palette_header_hash_bytes = b''
         if stream_palette.palette_type == 'custom':
@@ -88,7 +90,7 @@ class RenderHandler:
                 if frame_process['frame_number'] == self.frames_wrote:
                     block_position = frame_process['block_position']
                 logging.info(f'Processing frame {count} of {self.frames_wrote}... '
-                             f'({round(((count / self.frames_wrote) * 100), 2)} %)')
+                             f'({round(((count / self.frames_wrote) * 100), 2):.2f} %)')
 
                 count += 1
         logging.info('Rendering frames complete.')

@@ -75,9 +75,8 @@ def draw_frame(dict_obj):
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
     stream_sha = dict_obj['stream_sha']
-    #logging.debug(f'Rendering {frame_number} of {total_frames} ...')
-    #logging.info(f'FRAME {frame_number} frame_payload {frame_payload.len} initializer_palette_blocks_used {initializer_palette_blocks_used}')
-    logging.info(f'frame_payload.len {frame_payload.len} - initializer_palette_blocks_used {initializer_palette_blocks_used} = {frame_payload.len - initializer_palette_blocks_used}')
+
+    logging.debug(f'Rendering {frame_number} of {total_frames} ...')
     image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
     draw = ImageDraw.Draw(image)
 
@@ -87,7 +86,6 @@ def draw_frame(dict_obj):
     next_coordinates = render_coords_generator(block_height, block_width, pixel_width, initializer_enabled)
     block_position = 0
     while len(frame_payload) != frame_payload.bitpos:
-        # logging.info(f'FRAME {frame_number} Block {block_position}')
 
         # Primary palette selection (ie, header_palette or stream_palette depending on where we are in the stream)
         if block_position >= initializer_palette_blocks_used:
@@ -128,4 +126,6 @@ def draw_frame(dict_obj):
     save_path = Path(image_output_path / f'{str(file_name)}.png')
     image.save(save_path)
 
+    # Ensure every bit in payload is accounted for.
+    assert frame_payload.len == frame_payload.bitpos
     return {'block_position': block_position, 'frame_number': frame_number}
