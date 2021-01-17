@@ -45,7 +45,7 @@ class StatisticsManager(BaseManager):
                       f'{humanize_file_size(self.data_wrote)} data.')
 
     def read_update(self, blocks, frames, data):
-        self.blocks_read += blocks  # todo add this to read
+        self.blocks_read += blocks
         self.frames_read += frames
         self.data_read += data
         self._save()

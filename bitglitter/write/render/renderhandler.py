@@ -76,7 +76,7 @@ class RenderHandler:
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU cores...')
             count = 1
-            for frame_process in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
+            for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
                                                                                     pixel_width, protocol_version,
                                                                                     initializer_palette, stream_palette,
                                                                                     output_mode, output_path,
@@ -87,8 +87,8 @@ class RenderHandler:
                                                                                     initializer_palette_dict,
                                                                                     stream_palette_dict,
                                                                                     default_output_path), chunksize=1):
-                if frame_process['frame_number'] == self.frames_wrote:
-                    block_position = frame_process['block_position']
+                if frame_encode['frame_number'] == self.frames_wrote:
+                    block_position = frame_encode['block_position']
                 logging.info(f'Processing frame {count} of {self.frames_wrote}... '
                              f'({round(((count / self.frames_wrote) * 100), 2):.2f} %)')
 

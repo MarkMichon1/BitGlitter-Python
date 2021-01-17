@@ -4,7 +4,7 @@ import pickle
 from bitglitter.config.basemanager import BaseManager
 
 
-class SaveManager(BaseManager):
+class ReadManager(BaseManager):
     """Acts as an API to Assembler."""
 
     def __init__(self):
@@ -29,9 +29,9 @@ class SaveManager(BaseManager):
 
 try:
     current_directory = Path(__file__).resolve().parent
-    pickle_path = current_directory / 'save_state.bin'
+    pickle_path = current_directory / 'read_state.bin'
     with open(pickle_path, 'rb') as unpickler:
         read_manager = pickle.load(unpickler)
 
 except FileNotFoundError:
-    read_manager = SaveManager()
+    read_manager = ReadManager()

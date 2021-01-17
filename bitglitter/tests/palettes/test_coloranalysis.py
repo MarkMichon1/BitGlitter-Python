@@ -1,5 +1,5 @@
 import unittest
-from bitglitter.read.framedecode.framecoloranalysis import color_snap
+from bitglitter.read.framescan.scanutilities import color_snap
 
 
 class Test(unittest.TestCase):

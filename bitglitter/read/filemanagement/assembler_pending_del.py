@@ -2,10 +2,10 @@ import logging
 import shutil
 
 from bitglitter.config.defaultvalues import DEFAULT_READ_PATH
-from bitglitter.read.dataprocess.decodedstream import DecodedStream
+from bitglitter.read.filemanagement.savedstream import SavedStream
 
 
-class Assembler:
+class Assembler: #todo- merge with config manager
     '''This object holds PartialSave objects, which holds the state of the file being read until it is fully assembled
     and complete, which then purges the record.
     '''
@@ -30,8 +30,8 @@ class Assembler:
 
 
     def create_partial_save(self, stream_sha, scrypt_n, scrypt_r, scrypt_p, output_path, encryption_key, assemble_hold):
-        self.save_dict[stream_sha] = DecodedStream(stream_sha, self.working_folder, scrypt_n, scrypt_r, scrypt_p, output_path,
-                                                   encryption_key, assemble_hold)
+        self.save_dict[stream_sha] = SavedStream(stream_sha, self.working_folder, scrypt_n, scrypt_r, scrypt_p, output_path,
+                                                 encryption_key, assemble_hold)
 
 
     def save_frame_into_partial_save(self, stream_sha, payload, frame_number):

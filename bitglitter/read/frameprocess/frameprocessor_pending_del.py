@@ -3,8 +3,8 @@ import math
 
 from bitstring import BitStream
 
-from bitglitter.read.framedecode.framecoloranalysis import color_snap
-from bitglitter.read.framedecode.decoderassets import scan_block
+from bitglitter.read.framescan.scanutilities import color_snap
+from bitglitter.read.framescan.decoderassets_pending_del import scan_block
 
 
 class FrameProcessor:
@@ -171,7 +171,7 @@ class FrameProcessor:
         self.non_calibrator_blocks = blocks_to_read
 
 
-    def load_new_frame(self, image, has_initializer):
+    def load_new_frame(self, image, has_initializer): #todo merged into init
         '''This method loads in the new image, as well as resets the parameters from the previous frame.'''
 
         self.image = image

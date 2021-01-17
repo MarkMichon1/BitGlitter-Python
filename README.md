@@ -1,6 +1,8 @@
-**(11/14/20) v2.0 Overhaul in progress!**
+**(1/15/21) v2.0 Overhaul in progress!**
 I'm currently in the middle of overhauling major components of the library, as well as refactoring and adding some 
-stuff.  This will put BitGlitter in a much better place for future development and deployment..... plus, work on the desktop app version will then begin.  Many parts of this library will be broken until this is completed.  Working version 1.0.3 is still available via `pip`!
+stuff.  This will put BitGlitter in a much better place for future development and deployment..... plus, work on the 
+desktop app version will then begin.  Many parts of this library will be broken until this is completed.  Working 
+version 1.0.3 is still available via `pip`!
 Expect large changes upon release.
 
 
@@ -71,8 +73,8 @@ interesting applications that can come out of this.
 
 ### Data
 
-+ **Supports streams up to ~1 [EB](https://en.wikipedia.org/wiki/Exabyte) in size, or ~4.3B frames:**  In other words, there is no practical limit to the
- stream's size.
++ **Supports streams up to ~1 [EB](https://en.wikipedia.org/wiki/Exabyte) in size, or ~4.3B frames:**  In other words,
+  there is no practical limit to the stream's size.
 + **Compression added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
 sending.
 + **Encryption added:** Optional AES-256 encryption to protect your files.  Passwords are hashed with `scrypt`, 
@@ -121,8 +123,8 @@ contribute, docstrings and notes are throughout the library.
 + **Built in future-proofing:** As of now, BitGlitter has a single protocol (Protocol 1), which is a specific set of
   procedures around how data is handled, and the components of a frame, as well as their layout.  Each protocol has its
   own unique ID to identify it with.  This ID is added in the  header during the write process, and is picked up at 
-  `read()`.  As new protocols get created, older versions of BitGlitter that don't have these included will notify the user
-  to update their version in order for it to be read.  All older protocol versions are saved in future library
+  `read()`.  As new protocols get created, older versions of BitGlitter that don't have these included will notify the
+  user to update their version in order for it to be read.  All older protocol versions are saved in future library
   iterations, so no matter how old the protocol version is used on the stream, it will always be able to be read.
 
 + **Fully modular design:** Do you have a specialized use case?  Adapting this library to your own needs is quite easy.
@@ -131,7 +133,8 @@ contribute, docstrings and notes are throughout the library.
 
 ### CLI
 
-**Temporary warning-** Due to issues uploading to PyPI, these features are only available on Github for now.  The PyPI version of BitGlitter still performs everything else fine.  This will be removed when the problem is fixed.
+**Temporary warning-** Due to issues uploading to PyPI, these features are only available on Github for now.  The PyPI 
+version of BitGlitter still performs everything else fine.  This will be removed when the problem is fixed.
 
 Write from command line:
 
@@ -163,8 +166,9 @@ In addition to downloading the code from Github, you can also grab it directly f
 
 `pip install bitglitter`
 
-<span style="color:red">**IMPORTANT:**</span> FFmpeg, a free small library must be installed on your machine in order to properly render video.
-.
+<span style="color:red">**IMPORTANT:**</span> FFmpeg, a free small library must be installed on your machine in order to
+properly render video.
+
 Installing on Ubuntu is fast and easy:
 
 `sudo apt update`
@@ -192,8 +196,8 @@ to customize the stream, but there is only one required argument.  Everything el
 
 `input_path` defines what file or folder you wish to embed in the stream.  It must be an absolute path.
 
-`preset_nickname` allows you to use a saved assortment of `write` arguments with a `str` nickname for easy switching between
-preferred configs.  Learn more below in the **Preset Configuration** section.
+`preset_nickname` allows you to use a saved assortment of `write` arguments with a `str` nickname for easy switching 
+between preferred configs.  Learn more below in the **Preset Configuration** section.
 
 `stream_name=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.
@@ -214,8 +218,8 @@ name.
 `max_cpu_cores=0` determines how many CPU cores you'd like to use when rendering frames.  0 is default, which is
 maximum.
 
-`compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  This is enabled
-by default.
+`compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  
+This is enabled by default.
 
 [comment]: <> (`error_correction=False` toggles Reed Solomon error-correcting from being applied on the stream payload.  This will)
 
@@ -237,12 +241,12 @@ as well as their size) on the screen.
 `encryption_key=''` optionally encrypts your data with AES-256.  By default, this is disabled.  The stream will not be
 able to be read unless the reader successfully inputs this.
 
-Arguments `scrypt_N=14`, `scrypt_R=8` and `scrypt_P=1` allow you to customize the parameters of the `scrypt` key derivation 
-function.  If you're a casual user, you'll never need to touch these (and shouldn't).  Only change these settings if
- you're comfortable with cryptography and you know what you're doing!  It's worth noting `scrypt_N` uses it's argument as
- 2^n.  Finally, if you're changing these numbers, they MUST be manually inputted during `read()` otherwise decryption
- will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end users of the
- stream must know these custom parameters.
+Arguments `scrypt_N=14`, `scrypt_R=8` and `scrypt_P=1` allow you to customize the parameters of the `scrypt` key 
+derivation function.  If you're a casual user, you'll never need to touch these (and shouldn't).  Only change these 
+settings if you're comfortable with cryptography and you know what you're doing!  It's worth noting `scrypt_N` uses its
+argument as 2^n.  Finally, if you're changing these numbers, they MUST be manually inputted during `read()` otherwise 
+decryption will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end 
+users of the stream must know these custom parameters.
 
 `stream_palette_id='6'` sets the palette used for the payload after the initialization headers,  By default, the 4 bit
 default color set is used.  I'll 
@@ -259,8 +263,8 @@ distorted.
 
 `block_width=80` sets how many blocks wide the frame will be.  By default this is set to 96.
 
-`frames_per_second=30` sets how many frames per second the video will play at, assuming argument `output_mode = "video"`.
-Currently, 30fps and 60fps are accepted.
+`frames_per_second=30` sets how many frames per second the video will play at, assuming argument 
+`output_mode = "video"`. Currently, 30fps and 60fps are accepted.
 
 Finally we have several arguments to control logging.
 
@@ -268,11 +272,12 @@ Finally we have several arguments to control logging.
 default and only shows core status data during `read()` and `write()`.  `'debug'`  shows INFO level messages as well as
 lower level messages from the various processes.  Boolean `False` disables logging altogether.
 
-`logging_stdout_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type `bool`. 
-Enabled by default.
+`logging_stdout_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type 
+`bool`. Enabled by default.
 
-`logging_txt_output=False` determines whether logging messages are saved as text files or not.  Only accepts type `bool`.
-Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved there.
+`logging_txt_output=False` determines whether logging messages are saved as text files or not.  Only accepts type 
+`bool`. Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved
+there.
 
 `save_session_overview=False` saves an overview of the write session as an object, storing some key information about
 it such as files rendered, stream size, configuration settings, etc.  Its main use will be for the desktop app coming
@@ -288,17 +293,20 @@ corruption.
 ## read(), converting streams back into data
 
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.  While this 
-is the basic function to decode streams, there are several other functions included to interact with these streams (inputting
-the password, removing one or all streams, changing its save path, etc).  Please check **Read Functions** below.
+is the basic function to decode streams, there are several other functions included to interact with these streams 
+(inputting the password, removing one or all streams, changing its save path, etc).  Please check **Read Functions** 
+below.
 
-Like with `write()`, the only argument required is the input path (`input_path`), whether it is a file or a directory.
+Like with `write()`, the only argument required is the input path (`file_path`), except in this case it accepts files
+only, not directories.  Files can either be a supported video format (.avi, .flv, .mov, .mp4, .wmv) or a support image
+format (.bmp, .jpg, .png).
 
 `output_path=False` Is where you can set where files will be written as they become available through decoding.
   It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
   stick with that stream.  This argument requires a string of a folder path that already exists.
 
-`bad_frame_strikes=25` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  This
-allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
+`bad_frame_strikes=25` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  
+This allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
  iterate over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
  regardless of the level of corruption.
 
@@ -316,14 +324,17 @@ a folder of images (of BitGlitter frames)
 `encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only
 need this argument once, and it will bind to that save.
 
+`logging_level='info'`, `logging_stdout_output=True`, `logging_txt_output=False`, and `save_statistics=False` are 
+arguments as well.  Scroll a little bit up to see them explained in `write()`
+
 ## Configuration Functions
 
 ### Color Palettes
 
 If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
 
-`add_custom_palette(palette_name, palette_description, color_set, optional_nickname = "")`  This function adds custom palettes
-to use.  
+`add_custom_palette(palette_name, palette_description, color_set, optional_nickname = "")`  This function adds custom 
+palettes to use.  
 
 `palette_name` takes a string and is the name of the palette that gets displayed and transmitted. 
 
@@ -342,8 +353,9 @@ must be unique!  The more 'different' the colors are, the better.
   code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
   well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
 
-`edit_nickname_to_custom_palette(id_or_nick, new_name)` This function allows you to edit the nickname of your custom palette 
-to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal ID.
+`edit_nickname_to_custom_palette(id_or_nick, new_name)` This function allows you to edit the nickname of your custom 
+palette to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal
+ID.
 
 `return_default_palettes()` Returns a list of dictionary objects, each of which outlines data for each of the default
 (included) palettes.  It shows information such as their name, description, date created, color set, nickname,
@@ -355,11 +367,11 @@ created by you, or "learned" from other streams using their own custom palettes.
 `remove_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
 will not be removed.
 
-`remove_custom_palette(id_or_nick)` This function removes the custom palette from your config.  It takes a string argument
-of either it's internal ID, or a nickname you've previously given it.
+`remove_custom_palette(id_or_nick)` This function removes the custom palette from your config.  It takes a string 
+argument of either it's internal ID, or a nickname you've previously given it.
 
-`remove_custom_palette_nickname(id_or_nick)` This function strips any nickname associated with a custom palette.  It takes a
-string argument of either the internal ID or a previous nickname.
+`remove_custom_palette_nickname(id_or_nick)` This function strips any nickname associated with a custom palette.  It 
+takes a string argument of either the internal ID or a previous nickname.
 
 `remove_all_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.  Please note this doesn't
 remove the palette, and it can still be accessible via its ID.
@@ -372,8 +384,8 @@ Once the first frame of a stream is read, a PartialSave object is created.  This
 strings, and holds various information on it's state.  These functions help better interface with them.
 
 `update_partial_save(stream_sha, reattempt_assembly = True, password_update = None, scrypt_n =  None, scrypt_r = None, 
-scrypt_p = None, change_output_path = None)` This function allows you to update various parameters of the save.  Requires
-a string input for `streamSHA` which is the ID number of the string.  
+scrypt_p = None, change_output_path = None)` This function allows you to update various parameters of the save.  
+Requires a string input for `streamSHA` which is the ID number of the string.  
 
 Argument `reattempt_assembly` makes the assembler
 attempt to reassemble the frames, as well as output the embedded files and folders.  This would be used in the case of
@@ -385,23 +397,23 @@ Arguments `scrypt_n, scrypt_r and scrypt_p` change the scrypt parameters used to
 the scrypt parameters were left at default during `write()` of the stream, these can be left as is.  Otherwise, the 
 custom values will need to be inputted whether here or in the optional arguments of `read()`.
 
-`begin_assembly(stream_sha)` This function exists to initiate assembly of a package at a later time, rather than doing so 
-immediately for whatever reason.
+`begin_assembly(stream_sha)` This function exists to initiate assembly of a package at a later time, rather than doing 
+so immediately for whatever reason.
 
-`print_full_save_list(path, debug_data=False)` This function outputs a text file to the folder path outlining all (if any)
-partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
+`print_full_save_list(path, debug_data=False)` This function outputs a text file to the folder path outlining all (if 
+any) partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
 itself.  Argument `debugData` is `False` by default, but enabling it to `True` outputs various debug information 
 pertaining to the object as well, which wouldn't serve much utility seeing for someone such as a casual end user.
 
-`remove_partial_save(stream_sha)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this will
-remove the object from your config, as well as remove all temporary data associated with it.
+`remove_partial_save(stream_sha)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this 
+will remove the object from your config, as well as remove all temporary data associated with it.
 
 `remove_all_partial_saves()` All saves are removed from the config object, clearing all temporary data.
 
 ### Preset Configuration
 
-Presets allow you to define `write()` behavior (geometry, palettes, etc) and save them with a nickname, so you can quickly
-and easily use your favorite configurations without needing to explictly state all parameters in the arguments.
+Presets allow you to define `write()` behavior (geometry, palettes, etc) and save them with a nickname, so you can 
+quickly and easily use your favorite configurations without needing to explictly state all parameters in the arguments.
 
 `add_new_preset(nickname, output_mode='video', compression_enabled=True, scrypt_n=14, scrypt_r=8, scrypt_p=1,
 stream_palette_id='6', header_palette_id='6', pixel_width=24, block_height=45, block_width=80, frames_per_second=30)`

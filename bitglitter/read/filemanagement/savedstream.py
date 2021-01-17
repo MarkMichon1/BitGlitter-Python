@@ -4,13 +4,13 @@ import os
 
 from bitstring import BitStream
 
-from bitglitter.read.dataprocess.postprocessor import PostProcessor
-from bitglitter.read.dataprocess.headerdecode import format_file_list, decode_text_header, \
+from bitglitter.read.filemanagement.postprocessor import PostProcessor
+from bitglitter.read.framescan.headerprocess import format_file_list, decode_text_header, \
     decode_stream_header
 from bitglitter.utilities.filemanipulation import compress_file, decompress_file, get_hash_from_file
 
 
-class DecodedStream:
+class SavedStream:
     '''PartialSave objects are essentially containers for the state of streams as they are being read, frame by frame.
     This mainly interacts through the Assembler object.  All of the functionality needed to convert raw frame data back
     into the original package is done through it's contained methods.
@@ -41,7 +41,7 @@ class DecodedStream:
         self.assemble_hold = assemble_hold
 
 
-        # Stream Header - Binary Preamble
+        # Stream Setup Header
         self.size_in_bytes = None
         self.total_frames = '???'
         self.compression_enabled = None
@@ -58,12 +58,14 @@ class DecodedStream:
         self.stream_description = None
         self.file_list = None
 
-        # Optional ASCII Header Fields
+        # Metadata Header Fields
         self.custom_color_name = None
         self.custom_color_description = None
         self.custom_color_date_created = None
         self.custom_color_palette = None
         self.post_compression_sha = None
+
+        manifest = None
 
         # Changeable Postprocessing Arguments
         self.encryption_key = encryption_key
@@ -107,6 +109,7 @@ class DecodedStream:
             frame_data = self._read_file(f'frame{self.next_stream_header_sequential_frame}')
             self.load_frame_data(frame_data, self.next_stream_header_sequential_frame, is_recursive= True)
 
+    #todo: add frame block byte file to signify processing on given frame
 
     def user_input_update(self, password_update, scrypt_n, scrypt_r, scrypt_p, change_output_path):
         '''This method changes user related configurations such as password, scrypt parameters, and save location.
@@ -413,7 +416,7 @@ class DecodedStream:
         logging.debug(f'Closing session for {self.stream_sha}')
 
 
-    def return_status(self, debug_data):
+    def return_status(self, debug_data): # todo: convert into dict return
         '''This is used in print_full_save_list in savedfunctions module; it returns the state of the object, as well as
         various information read from the reader.  __str__ is not used, as debug_data controls what level of data is
         returned, whether for end users, or debugging purposes.

@@ -14,6 +14,7 @@ class SettingsManager(BaseManager):
         # Constants
         self.BG_VERSION = '2.0'  # Change this during version updates!  Used for internal/debug stuff.
         self.PROTOCOL_VERSION = 1  # This will be moved when we have more protocols.
+        self.SUPPORTED_PROTOCOLS = [1] # Add protocols to list (as they become supported)
         self.WRITE_WORKING_DIR = Path(__file__).resolve().parent.parent / 'Temp'
         self.DEFAULT_OUTPUT_PATH = Path(__file__).resolve().parent.parent / 'Render Output'
         self.DEFAULT_PARTIAL_SAVE_DATA_PATH = Path(__file__).resolve().parent.parent / 'Partial Stream Data'

@@ -184,16 +184,16 @@ class PaletteManager(BaseManager):
                              "\npalette.  This breaks the communication protocol.  See BitGlitter guide for more "
                              "information.")
 
-        id = get_palette_id_from_hash(name_string, description_string, date_created, color_set)
+        palette_id = get_palette_id_from_hash(name_string, description_string, date_created, color_set)
 
-        new_palette = CustomPalette(name_string, description_string, color_set, min_distance, date_created, id,
+        new_palette = CustomPalette(name_string, description_string, color_set, min_distance, date_created, palette_id,
                                     nickname_string)
-        self.custom_palette_dict[id] = new_palette
+        self.custom_palette_dict[palette_id] = new_palette
         if nickname_string:
             self.custom_palette_nickname_dict[nickname_string] = new_palette
         self._save()
 
-        return id
+        return palette_id
 
     def edit_nickname_to_custom_palette(self, id_or_nick, new_nickname):
         if new_nickname not in self.custom_palette_dict \
@@ -258,6 +258,12 @@ class PaletteManager(BaseManager):
             return self.custom_palette_nickname_dict[id_or_nickname]
         else:
             raise ValueError(f'No palettes exist with ID or nickname \'{id_or_nickname}\'.')
+
+    def does_palette_exist(self, id_or_nickname):
+        if id_or_nickname not in self.DEFAULT_PALETTE_LIST and id_or_nickname not in self.custom_palette_dict and \
+                id_or_nickname not in self.custom_palette_nickname_dict:
+            raise ValueError(f"Stream palette {id_or_nickname} is not a valid ID or nickname.  Verify that exact value"
+                             f" exists.")
 
 
 try:

@@ -19,8 +19,8 @@ def verify_write_params_render_values(stream_palette_id, pixel_width, block_heig
     elif stream_palette_id in palette_manager.custom_palette_nickname_dict:
         stream_palette = palette_manager.custom_palette_nickname_dict[stream_palette_id]
     else:
-        raise ValueError(f"Stream palette {stream_palette_id} in write() is not a valid ID or nickname.  Verify that"
-                         f" exact value exists.")
+        raise ValueError(f"Stream palette {stream_palette_id} in is not a valid ID or nickname.  Verify that exact "
+                         f"value exists.")
 
     is_int_over_zero('pixel_width', pixel_width)
     is_int_over_zero('block_height', block_height)

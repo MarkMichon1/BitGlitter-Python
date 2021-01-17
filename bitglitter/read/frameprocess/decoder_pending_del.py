@@ -2,9 +2,9 @@ import logging
 
 from bitglitter.config.palettemanager import palette_manager
 from bitglitter.palettes.utilities import ColorsToValue
-from bitglitter.read.framedecode.decoderassets import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
-from bitglitter.read.framedecode.frameprocess import FrameProcessor
-from bitglitter.read.framedecode.framelockon import frame_lock_on
+from bitglitter.read.framescan.decoderassets_pending_del import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
+from bitglitter.read.framescan.frameprocessor_pending_del import FrameProcessor
+from bitglitter.read.framescan.framevalidation import frame_lock_on
 
 
 class Decoder:
