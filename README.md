@@ -5,6 +5,8 @@ desktop app version will then begin.  Many parts of this library will be broken 
 version 1.0.3 is still available via `pip`!
 Expect large changes upon release.
 
+**(5/23/21)** v2.0 is still alive and well (and so am I), expect completion in summer of this year.  :)
+
 
 [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
