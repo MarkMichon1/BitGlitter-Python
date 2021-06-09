@@ -1,12 +1,6 @@
-**(1/15/21) v2.0 Overhaul in progress!**
-I'm currently in the middle of overhauling major components of the library, as well as refactoring and adding some 
-stuff.  This will put BitGlitter in a much better place for future development and deployment..... plus, work on the 
-desktop app version will then begin.  Many parts of this library will be broken until this is completed.  Working 
-version 1.0.3 is still available via `pip`!
-Expect large changes upon release.
+**(6/9/21) v2.0 Overhaul in progress!**
 
-**(5/23/21)** v2.0 is still alive and well (and so am I), expect completion in summer of this year.  :)
-
+In this staging branch, work is currently being done to move BitGlitter to v2.0 from v1.0.3.  Major components are being overhauled and optimized.  Plus, BitGlitter is being prepared to integrate into the future Electronjs desktop app.  The previous stable version 1.0.3 is still available via `pip` as well as the master branch.
 
 [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
