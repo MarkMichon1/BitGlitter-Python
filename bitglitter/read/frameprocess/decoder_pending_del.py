@@ -1,10 +1,10 @@
 import logging
 
 from bitglitter.config.palettemanager import palette_manager
-from bitglitter.palettes.utilities import ColorsToValue
-from bitglitter.read.framescan.decoderassets_pending_del import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
-from bitglitter.read.framescan.frameprocessor_pending_del import FrameProcessor
-from bitglitter.read.framescan.framevalidation import frame_lock_on
+from bitglitter.palettes.utilities import ColorsToBits
+from bitglitter.read.frameprocess.decoderassets_pending_del import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
+from bitglitter.read.frameprocess.frameprocessor_pending_del import FrameProcessor
+from bitglitter.read.frameprocess.framevalidation import frame_lock_on
 
 
 class Decoder:
@@ -45,7 +45,7 @@ class Decoder:
 
         # Palette Variables
         self.initializer_palette = palette_manager.return_selected_palette('1')
-        self.initializer_palette_dict = ColorsToValue(self.initializer_palette)
+        self.initializer_palette_dict = ColorsToBits(self.initializer_palette)
         self.primary_palette = None
         self.primary_palette_dict = None
         self.header_palette = None
@@ -172,10 +172,10 @@ class Decoder:
         Assembler object to see if this frame is needed.  This is ran on every frame.
         '''
 
-        self.frameHeaderBits, self.carry_over_bits = self.frame_handler.return_frame_header(palette_type)
+        self.frame_header_bits, self.carry_over_bits = self.frame_handler.return_frame_header(palette_type)
 
         self.stream_sha, self.frame_sha, self.frame_number_of_stream, self.blocks_to_read = \
-            read_frame_header(self.frameHeaderBits)
+            read_frame_header(self.frame_header_bits)
 
         if self.stream_sha == False:
             return False
@@ -243,7 +243,7 @@ class Decoder:
                 logging.debug('Custom palette successfully instantiated.')
                 self.stream_palette = palette_manager.return_selected_palette(save_object[1])
 
-            self.stream_palette_dict = ColorsToValue(self.stream_palette)
+            self.stream_palette_dict = ColorsToBits(self.stream_palette)
             self.frame_handler.update_dictionaries('stream_palette', self.stream_palette_dict, self.stream_palette)
             self.config_object.assembler.save_dict[self.stream_sha].stream_palette_read = True
 
@@ -267,7 +267,7 @@ class Decoder:
             return False
         logging.debug(f'primary_palette ID loaded: {self.primary_palette.palette_id}')
 
-        self.primary_palette_dict = ColorsToValue(self.primary_palette)
+        self.primary_palette_dict = ColorsToBits(self.primary_palette)
         self.frame_handler.primary_palette_bit_length = self.primary_palette.bit_length
         self.frame_handler.update_dictionaries('primary_palette', self.primary_palette_dict, self.primary_palette)
 
@@ -287,5 +287,5 @@ class Decoder:
 
         # Now with header_palette loaded, we can get its color set as well as generate its ColorsToValue dictionary,
         # As well as propagate these values to frame_handler.
-        self.header_palette_dict = ColorsToValue(self.header_palette)
+        self.header_palette_dict = ColorsToBits(self.header_palette)
         self.frame_handler.update_dictionaries('header_palette', self.header_palette_dict, self.header_palette)

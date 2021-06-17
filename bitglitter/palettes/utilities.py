@@ -6,7 +6,7 @@ import math
 from bitstring import BitArray, ConstBitStream
 
 
-class ValuesToColor:
+class BitsToColor:
     """This generates a dictionary linking a string binary value to an RGB value.  This is how binary data gets directly
     converted to colors.  This step required more than a dictionary, as additional logic was required to switch between
     a standard dictionary used by default and custom palettes, and 24 bit palettes.  They both convert data to colors in
@@ -27,7 +27,7 @@ class ValuesToColor:
             red_channel = bit_value.read('uint : 8')
             green_channel = bit_value.read('uint : 8')
             blue_channel = bit_value.read('uint : 8')
-            return (red_channel, green_channel, blue_channel)
+            return red_channel, green_channel, blue_channel
 
         color_dict = {}
         if self.palette.bit_length != 24:
@@ -49,8 +49,8 @@ class ValuesToColor:
             return self.return_value(value)
 
 
-class ColorsToValue:
-    """This class does the exact opposite as ValuesToColor.  This first generates a dictionary linking colors to
+class ColorsToBits:
+    """This class does the exact opposite as BitsToColor.  This first generates a dictionary linking colors to
     specific bit values, and then get_value() accomplishes that.  It is worth noting that 24 bit color functions
     differently than the other color palettes, in that it doesn't use a dictionary, but rather converts each byte into
     an unsigned integer for each of it's three color channels, and then returns that color.

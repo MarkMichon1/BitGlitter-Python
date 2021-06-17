@@ -39,6 +39,7 @@ def decode_video_multicore_state_generator(video_input_path):
 
     for frame in range(total_frames):
         yield {'frame': active_video.read()[1], 'current_frame_position': current_frame}
+        current_frame += 1
 
 # For reference until confirmed working ^
 

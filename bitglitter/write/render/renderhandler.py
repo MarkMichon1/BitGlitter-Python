@@ -2,7 +2,7 @@ import logging
 from multiprocessing import cpu_count, Pool
 
 from bitglitter.config.palettemanager import palette_manager
-from bitglitter.palettes.utilities import ValuesToColor
+from bitglitter.palettes.utilities import BitsToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.render.headers import metadata_header_process, palette_initialization_header_process, \
     stream_setup_header_process
@@ -41,8 +41,8 @@ class RenderHandler:
         initializer_palette = palette_manager.return_selected_palette('1')
         stream_palette = palette_manager.return_selected_palette(stream_palette_id)
 
-        initializer_palette_dict = ValuesToColor(initializer_palette, 'initializer_palette')
-        stream_palette_dict = ValuesToColor(stream_palette, 'stream_palette')
+        initializer_palette_dict = BitsToColor(initializer_palette, 'initializer_palette')
+        stream_palette_dict = BitsToColor(stream_palette, 'stream_palette')
 
         metadata_header_bytes, metadata_header_hash_bytes = metadata_header_process(file_mask_enabled, crypto_key,
                                                                                     scrypt_n,

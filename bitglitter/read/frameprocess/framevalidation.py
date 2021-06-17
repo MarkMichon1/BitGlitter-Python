@@ -1,39 +1,56 @@
+import hashlib
 import logging
 
 from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
 from bitglitter.config.palettemanager import palette_manager
-from bitglitter.read.framescan.scanutilities import color_snap, return_distance
-from bitglitter.read.framescan.decoderassets_pending_del import scan_block
-from bitglitter.palettes.utilities import ColorsToValue
+from bitglitter.read.frameprocess.scanutilities import color_snap, return_distance, scan_block
+from bitglitter.palettes.utilities import ColorsToBits
+
+
+def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_width,
+                             active_frame_size_height):
+    """If block_height_override and block_width_override have been entered, this checks those values against the height
+    and width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that
+    is finest detail you can have with an image), any values beyond that are invalid, and stopped here.
+    """
+
+    if block_height_override and block_width_override:
+        if active_frame_size_width < block_width_override or active_frame_size_height < \
+                block_height_override:
+            logging.warning("Block override parameters are too large for a file of these dimensions.  "
+                            "Aborting...")
+            return False
+
+    return True
 
 
 def frame_lock_on(image, block_height_override, block_width_override, frame_width, frame_height):
-    '''This function is used to lock onto the frame.  If override values are present, these will be used.  Otherwise,
-    it will attempt to extract the correct values from the X and Y calibrator on the initial frame.'''
+    """This function is used to lock onto the frame.  If override values are present, these will be used.  Otherwise,
+    it will attempt to extract the correct values from the X and Y calibrator on the initial frame."""
 
     logging.debug('Locking onto frame...')
     initializer_palette_a = palette_manager.return_selected_palette('1')
     initializer_palette_b = palette_manager.return_selected_palette('11')
-    initializer_palette_a_dict = ColorsToValue(initializer_palette_a)
-    initializer_palette_b_dict = ColorsToValue(initializer_palette_b)
+    initializer_palette_a_dict = ColorsToBits(initializer_palette_a)
+    initializer_palette_b_dict = ColorsToBits(initializer_palette_b)
     combined_colors = initializer_palette_a.color_set + initializer_palette_b.color_set
 
-    if block_height_override and block_width_override: # Jump straight to validation
+    if block_height_override and block_width_override:  # Jump straight to validation
         logging.info("block_height_override and block_width_override parameters detected.  Attempting to lock with "
                      "these values...")
         pixel_width = ((frame_width / block_width_override) + (frame_height / block_height_override)) / 2
 
         checkpoint = verify_blocks_x(image, pixel_width, block_width_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
-        if checkpoint == False:
-                return False, False, False
+        if not checkpoint:
+            return False, False, False
 
         checkpoint = verify_blocks_y(image, pixel_width, block_height_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
-        if checkpoint == False:
-                return False, False, False
+        if not checkpoint:
+            return False, False, False
 
         block_width, block_height = block_width_override, block_height_override
 
@@ -50,7 +67,7 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
                                                          width=True)
         checkpoint = verify_blocks_x(image, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
-        if checkpoint == False:
+        if not checkpoint:
             return False, False, False
 
         block_width = block_dimension_guess
@@ -61,7 +78,7 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
         checkpoint = verify_blocks_y(image, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
 
-        if checkpoint == False:
+        if not checkpoint:
             return False, False, False
         block_height = block_dimension_guess
 
@@ -71,8 +88,8 @@ def frame_lock_on(image, block_height_override, block_width_override, frame_widt
 
 
 def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, initializer_palette_a_dict,
-                    initializer_palette_b_dict, override = False):
-    '''This is a function used within frame_lock_on().  It verifies the correct values for the X axis.'''
+                    initializer_palette_b_dict, override=False):
+    """This is a function used within frame_lock_on().  It verifies the correct values for the X axis."""
 
     calibrator_bits_x = BitArray()
     for x_block in range(17):
@@ -88,7 +105,7 @@ def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, i
     read_calibrator_x = ConstBitStream(calibrator_bits_x)
 
     if read_calibrator_x.read('uint:16') != block_width_estimate:
-        if override == True:
+        if override:
             logging.warning('block_width_override is not equal to what was read on calibrator.  Aborting...')
 
         else:
@@ -97,11 +114,11 @@ def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, i
 
         return False
 
-    if read_calibrator_x.read('bool') != False:
+    if read_calibrator_x.read('bool'):
         logging.warning('0,0 block unexpected value.  Aborting...')
         return False
 
-    if override == True:
+    if override:
         logging.info('block_width_override successfully verified.')
 
     else:
@@ -111,8 +128,8 @@ def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, i
 
 
 def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, initializer_palette_a_dict,
-                    initializer_palette_b_dict, override = False):
-    '''This is a function used within frame_lock_on().  It verifies the correct values for the Y axis.'''
+                    initializer_palette_b_dict, override=False):
+    """This is a function used within frame_lock_on().  It verifies the correct values for the Y axis."""
 
     calibrator_bits_y = BitArray()
     for y_block in range(17):
@@ -128,7 +145,7 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
     read_calibrator_y = ConstBitStream(calibrator_bits_y)
 
     if read_calibrator_y.read('uint:16') != block_height_estimate:
-        if override == True:
+        if override:
             logging.warning('block_height_override is not equal to what was read on calibrator.  Aborting...')
 
         else:
@@ -137,11 +154,11 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
 
         return False
 
-    if read_calibrator_y.read('bool') != False:
+    if read_calibrator_y.read('bool'):
         logging.warning('0,0 block unexpected value.  Aborting...')
         return False
 
-    if override == True:
+    if override:
         logging.info('block_height_override successfully verified.')
 
     else:
@@ -152,29 +169,26 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
 
 def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_colors, initializer_palette_a_dict,
                 initializer_palette_b_dict, image_width, image_height, width):
-    '''This function moves across the calibrator on the top and left of the frame one pixel at a time, and after
+    """This function moves across the calibrator on the top and left of the frame one pixel at a time, and after
     'snapping' the colors, decodes an unsigned integer from each axis, which if read correctly, is the block width and
     block height of the frame.
-    '''
+    """
 
     calibrator_bits = BitArray()
     snapped_values = []
     active_color = (0, 0, 0)
-    active_distance = 0
     pixel_on_dimension = 1
     palette_a_is_active = False
 
-    if width == True:
-        axis_on_image = pixel_on_dimension, 0
+    if width:
         axis_analyzed = image_width
 
     else:
-        axis_on_image = 0, pixel_on_dimension
         axis_analyzed = image_height
 
     for value in range(16):
         while True:
-            if width == True:
+            if width:
                 axis_on_image = 0, pixel_on_dimension
                 axis_analyzed = image_width
 
@@ -191,7 +205,7 @@ def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_co
                 continue
 
             else:  # We are determining if we are within < 100 dist of a new color, or are in fuzzy space.
-                if palette_a_is_active == False:
+                if not palette_a_is_active:
                     active_palette = initializer_palette_b.color_set
 
                 else:
@@ -208,7 +222,7 @@ def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_co
                     else:
                         continue
 
-            if new_palette_locked == True:
+            if new_palette_locked:
                 break
 
         active_color = color_snap(active_scan, combined_colors)
@@ -220,11 +234,29 @@ def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_co
         else:
             calibrator_bits.append(initializer_palette_b_dict.get_value(active_color))
 
-        active_distance = 0
-
     calibrator_bits.reverse()
     read_calibrator_bits = ConstBitStream(calibrator_bits)
     block_dimension_guess = read_calibrator_bits.read('uint:16')
     pixel_width = axis_analyzed / block_dimension_guess
 
     return pixel_width, block_dimension_guess
+
+
+def validate_payload(payload_bits, read_frame_sha):
+    """Taking all of the frame bits after the frame header, this takes the SHA-256 hash of them, and compares it against
+    the frame SHA written in the frame header.  This is the primary mechanism that validates frame data, which either
+    allows it to be passed through to the assembler, or discarded.
+    """
+
+    sha_hasher = hashlib.sha256()
+    sha_hasher.update(payload_bits.tobytes())
+    string_output = sha_hasher.hexdigest()
+    logging.debug(f'length of payload_bits: {payload_bits.len}')
+
+    if string_output != read_frame_sha:
+        logging.warning('validate_payload: read_frame_sha does not match calculated one.  Aborting...')
+        logging.debug(f'Read from frameHeader: {read_frame_sha}\nCalculated just now: {string_output}')
+        return False
+
+    logging.debug('Payload validated this frame.')
+    return True
