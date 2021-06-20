@@ -22,8 +22,6 @@ class AbstractPalette:
     def __getitem__(self, item):
         return self.color_set[item]
 
-    def __repr__(self):
-        return f'{self.name} [{self.palette_type}]'
 
 
 class DefaultPalette(AbstractPalette):
@@ -106,3 +104,73 @@ class TwentyFourBitPalette:
             self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
                     self.number_of_colors, 'bit_length': self.bit_length
                 }
+
+
+from sqlalchemy import Boolean, Column, Float, Integer, String, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+
+from bitglitter.config.config import ConfigBaseClass, engine
+
+
+class Palette(ConfigBaseClass):
+    __tablename__ = 'palettes'
+    id = Column(Integer, primary_key=True)
+    is_valid = Column(Boolean, default=False)
+    is_24_bit = Column(Boolean, default=False)
+    is_default = Column(Boolean, default=False)
+
+    palette_id = Column(String)
+    palette_type = Column(String)
+    name = Column(String)
+    description = Column(String)
+    nickname = Column(String) #todo
+    color_set = Column(String) #todo relationship
+    color_distance = Column(Float) #dynamic
+    number_of_colors = Column(Integer) #load dynamic
+    bit_length = Column(Integer) #load dynamic
+
+    __table_args__ = (
+        UniqueConstraint('palette_id'),
+    )
+
+    def load_colors(self):
+        self.name = '1'
+        self.save()
+        print('ran')
+
+    #@classmethod
+
+    #todo- calculate color distance dynamically upon color changes
+
+
+class PaletteColor(ConfigBaseClass):
+    __tablename__ = 'palette_colors'
+    id = Column(Integer, primary_key=True)
+    palette_sequence = Column(Integer)
+    red_channel = Column(Integer)
+    green_channel = Column(Integer)
+    blue_channel = Column(Integer)
+
+    __table_args__ = (
+        #
+    )
+
+
+    def test(self):
+        self.name = ''
+        self.save()
+
+    def return_encoder(self):
+        pass
+
+    def return_decoder(self):
+        pass
+
+    def return_as_dict(self):
+        pass # below, old data
+        """        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
+            self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
+                    self.number_of_colors, 'bit_length': self.bit_length
+                }"""
+
+ConfigBaseClass.metadata.create_all(engine)

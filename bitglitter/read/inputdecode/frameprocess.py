@@ -1,5 +1,5 @@
-from bitglitter.read.frameprocess.framevalidation import frame_lock_on, minimum_block_checkpoint
-from bitglitter.read.frameprocess.scanhandler import ScanHandler
+from bitglitter.read.inputdecode.scan.scanvalidate import frame_lock_on, minimum_block_checkpoint
+from bitglitter.read.inputdecode.scan.scanhandler import ScanHandler
 
 def frame_process(frame, mode, frame_number, block_height_override=None, block_width_override=None, stream_sha=None,
                   stream_palette=None, block_width=None, block_height=None,

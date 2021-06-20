@@ -2,10 +2,9 @@ import ast
 import logging
 import zlib
 
-from bitglitter.config.palettemanager import palette_manager
+from bitglitter.config.palettes import palette_manager
 from bitglitter.config.settingsmanager import settings_manager
 
-# test
 def read_initializer(bit_stream, blockHeight, block_width, custom_palette_list, default_palette_list):
     """This function decodes the raw binary data from the initializer header after verifying it's checksum, and will
     emergency stop the read if any of the conditions are met:  If the read checksum differs from the calculated

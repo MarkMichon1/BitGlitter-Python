@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
 import pickle
+from sqlalchemy.ext.declarative import declarative_base
 
-from bitglitter.config.basemanager import BaseManager
+from bitglitter.config.del_pending_basemanager import BaseManager
 from bitglitter.utilities.display import humanize_file_size
 
 

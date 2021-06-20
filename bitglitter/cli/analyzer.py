@@ -43,7 +43,7 @@ class CliArgumentParser(object):
         
         if path.isfile(file_path) == True or path.isdir(file_path) == True:
             try:
-                write(input_path=file_path, stream_name=stream_name, output_mode=mode, output_path=output_path)
+                write(input_path=file_path, stream_name=stream_name, output_mode=mode, output_directory=output_path)
             except FileNotFoundError:
                 raise FileNotFoundError("ffmpeg is required and wasn't found do you have ffmpeg installed in your local directory ?")
             except TypeError:

@@ -1,8 +1,8 @@
-from bitglitter.config.palettemanager import palette_manager
-from bitglitter.config.presetmanager import preset_manager
-from bitglitter.config.readmanager import read_manager
+from bitglitter.config.palettes import palette_manager
+from bitglitter.config.presets import preset_manager
+from bitglitter.config.read import read_manager
 from bitglitter.config.settingsmanager import settings_manager
-from bitglitter.config.statisticsmanager import stats_manager
+from bitglitter.config.statistics import stats_manager
 
 
 def remove_session():

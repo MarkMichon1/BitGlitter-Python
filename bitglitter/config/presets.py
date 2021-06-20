@@ -1,7 +1,7 @@
 from pathlib import Path
 import pickle
 
-from bitglitter.config.basemanager import BaseManager
+from bitglitter.config.del_pending_basemanager import BaseManager
 from bitglitter.validation.validatewrite import write_preset_validate
 
 

@@ -41,7 +41,7 @@
 
 # CORE USES
 from bitglitter.write.write import write
-from bitglitter.read.read import read
+#from bitglitter.read.read import read
 
 
 # GENERAL CONFIGURATION

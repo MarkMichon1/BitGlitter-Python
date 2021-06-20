@@ -10,9 +10,9 @@ def render_video(stream_output_path, default_output_path, output_name, working_d
 
     logging.info('Rendering video...')
     if stream_output_path:
-        video_output_path = stream_output_path
+        video_output_path = Path(stream_output_path)
     else:
-        video_output_path = default_output_path
+        video_output_path = Path(default_output_path)
     if output_name:
         video_name = output_name
     else:

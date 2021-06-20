@@ -1,4 +1,4 @@
-from bitglitter.config.presetmanager import preset_manager
+from bitglitter.config.presets import preset_manager
 
 
 def add_new_preset(nickname, output_mode='video', compression_enabled=True, scrypt_n=14, scrypt_r=8, scrypt_p=1,

@@ -3,11 +3,11 @@ from multiprocessing import cpu_count, Pool
 
 from cv2 import imread
 
-from bitglitter.read.framescan.decodestatemanagement import decode_video_multicore_state_generator, initial_video_stream_lockon
-from bitglitter.read.framescan.frameprocess import frame_process
+from bitglitter.read.inputdecode.decodestatemanagement import decode_video_multicore_state_generator, initial_video_stream_lockon
+from bitglitter.read.inputdecode.frameprocess import frame_process
 
 
-class DecodeHandler:  # look at render handler
+class FrameReadHandler:  # look at render handler
     def __init__(self, input_path, output_path, input_type, bad_frame_strikes, max_cpu_cores, block_height_override,
                  block_width_override, stream_palette_id_override, encryption_key, scrypt_n, scrypt_r, scrypt_p,
                  save_statistics, partial_save_path):

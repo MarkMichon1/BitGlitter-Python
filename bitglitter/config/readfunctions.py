@@ -36,7 +36,7 @@ def update_partial_save():
     pass
 
     # def update_partial_save(stream_sha, reattempt_assembly=True, password_update=None, scrypt_n=None,
-    #                         scrypt_r=None, scrypt_p=None, change_output_path=None):
+    #                         scrypt_r=None, scrypt_p=None, change_output_directory=None):
     #     '''This function will update the PartialSave object with the parameters provided, once they've been verified.'''
     #
     #     if password_update:

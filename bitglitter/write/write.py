@@ -1,6 +1,6 @@
-from bitglitter.config.presetmanager import preset_manager
+from bitglitter.config.presets import preset_manager
 from bitglitter.config.settingsmanager import settings_manager
-from bitglitter.config.statisticsmanager import stats_manager
+from bitglitter.config.statistics import stats_manager
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
@@ -15,7 +15,7 @@ def write(
         preset_nickname=None,
         stream_name="",
         stream_description="",
-        output_path=None,
+        output_directory=None,
         output_mode="video",
         output_name="",
         max_cpu_cores=0,
@@ -57,7 +57,7 @@ def write(
 
     # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
     if preset_nickname:
-        write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
                                  file_mask_enabled, encryption_key, preset_used=True)
         preset = preset_manager.return_preset(preset_nickname)
         output_mode = preset.output_mode
@@ -72,7 +72,7 @@ def write(
         block_width = preset.block_width
         frames_per_second = preset.frames_per_second
     else:
-        write_parameter_validate(input_path, stream_name, stream_description, output_path, output_name,
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
                                  file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
                                  scrypt_n, scrypt_r, scrypt_p, stream_palette_id, pixel_width, block_height,
                                  block_width, frames_per_second, preset_used=False)
@@ -92,7 +92,7 @@ def write(
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, settings_manager.BG_VERSION,
                                    pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,
-                                   output_mode, output_path, output_name)
+                                   output_mode, output_directory, output_name)
 
     # Removing temporary files
     remove_working_folder(working_dir)

@@ -1,4 +1,4 @@
-from bitglitter.config.statisticsmanager import stats_manager
+from bitglitter.config.statistics import stats_manager
 
 
 def output_stats():

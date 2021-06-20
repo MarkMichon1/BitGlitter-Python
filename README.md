@@ -200,7 +200,7 @@ reads the file, along with other stream data.
 
 `stream_description=''` serves as a text field to optionally put a description for the stream.
 
-`output_path=False` is where you can optionally define the path of where the created media is outputted.  By
+`output_directory=False` is where you can optionally define the path of where the created media is outputted.  By
 default, media is saved where the python file is ran.  The folder path must already exist if used.
 
 `output_mode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
@@ -297,7 +297,7 @@ Like with `write()`, the only argument required is the input path (`file_path`),
 only, not directories.  Files can either be a supported video format (.avi, .flv, .mov, .mp4, .wmv) or a support image
 format (.bmp, .jpg, .png).
 
-`output_path=False` Is where you can set where files will be written as they become available through decoding.
+`output_directory=False` Is where you can set where files will be written as they become available through decoding.
   It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
   stick with that stream.  This argument requires a string of a folder path that already exists.
 
@@ -317,7 +317,7 @@ attempt to lock onto the screen given these parameters.  Both must be filled in 
 `stream_palette_id_override=False` is something you'd only touch if reading from
 a folder of images (of BitGlitter frames)
 
-`encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_path`, you only
+`encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_directory`, you only
 need this argument once, and it will bind to that save.
 
 `logging_level='info'`, `logging_stdout_output=True`, `logging_txt_output=False`, and `save_statistics=False` are 
@@ -380,7 +380,7 @@ Once the first frame of a stream is read, a PartialSave object is created.  This
 strings, and holds various information on it's state.  These functions help better interface with them.
 
 `update_partial_save(stream_sha, reattempt_assembly = True, password_update = None, scrypt_n =  None, scrypt_r = None, 
-scrypt_p = None, change_output_path = None)` This function allows you to update various parameters of the save.  
+scrypt_p = None, change_output_directory = None)` This function allows you to update various parameters of the save.  
 Requires a string input for `streamSHA` which is the ID number of the string.  
 
 Argument `reattempt_assembly` makes the assembler

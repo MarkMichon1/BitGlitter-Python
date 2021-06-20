@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from bitglitter.config.palettemanager import palette_manager
+from bitglitter.config.palettes import palette_manager
 from bitglitter.config.settingsmanager import settings_manager
 from bitglitter.validation.utilities import is_valid_directory, is_int_over_zero, proper_string_syntax, \
     is_bool

@@ -4,8 +4,8 @@ import logging
 from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
-from bitglitter.config.palettemanager import palette_manager
-from bitglitter.read.frameprocess.scanutilities import color_snap, return_distance, scan_block
+from bitglitter.config.palettes import palette_manager
+from bitglitter.read.inputdecode.scan.scanutilities import color_snap, return_distance, scan_block
 from bitglitter.palettes.utilities import ColorsToBits
 
 
