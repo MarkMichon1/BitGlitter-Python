@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from bitglitter.config.palettes import palette_manager
+from bitglitter.config.del_pending_palettes import palette_manager
 from bitglitter.utilities.display import humanize_file_size
 from bitglitter.validation.utilities import is_bool, is_int_over_zero, is_valid_directory, proper_string_syntax, \
     verify_write_params_output_mode, verify_write_params_scrypt

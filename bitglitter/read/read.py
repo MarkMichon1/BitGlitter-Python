@@ -1,7 +1,7 @@
 import logging
 
 from bitglitter.config.settingsmanager import settings_manager
-from bitglitter.config.statistics import stats_manager
+from bitglitter.config.configfunctions import _read_update
 from bitglitter.read.inputdecode.framereadhandler import FrameReadHandler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validateread import verify_read_parameters
@@ -29,7 +29,8 @@ def read(file_path,
          logging_save_output=False,
 
          # Session Data
-         save_statistics=False
+         save_statistics=False,
+         _app_mode = False #overrides some configs if ran from Electron app
          ):
 
     """This is the high level function that decodes BitGlitter encoded images and video back into the files/folders
@@ -59,5 +60,4 @@ def read(file_path,
 
     # Save statistics if enabled.
     if save_statistics:
-        stats_manager.read_update(decode_handler.blocks_read, decode_handler.unique_frames_read,
-                                   decode_handler.data_read)
+        _read_update(decode_handler.blocks_read, decode_handler.unique_frames_read, decode_handler.data_read)

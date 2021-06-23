@@ -1,4 +1,4 @@
-from bitglitter.config.palettes import palette_manager
+from bitglitter.config.del_pending_palettes import palette_manager
 
 
 def add_custom_palette(palette_name, palette_description, color_set, optional_nickname=""):

@@ -23,7 +23,6 @@ class AbstractPalette:
         return self.color_set[item]
 
 
-
 class DefaultPalette(AbstractPalette):
     """These are palettes that come default with BitGlitter.  They cannot be changed or removed."""
 
@@ -109,43 +108,67 @@ class TwentyFourBitPalette:
 from sqlalchemy import Boolean, Column, Float, Integer, String, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 
-from bitglitter.config.config import ConfigBaseClass, engine
+from bitglitter.config.config import SqlBaseClass, engine, session
 
 
-class Palette(ConfigBaseClass):
+class Palette(SqlBaseClass):
     __tablename__ = 'palettes'
-    id = Column(Integer, primary_key=True)
+    __abstract__ = False
     is_valid = Column(Boolean, default=False)
     is_24_bit = Column(Boolean, default=False)
     is_default = Column(Boolean, default=False)
 
     palette_id = Column(String)
-    palette_type = Column(String)
     name = Column(String)
     description = Column(String)
-    nickname = Column(String) #todo
-    color_set = Column(String) #todo relationship
-    color_distance = Column(Float) #dynamic
-    number_of_colors = Column(Integer) #load dynamic
-    bit_length = Column(Integer) #load dynamic
+    #nickname = Column(String)  # todo
+    #color_set = Column(String)  # todo relationship
+    #color_distance = Column(Float)  # dynamic
+    #number_of_colors = Column(Integer)  # load dynamic
+    #bit_length = Column(Integer)  # load dynamic
 
     __table_args__ = (
         UniqueConstraint('palette_id'),
     )
+
+    @classmethod
+    def test(cls):
+        test = session.query(Palette).first()
+        print(test)
+        # print(f'{test.palette_id} {test.name}')
 
     def load_colors(self):
         self.name = '1'
         self.save()
         print('ran')
 
-    #@classmethod
+    def return_encoder(self):
+        if not self.is_24_bit:
+            pass
+        else:
+            pass
 
-    #todo- calculate color distance dynamically upon color changes
+    def return_decoder(self):
+        if not self.is_24_bit:
+            pass
+        else:
+            pass
+
+    def return_as_dict(self):
+        pass  # below, old data
+        """        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
+            self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
+                    self.number_of_colors, 'bit_length': self.bit_length
+                }"""
+
+    # @classmethod
+
+    # todo- calculate color distance dynamically upon color changes
 
 
-class PaletteColor(ConfigBaseClass):
+class PaletteColor(SqlBaseClass):
     __tablename__ = 'palette_colors'
-    id = Column(Integer, primary_key=True)
+    __abstract__ = False
     palette_sequence = Column(Integer)
     red_channel = Column(Integer)
     green_channel = Column(Integer)
@@ -155,22 +178,9 @@ class PaletteColor(ConfigBaseClass):
         #
     )
 
-
     def test(self):
         self.name = ''
         self.save()
 
-    def return_encoder(self):
-        pass
 
-    def return_decoder(self):
-        pass
-
-    def return_as_dict(self):
-        pass # below, old data
-        """        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
-            self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
-                    self.number_of_colors, 'bit_length': self.bit_length
-                }"""
-
-ConfigBaseClass.metadata.create_all(engine)
+SqlBaseClass.metadata.create_all(engine)

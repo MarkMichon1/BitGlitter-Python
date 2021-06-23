@@ -1,6 +1,6 @@
 import logging
 
-from bitglitter.config.palettes import palette_manager
+from bitglitter.config.del_pending_palettes import palette_manager
 from bitglitter.palettes.utilities import ColorsToBits
 from bitglitter.read.inputdecode.decoderassets_pending_del import minimum_block_checkpoint, read_frame_header, read_initializer, validate_payload
 from bitglitter.read.inputdecode.scan.DEL_moveto_notsureyet import FrameProcessor

@@ -1,6 +1,8 @@
+import logging
+
+from bitglitter.config.configfunctions import _write_update
 from bitglitter.config.presets import preset_manager
 from bitglitter.config.settingsmanager import settings_manager
-from bitglitter.config.statistics import stats_manager
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
@@ -46,7 +48,8 @@ def write(
         logging_txt_output=False,
 
         # Session Data
-        save_statistics=False
+        save_statistics=False,
+        _app_mode = False #overrides some configs if ran from Electron app
         ):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page or project README
     for more information.
@@ -98,7 +101,6 @@ def write(
     remove_working_folder(working_dir)
 
     if save_statistics:
-        stats_manager.write_update(render_handler.blocks_wrote, render_handler.frames_wrote,
-                                   pre_processor.size_in_bytes)
+        _write_update(render_handler.blocks_wrote, render_handler.frames_wrote, pre_processor.size_in_bytes)
 
     return pre_processor.stream_sha

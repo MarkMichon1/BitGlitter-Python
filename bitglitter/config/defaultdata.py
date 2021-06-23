@@ -1,9 +1,17 @@
-from bitglitter.config.config import session
+from bitglitter.config.config import Config, Constants, Statistics, session
 from bitglitter.palettes.palettes import Palette, PaletteColor
 
 def load_default_data():
     """Populates config.db with required models as well as some default palettes"""
-    pending_commit_objects = []
+    if session.query(Config).first():
+        return
+
+    constants_model = Constants()
+    constants_model.save()
+    statistics_model = Statistics()
+    statistics_model.save()
+    config_model = Config()
+    config_model.save()
 
     # Palette create
     default_palette_data = [
@@ -13,6 +21,7 @@ def load_default_data():
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
             'it has the highest reliability.',
             'color_set': ((0, 0, 0), (255, 255, 255)),
+            'is_24_bit': True
         },
         {
             'palette_id': '11',
@@ -20,6 +29,7 @@ def load_default_data():
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
                            'it has the highest reliability.',
             'color_set': ((255, 0, 255), (0, 255, 255)),
+            'is_24_bit': True
         },
         {
             'palette_id': '2',
@@ -27,6 +37,7 @@ def load_default_data():
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
                            'it has the highest reliability.',
             'color_set': ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255)),
+            'is_24_bit': True
         },
         {
             'palette_id': '22',
@@ -34,6 +45,7 @@ def load_default_data():
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
                            'it has the highest reliability.',
             'color_set': ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)),
+            'is_24_bit': False
         },
         {
             'palette_id': '3',
@@ -42,6 +54,7 @@ def load_default_data():
                            'it has the highest reliability.',
             'color_set': ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255),
                           (255, 255, 255)),
+            'is_24_bit': False
         },
         {
             'palette_id': '4',
@@ -51,6 +64,7 @@ def load_default_data():
             'color_set': ((0, 0, 0), (128, 128, 128), (192, 192, 192), (128, 0, 0), (255, 0, 0), (128, 128, 0), (255,
                           255, 0), (0, 255, 0), (0, 128, 128), (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
                           (128, 0, 128), (255, 0, 255), (255, 255, 255)),
+            'is_24_bit': False
         },
         {
             'palette_id': '6',
@@ -68,6 +82,7 @@ def load_default_data():
                           (255, 0, 85), (255, 0, 170), (255, 0, 255), (255, 85, 0), (255, 85, 85), (255, 85, 170),
                           (255, 85, 255), (255, 170, 0), (255, 170, 85), (255, 170, 170), (255, 170, 255),
                           (255, 255, 0), (255, 255, 85), (255, 255, 170), (255, 255, 255)),
+            'is_24_bit': True
         },
         {
             'palette_id': '24',
@@ -75,16 +90,14 @@ def load_default_data():
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
                            'it has the highest reliability.',
             'color_set': None,
-        },
+            'is_24_bit': True
+        }, #stellar wind
     ]
 
     for palette in default_palette_data:
-        new_palette = Palette(palette_id=palette['palette_id'], palette_type='default', name=palette['palette_id'], description=palette['palette_id'], color_set=palette['palette_id'],
-                      color_distance=2.532, number_of_colors=7, bit_length=3)
-        pending_commit_objects.append(new_palette)
+        new_palette = Palette(palette_id=palette['palette_id'], is_valid=True, is_24_bit=palette['is_24_bit'],
+                              is_default=True, name=palette['name'], description=palette['description'])
+        new_palette.save()
+        #new_palette.load_colors(palette['color_set'])
 
-    session.add_all(pending_commit_objects)
-    session.commit()
-
-
-load_default_data()
+#load_default_data() #here for now for testing.

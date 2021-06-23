@@ -5,7 +5,7 @@ import zlib
 from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
-from bitglitter.config.palettes import palette_manager
+from bitglitter.config.del_pending_palettes import palette_manager
 from bitglitter.palettes.utilities import BitsToColor
 from bitglitter.utilities.compression import compress_bytes
 from bitglitter.utilities.encryption import encrypt_bytes, get_hash_from_bytes

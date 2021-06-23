@@ -1,3 +1,27 @@
+from bitglitter.config.defaultdata import load_default_data
+load_default_data()
+
+# CORE USES
+from bitglitter.write.write import write
+# from bitglitter.read.read import read
+
+
+# GENERAL CONFIGURATION
+from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session
+
+# READ CONFIGURATION
+# from bitglitter.config.readfunctions import * todo
+
+# PALETTE CONFIGURATION
+from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
+    remove_all_custom_palettes, remove_all_custom_palette_nicknames, remove_custom_palette, \
+    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes
+
+# PRESET CONFIGURATION
+from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
+    return_all_preset_data, return_preset_data
+
+# ===============================================================================
 # The MIT License (MIT)
 #
 # Copyright (c) 2020 - ∞ Mark Michon
@@ -25,44 +49,16 @@
 # Official project page (Python library):
 # https://github.com/MarkMichon1/BitGlitter
 #
-# Official project page (Desktop app in progress)
+# Official project page (desktop app to be released sometime in 2021):
 # https://github.com/MarkMichon1/BitGlitter-GUI
 #
 # Guides and roadmap (under construction!):
 # https://github.com/MarkMichon1/BitGlitter/wiki
 #
-# Discord channel:
+# Discord server:
 # https://discord.gg/t9uv2pZ
 #
 # Have fun! :)
 #
 #   - Mark
 # ===============================================================================
-
-# CORE USES
-from bitglitter.write.write import write
-#from bitglitter.read.read import read
-
-
-# GENERAL CONFIGURATION
-from bitglitter.config.configfunctions import remove_session
-
-# READ CONFIGURATION
-# from bitglitter.config.readfunctions import * todo
-
-# PALETTE CONFIGURATION
-from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
-    remove_all_custom_palettes, remove_all_custom_palette_nicknames, remove_custom_palette, \
-    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes
-
-# PRESET CONFIGURATION
-from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
-    return_all_preset_data, return_preset_data
-
-# STATISTICS CONFIGURATION
-from bitglitter.config.statisticsfunctions import clear_stats, output_stats
-
-
-# Desktop App
-# https://github.com/MarkMichon1/BitGlitter-GUI
-# Coming soon!

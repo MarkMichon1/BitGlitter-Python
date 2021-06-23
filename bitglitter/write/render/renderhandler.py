@@ -1,7 +1,7 @@
 import logging
 from multiprocessing import cpu_count, Pool
 
-from bitglitter.config.palettes import palette_manager
+from bitglitter.config.del_pending_palettes import palette_manager
 from bitglitter.palettes.utilities import BitsToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.render.headers import metadata_header_process, palette_initialization_header_process, \
