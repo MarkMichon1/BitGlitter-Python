@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.config.settingsmanager import settings_manager
+from bitglitter.config.config import Constants, session
 from bitglitter.validation.utilities import is_valid_directory, is_int_over_zero, proper_string_syntax, \
     is_bool
 
@@ -16,6 +16,7 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
     """
 
     logging.info("Verifying read parameters...")
+    constants = session.query(Constants).first()
 
     path = Path(file_path)
     if not path.is_absolute():
@@ -24,15 +25,16 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
         raise ValueError(f'file_to_input argument {file_path} must be a file.')
 
     file_format = os.path.splitext(file_path)[1]
-    if file_format in settings_manager.VALID_VIDEO_FORMATS:
+    if file_format in constants.return_valid_video_formats():
         logging.debug(f'Video detected: {file_format}')
         input_type = 'video'
-    elif file_format in settings_manager.VALID_IMAGE_FORMATS:
+    elif file_format in constants.return_valid_image_formats():
         logging.debug(f'Image detected: {file_format}')
         input_type = 'image'
     else:
         raise ValueError(f'input_file value {file_path} is not a valid format.  Only the following are '
-                         f'allowed: {settings_manager.VALID_VIDEO_FORMATS}, and {settings_manager.VALID_IMAGE_FORMATS}')
+                         f'allowed: {constants.return_valid_video_formats()}, '
+                         f'and {constants.return_valid_image_formats()}')
 
     if output_path:
         is_valid_directory('file_to_input', output_path)

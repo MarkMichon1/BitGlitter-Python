@@ -1,6 +1,6 @@
 import logging
 
-from bitglitter.config.settingsmanager import settings_manager
+from bitglitter.config.del_pending_settingsmanager import settings_manager
 from bitglitter.config.configfunctions import _read_update
 from bitglitter.read.inputdecode.framereadhandler import FrameReadHandler
 from bitglitter.utilities.loggingset import logging_setter

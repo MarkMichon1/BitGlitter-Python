@@ -1,5 +1,5 @@
-from bitglitter.config.defaultdata import load_default_data
-load_default_data()
+from bitglitter.config.defaultdbdata import load_default_db_data
+load_default_db_data()
 
 # CORE USES
 from bitglitter.write.write import write

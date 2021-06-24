@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from multiprocessing import cpu_count
 from pathlib import Path
 
-engine = create_engine('sqlite:///config.db')
+engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.db"}')
 engine.connect()
 Session = sessionmaker(bind=engine)
 session = Session()

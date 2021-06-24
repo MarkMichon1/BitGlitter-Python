@@ -89,6 +89,11 @@ class ColorsToBits:
             return self.return_value(color)
 
 
+def hex_to_rgb(hex_string):
+    stripped = hex_string.replace('#', '')
+    return tuple(int(stripped[i:i + 2], 16) for i in (0, 2, 4))
+
+
 def get_color_distance(palette):
     """This function takes in the set of tuples in a palette, and calculates their proximity to each other in RGB space.
     Higher number denote 'safer' palettes to use in the field, as they are less prone to errors in the field.  Getting 0

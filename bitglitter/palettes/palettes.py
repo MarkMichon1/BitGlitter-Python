@@ -1,4 +1,8 @@
-import datetime
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, UniqueConstraint
+
+from bitglitter.config.config import SqlBaseClass, engine, session
+
+from datetime import datetime
 import math
 
 
@@ -105,12 +109,6 @@ class TwentyFourBitPalette:
                 }
 
 
-from sqlalchemy import Boolean, Column, Float, Integer, String, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-
-from bitglitter.config.config import SqlBaseClass, engine, session
-
-
 class Palette(SqlBaseClass):
     __tablename__ = 'palettes'
     __abstract__ = False
@@ -126,21 +124,23 @@ class Palette(SqlBaseClass):
     #color_distance = Column(Float)  # dynamic
     #number_of_colors = Column(Integer)  # load dynamic
     #bit_length = Column(Integer)  # load dynamic
+    #datetime_created = Column(D)
 
     __table_args__ = (
         UniqueConstraint('palette_id'),
     )
 
-    @classmethod
-    def test(cls):
-        test = session.query(Palette).first()
-        print(test)
-        # print(f'{test.palette_id} {test.name}')
-
-    def load_colors(self):
-        self.name = '1'
-        self.save()
-        print('ran')
+    def initialize_colors(self):
+        if not self.is_24_bit:
+            self.name = '1'
+            # run color distance here with set, load into model after
+            # ^+ number of colors, bit length
+            self.save()
+        else:
+            self.bit_length = 24
+            self.color_distance = 0
+            self.number_of_colors = 16777216
+            self.save()
 
     def return_encoder(self):
         if not self.is_24_bit:
@@ -169,18 +169,11 @@ class Palette(SqlBaseClass):
 class PaletteColor(SqlBaseClass):
     __tablename__ = 'palette_colors'
     __abstract__ = False
+    parent_palette = Column(Integer)
     palette_sequence = Column(Integer)
     red_channel = Column(Integer)
     green_channel = Column(Integer)
     blue_channel = Column(Integer)
-
-    __table_args__ = (
-        #
-    )
-
-    def test(self):
-        self.name = ''
-        self.save()
 
 
 SqlBaseClass.metadata.create_all(engine)

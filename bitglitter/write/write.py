@@ -1,8 +1,8 @@
-import logging
+from pathlib import Path
 
+from bitglitter.config.config import Config, Constants, session
 from bitglitter.config.configfunctions import _write_update
-from bitglitter.config.presets import preset_manager
-from bitglitter.config.settingsmanager import settings_manager
+from bitglitter.config.del_pending_presets import preset_manager
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
@@ -49,14 +49,17 @@ def write(
 
         # Session Data
         save_statistics=False,
-        _app_mode = False #overrides some configs if ran from Electron app
+        _app_mode = False # overrides some configs if ran from Electron app
         ):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page or project README
     for more information.
     """
 
+    config = session.query(Config).first()
+    constants = session.query(Constants).first()
+
     # Initializing logging, must be up front for logging to work properly.
-    logging_setter(logging_level, logging_stdout_output, logging_txt_output, settings_manager.log_txt_path)
+    logging_setter(logging_level, logging_stdout_output, logging_txt_output, Path(config.log_txt_path))
 
     # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
     if preset_nickname:
@@ -81,8 +84,8 @@ def write(
                                  block_width, frames_per_second, preset_used=False)
 
     # This sets the name of the temporary folder while the file is being written, as well as the default output path.
-    working_dir = settings_manager.WRITE_WORKING_DIR
-    default_output_path = settings_manager.DEFAULT_OUTPUT_PATH
+    working_dir = Path(constants.WRITE_WORKING_DIR)
+    default_output_path = Path(constants.DEFAULT_OUTPUT_PATH)
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     pre_processor = PreProcessor(working_dir, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,
@@ -93,8 +96,8 @@ def write(
                                    scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
                                    stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
-                                   file_mask_enabled, pre_processor.datetime_started, settings_manager.BG_VERSION,
-                                   pre_processor.manifest, settings_manager.PROTOCOL_VERSION, frames_per_second,
+                                   file_mask_enabled, pre_processor.datetime_started, constants.BG_VERSION,
+                                   pre_processor.manifest, constants.PROTOCOL_VERSION, frames_per_second,
                                    output_mode, output_directory, output_name)
 
     # Removing temporary files

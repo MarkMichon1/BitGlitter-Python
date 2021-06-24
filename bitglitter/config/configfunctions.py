@@ -1,24 +1,23 @@
-from bitglitter.config.config import engine, session, SqlBaseClass, Statistics
-from bitglitter.config.defaultdata import load_default_data
-from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.config.presets import preset_manager
-from bitglitter.config.read import read_manager
-from bitglitter.config.settingsmanager import settings_manager
+from bitglitter.config.config import Config, Constants, session, Statistics
+from bitglitter.config.defaultdbdata import load_default_db_data
+from bitglitter.palettes.palettes import Palette, PaletteColor
 
 
 
 
 def remove_session():
     """Resets persistent data to factory default settings."""
-
-    SqlBaseClass.metadata.drop_all(engine)
-    load_default_data()
+    # todo: add future read models
+    model_list = [Config, Constants, Palette, PaletteColor, Statistics]
+    for model in model_list:
+        session.query(model).delete()
+    session.commit()
+    load_default_db_data()
 
 
 def output_stats():
     """Returns a dictionary object containing read and write statistics."""
     stats = session.query(Statistics).first()
-
     return stats.return_stats()
 
 
