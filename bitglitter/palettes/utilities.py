@@ -74,7 +74,7 @@ class ColorsToBits:
         value_dict = {}
 
         if self.palette.bit_length != 24:
-            for value in range(len(self.palette.color_set)):
+            for value in range(len(self.palette.color_set)): #todo change to .number_of_colors
                 temp_bin_holder = str(BitArray(uint=value, length=self.palette.bit_length))
                 temp_bin_holder = ConstBitStream(temp_bin_holder)
                 value_dict[self.palette[value]] = temp_bin_holder

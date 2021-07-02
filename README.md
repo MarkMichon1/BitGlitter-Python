@@ -69,7 +69,7 @@ interesting applications that can come out of this.
 
 ### Data
 
-+ **Supports streams up to ~1 [EB](https://en.wikipedia.org/wiki/Exabyte) in size, or ~4.3B frames:**  In other words,
++ **Supports streams up to ~1 [EB](https://en.wikipedia.org/wiki/Exabyte) in size, or ~4.3B rendered frames:**  In other words,
   there is no practical limit to the stream's size.
 + **Compression added:** This is done automatically, so don't worry about putting your files in a rar or zip prior to
 sending.

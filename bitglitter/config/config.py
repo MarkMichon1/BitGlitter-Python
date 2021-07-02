@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from multiprocessing import cpu_count
 from pathlib import Path
 
-engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.db"}')
+engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}')
 engine.connect()
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -49,15 +49,16 @@ class Config(SqlBaseClass):
 class Constants(SqlBaseClass):
     __abstract__ = False
     __tablename__ = 'constants'
-    BG_VERSION = Column(String, default='2.0')
-    PROTOCOL_VERSION = Column(Integer, default=1)
-    SUPPORTED_PROTOCOLS = Column(String, default='1')
-    WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'))
-    DEFAULT_OUTPUT_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'))
+    BG_VERSION = Column(String, default='2.0', nullable=False)
+    PROTOCOL_VERSION = Column(Integer, default=1, nullable=False)
+    SUPPORTED_PROTOCOLS = Column(String, default='1', nullable=False)
+    WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
+    DEFAULT_OUTPUT_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'),
+                                 nullable=False)
     DEFAULT_PARTIAL_SAVE_DATA_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent /
-                                                                'Partial Stream Data'))
-    VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv')
-    VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png')
+                                                                'Partial Stream Data'), nullable=False)
+    VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
+    VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)
 
     def return_supported_protocols(self):
         return self.SUPPORTED_PROTOCOLS.split('|')
@@ -79,8 +80,6 @@ class Statistics(SqlBaseClass):
     frames_read = Column(Integer, default=0)
     data_read = Column(Integer, default=0)
 
-    def __str__(self):
-        pass  # todo
 
     def write_update(self, blocks, frames, data):
         self.blocks_wrote += blocks

@@ -1,6 +1,8 @@
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 from bitglitter.config.config import SqlBaseClass, engine, session
+from bitglitter.palettes.utilities import BitsToColor, ColorsToBits, get_color_distance
 
 from datetime import datetime
 import math
@@ -114,28 +116,59 @@ class Palette(SqlBaseClass):
     __abstract__ = False
     is_valid = Column(Boolean, default=False)
     is_24_bit = Column(Boolean, default=False)
-    is_default = Column(Boolean, default=False)
+    is_custom = Column(Boolean, default=True)
+    is_included_with_repo = Column(Boolean, default=False) # for differentiating other people's colors & our fancy ones
 
-    palette_id = Column(String)
+    palette_id = Column(String, unique=True, nullable=False)
     name = Column(String)
     description = Column(String)
-    #nickname = Column(String)  # todo
-    #color_set = Column(String)  # todo relationship
-    #color_distance = Column(Float)  # dynamic
-    #number_of_colors = Column(Integer)  # load dynamic
-    #bit_length = Column(Integer)  # load dynamic
-    #datetime_created = Column(D)
+    nickname = Column(String, unique=True)
+    color_set = Column(String)  # todo relationship
+    color_distance = Column(Float, default=0, nullable=False)
+    number_of_colors = Column(Integer, default=0, nullable=False)
+    bit_length = Column(Integer, default=0, nullable=False)
+    datetime_created = Column(DateTime, default=datetime.now())
 
     __table_args__ = (
         UniqueConstraint('palette_id'),
     )
 
-    def initialize_colors(self):
+    def _convert_colors_to_tuple(self):
+        colors = [] #query list in proper sequence
+        returned_list = []
+        for color in colors:
+            returned_list.append((color.red_channel, color.green_channel, color.blue_channel))
+        return returned_list
+
+    def _recalculate_palette_math(self, color_set):
+        self.color_distance = get_color_distance(color_set)
+        self.number_of_colors = len(color_set)
+        self.bit_length = int(math.log(self.number_of_colors, 2))
+        self.save()
+
+    def _initialize_colors(self, color_set):
+        """This is BG-internal method that blindly accepts tuples.  Use palettefunctions functions for prior necessary
+        validation of values.
+        """
+
         if not self.is_24_bit:
-            self.name = '1'
-            # run color distance here with set, load into model after
-            # ^+ number of colors, bit length
+            self._recalculate_palette_math(color_set)
+            sequence_number = 0
+            for color in color_set:
+                print(f'CC- {color}')
+                new_color = PaletteColor(parent_palette=None, palette_sequence=sequence_number, red_channel=color[0],
+                                         green_channel=color[1], blue_channel=color[2])
+                print('here')
+                new_color.save()
+                sequence_number += 1
+
             self.save()
+
+            #todo
+            self.bit_length = 0
+            self.color_distance = 0
+            self.number_of_colors = 0
+
         else:
             self.bit_length = 24
             self.color_distance = 0
@@ -143,12 +176,14 @@ class Palette(SqlBaseClass):
             self.save()
 
     def return_encoder(self):
+        color_set_tupled = self._convert_colors_to_tuple()
         if not self.is_24_bit:
             pass
         else:
             pass
 
     def return_decoder(self):
+        color_set_tupled = self._convert_colors_to_tuple()
         if not self.is_24_bit:
             pass
         else:
@@ -156,10 +191,10 @@ class Palette(SqlBaseClass):
 
     def return_as_dict(self):
         pass  # below, old data
-        """        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
+        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
             self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
-                    self.number_of_colors, 'bit_length': self.bit_length
-                }"""
+            self.number_of_colors, 'bit_length': self.bit_length
+                }
 
     # @classmethod
 
@@ -169,11 +204,11 @@ class Palette(SqlBaseClass):
 class PaletteColor(SqlBaseClass):
     __tablename__ = 'palette_colors'
     __abstract__ = False
-    parent_palette = Column(Integer)
-    palette_sequence = Column(Integer)
-    red_channel = Column(Integer)
-    green_channel = Column(Integer)
-    blue_channel = Column(Integer)
+    parent_palette = Column(Integer, nullable=False)
+    palette_sequence = Column(Integer, nullable=False)
+    red_channel = Column(Integer, nullable=False)
+    green_channel = Column(Integer, nullable=False)
+    blue_channel = Column(Integer, nullable=False)
 
 
 SqlBaseClass.metadata.create_all(engine)

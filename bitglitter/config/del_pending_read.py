@@ -1,10 +1,8 @@
 from pathlib import Path
 import pickle
 
-from bitglitter.config.del_pending_basemanager import BaseManager
 
-
-class ReadManager(BaseManager):
+class ReadManager():
     """Acts as an API to Assembler."""
 
     def __init__(self):
@@ -12,7 +10,7 @@ class ReadManager(BaseManager):
         self._SAVE_FILE_NAME = 'save_state'
 
         self._delete_save_folder()
-        self._save()
+
 
     def _delete_save_folder(self):
         pass  # todo

@@ -2,13 +2,12 @@ from pathlib import Path
 import pickle
 import time
 
-from bitglitter.config.del_pending_basemanager import BaseManager
 from bitglitter.palettes.palettes import CustomPalette, DefaultPalette, TwentyFourBitPalette
 from bitglitter.palettes.utilities import get_color_distance, get_palette_id_from_hash
 from bitglitter.validation.utilities import proper_string_syntax
 
 #todo: merge into palettefunctions
-class PaletteManager_pending_del(BaseManager):
+class PaletteManager_pending_del():
     """This handles all palettes both default and custom.  Please note that default palettes are created here as well.
     All functions available in palettefunctions module that deal with custom palettes are interfacing with dictionaries
     custom_palette_list and custom_palette_nickname_list in this object.

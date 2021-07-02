@@ -1,6 +1,9 @@
 from bitglitter.config.config import Config, Constants, Statistics, session
 from bitglitter.palettes.palettes import Palette, PaletteColor
 
+from datetime import datetime
+
+
 def load_default_db_data():
     """Populates config.db with required models as well as some default palettes"""
     if session.query(Config).first():
@@ -19,10 +22,10 @@ def load_default_db_data():
             'palette_id': '1',
             'name': '1 Bit Default',
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
-            ' it has the highest reliability.',
+                           ' it has the highest reliability.',
             'color_set': ((0, 0, 0), (255, 255, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '11',
@@ -30,7 +33,7 @@ def load_default_db_data():
             'description': 'Alternate version.  Uses cyan/magenta instead of white/black.',
             'color_set': ((255, 0, 255), (0, 255, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '2',
@@ -38,7 +41,7 @@ def load_default_db_data():
             'description': 'Four colors- black, red, green, blue.',
             'color_set': ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '22',
@@ -46,7 +49,7 @@ def load_default_db_data():
             'description': 'Alternate version.  Four colors- black, magenta, cyan, yellow.',
             'color_set': ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '3',
@@ -55,17 +58,19 @@ def load_default_db_data():
             'color_set': ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255),
                           (255, 255, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '4',
             'name': '4 Bit Default',
             'description': 'Sixteen colors.',
             'color_set': ((0, 0, 0), (128, 128, 128), (192, 192, 192), (128, 0, 0), (255, 0, 0), (128, 128, 0), (255,
-                          255, 0), (0, 255, 0), (0, 128, 128), (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
+                                                                                                                 255,
+                                                                                                                 0),
+                          (0, 255, 0), (0, 128, 128), (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
                           (128, 0, 128), (255, 0, 255), (255, 255, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '6',
@@ -84,7 +89,7 @@ def load_default_db_data():
                           (255, 85, 255), (255, 170, 0), (255, 170, 85), (255, 170, 170), (255, 170, 255),
                           (255, 255, 0), (255, 255, 85), (255, 255, 170), (255, 255, 255)),
             'is_24_bit': False,
-            'is_default': True
+            'is_custom': False
         },
         {
             'palette_id': '24',
@@ -94,17 +99,18 @@ def load_default_db_data():
                            'rendered file WILL corrupt the data!',
             'color_set': None,
             'is_24_bit': True,
-            'is_default': True
+            'is_custom': False
         },
     ]
     custom_palette_data = [
         {
-            'palette_id': 'paperback2',
+            'palette_id': '',
+            'nickname': 'paperback2',
             'name': 'Paperback-2',
             'description': 'Two colors.  Credit goes to Doph of lospec.com.',
             'color_set': ('b8c2b9', '382b26'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'pixelink',
@@ -112,7 +118,7 @@ def load_default_db_data():
             'description': 'Two colors.  Credit goes to Polyducks of lospec.com.',
             'color_set': ('3e232c', 'edf6d6'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'knockia',
@@ -120,7 +126,7 @@ def load_default_db_data():
             'description': 'Two colors.  Credit goes to Imogia Games of lospec.com.',
             'color_set': ('212c28', '72a488'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'note2c',
@@ -128,7 +134,7 @@ def load_default_db_data():
             'description': 'Two colors.  Credit goes to Rytzi of lospec.com.',
             'color_set': ('222a3d', 'edf2e2'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'funkyjam',
@@ -136,7 +142,7 @@ def load_default_db_data():
             'description': 'Two colors.  Credit goes to Yelta of lospec.com.',
             'color_set': ('920244', 'fec28c'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'kirokaze',
@@ -144,7 +150,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to Kirokaze of lospec.com.',
             'color_set': ('332c50', '46878f', '94e344', 'e2f3e4'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'icecream',
@@ -152,7 +158,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to Kerrie Lake of lospec.com.',
             'color_set': ('7c3f58', 'eb6b6f', 'f9a875', 'fff6d3'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': '2bitgrayscale',
@@ -160,7 +166,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to lospec.com.',
             'color_set': ('000000', '676767', 'b6b6b6', 'ffffff'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'mist',
@@ -168,7 +174,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to Kerrie Lake of lospec.com.',
             'color_set': ('2d1b00', '1e606e', '5ab9a8', 'c4f0c2'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'rustic',
@@ -176,7 +182,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to Kerrie Lake of lospec.com.',
             'color_set': ('2c2137', '764462', 'edb4a1', 'a96868'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'spacehaze',
@@ -184,7 +190,7 @@ def load_default_db_data():
             'description': 'Four colors.  Credit goes to WildLeoKnight of lospec.com.',
             'color_set': ('f8e3c4', 'cc3495', '6b1fb1', '0b0630'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'slso8',
@@ -192,7 +198,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Luis Miguel Maldonado of lospec.com.',
             'color_set': ('0d2b45', '203c56', '544e68', '8d697a', 'd08159', 'ffaa5e', 'ffd4a3', 'ffecd6'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'dreamscape8',
@@ -200,7 +206,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Kerrie Lake of lospec.com.',
             'color_set': ('c9cca1', 'caa05a', 'ae6a47', '8b4049', '543344', '515262', '63787d', '8ea091'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'pollen8',
@@ -208,7 +214,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Conker of lospec.com.',
             'color_set': ('73464c', 'ab5675', 'ee6a7c', 'ffa7a5', 'ffe07e', 'ffe7d6', '72dcbb', '34acba'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'ammo8',
@@ -216,7 +222,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to rsvp asap of lospec.com.',
             'color_set': ('040c06', '112318', '1e3a29', '305d42', '4d8061', '89a257', 'bedc7f', 'eeffcc'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'funkyfuture8',
@@ -224,7 +230,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Shamaboy of lospec.com.',
             'color_set': ('2b0f54', 'ab1f65', 'ff4f69', 'fff7f8', 'ff8142', 'ffda45', '3368dc', '49e7ec'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'justparchment8',
@@ -232,7 +238,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to JustJimmy of lospec.com.',
             'color_set': ('292418', '524839', '73654a', '8b7d62', 'a48d6a', 'bda583', 'cdba94', 'e6ceac'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'rustgold',
@@ -240,7 +246,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Trigo Mathmancer of lospec.com.',
             'color_set': ('f6cd26', 'ac6b26', '563226', '331c17', 'bb7f57', '725956', '393939', '202020'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'oddfeeling',
@@ -248,7 +254,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to XENO of lospec.com.',
             'color_set': ('900c3f', 'e84a5f', 'ff847c', 'fc9d9d', 'feceab', 'ccafaf', '99b898', 'ffffff'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'retrocal',
@@ -256,7 +262,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to polyphorge of lospec.com.',
             'color_set': ('6eb8a8', '2a584f', '74a33f', 'fcffc0', 'c6505a', '2f142f', '774448', 'ee9c5d'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'citrink',
@@ -264,7 +270,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Inkpendude of lospec.com.',
             'color_set': ('ffffff', 'fcf660', 'b2d942', '52c33f', '166e7a', '254d70', '252446', '201533'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'waverator',
@@ -272,7 +278,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Mig Moog of lospec.com.',
             'color_set': ('0c0d14', '181c28', '23313d', '33505d', '4e7f7d', '53a788', '70d38b', 'cbffd8'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'winterwonderland',
@@ -280,7 +286,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Jimison3 of lospec.com.',
             'color_set': ('20284e', '2c4a78', '3875a1', '8bcadd', 'ffffff', 'd6e1e9', 'a7bcc9', '738d9d'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'sobeachy',
@@ -288,7 +294,7 @@ def load_default_db_data():
             'description': 'Eight colors.  Credit goes to Snowy Owl of lospec.com.',
             'color_set': ('e55388', 'e57d88', 'e59f88', 'e5d988', 'e3d5cc', 'bad5cc', '6dd5cc', '5ac5cc'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'sweetie',
@@ -297,7 +303,7 @@ def load_default_db_data():
             'color_set': ('1a1c2c', '5d275d', 'b13e53', 'ef7d57', 'ffcd75', 'a7f070', '38b764', '257179', '29366f',
                           '3b5dc9', '41a6f6', '73eff7', 'f4f4f4', '94b0c2', '566c86', '333c57'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'steamlords',
@@ -306,7 +312,7 @@ def load_default_db_data():
             'color_set': ('213b25', '3a604a', '4f7754', 'a19f7c', '77744f', '775c4f', '603b3a', '3b2137', '170e19',
                           '2f213b', '433a60', '4f5277', '65738c', '7c94a1', 'a0b9ba', 'c0d1cc'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'islandjoy',
@@ -315,7 +321,7 @@ def load_default_db_data():
             'color_set': ('ffffff', '6df7c1', '11adc1', '606c81', '393457', '1e8875', '5bb361', 'a1e55a', 'f7e476',
                           'f99252', 'cb4d68', '6a3771', 'c92464', 'f48cb6', 'f7b69e', '9b9c82'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'lostcentury',
@@ -324,7 +330,7 @@ def load_default_db_data():
             'color_set': ('d1b187', 'c77b58', 'ae5d40', '79444a', '4b3d44', 'ba9158', '927441', '4d4539', '77743b',
                           'b3a555', 'd2c9a5', '8caba1', '4b726e', '574852', '847875', 'ab9b8e'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'vanillamilkshake',
@@ -333,7 +339,7 @@ def load_default_db_data():
             'color_set': ('28282e', '6c5671', 'd9c8bf', 'f98284', 'b0a9e4', 'accce4', 'b3e3da', 'feaae4', '87a889',
                           'b0eb93', 'ffe6c6', 'dea38b', 'e9f59d', 'ffc384', 'fff7a0', 'fff7e4'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'galaxyflame',
@@ -342,7 +348,7 @@ def load_default_db_data():
             'color_set': ('699fad', '3a708e', '2b454f', '111215', '151d1a', '1d3230', '314e3f', '4f5d42', '9a9f87',
                           'ede6cb', 'f5d893', 'e8b26f', 'b6834c', '704d2b', '40231e', '151015'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'endesga32',
@@ -353,7 +359,7 @@ def load_default_db_data():
                           '2ce8f5', 'ffffff', 'c0cbdc', '8b9bb4', '5a6988', '3a4466', '262b44', '181425', 'ff0044',
                           '68386c', 'b55088', 'f6757a', 'e8b796', 'c28569'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'mulfok32',
@@ -364,7 +370,7 @@ def load_default_db_data():
                           '873e84', '1f102a', '4a3052', '7b5480', 'a6859f', 'd9bdc8', 'ffffff', 'aee2ff', '8db7ff',
                           '6d80fa', '8465ec', '834dc4', '7d2da0', '4e187c'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'warm32',
@@ -375,7 +381,7 @@ def load_default_db_data():
                           'bea8bf', '232d4f', '3a4b6d', '65799a', '99b4dd', '41648b', '6fa9c3', 'b9e2e5', 'd3ead8',
                           '0a2325', '204039', '3e6248', '778f73', 'b4c3a8'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'res64',
@@ -391,7 +397,7 @@ def load_default_db_data():
                           'fdcbb0'),
 
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'nanner',
@@ -402,7 +408,7 @@ def load_default_db_data():
                           'ebc8a7', 'd3a084', 'b87e6c', '8f5252', '6a3948', 'c57f79', 'ab597d', '7c3d64', '4e2b45',
                           '7a3b4f', 'a94b54', 'd8725e', 'f09f71', 'f7cf91'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'stardust32',
@@ -413,7 +419,7 @@ def load_default_db_data():
                           'ffa8bf', 'e681ac', 'bd448e', 'ffdac9', 'eba698', 'cc6e6e', 'a14869', '80335e', '521d45',
                           '2b1744', '54508a', '6f75a6', '91a2c2', 'cadbe8'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         },
         {
             'palette_id': 'pastel64',
@@ -428,17 +434,16 @@ def load_default_db_data():
                           '84b4c4', '7982ea', 'd1a2f2', '84b88d', '82d1c4', '91beeb', 'd2c6fa', '969976', '94c484',
                           '79eaa8'),
             'is_24_bit': False,
-            'is_default': False
+            'is_custom': True
         }
     ]
 
     palettes_types_pending = default_palette_data + custom_palette_data
 
-
     for palette in palettes_types_pending:
         new_palette = Palette(palette_id=palette['palette_id'], is_valid=True, is_24_bit=palette['is_24_bit'],
-                              is_default=palette['is_default'], name=palette['name'], description=palette['description'])
+                              is_custom=palette['is_custom'], name=palette['name'],
+                              description=palette['description'], is_included_with_repo=True,
+                              datetime_created=datetime.fromtimestamp(946706400))
         new_palette.save()
-        #new_palette.load_colors(palette['color_set'])
-
-#load_default_data() #here for now for testing.
+        new_palette._initialize_colors(palette['color_set'])

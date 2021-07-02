@@ -129,3 +129,7 @@ def draw_frame(dict_obj):
     # Ensure every bit in payload is accounted for.
     assert frame_payload.len == frame_payload.bitpos
     return {'block_position': block_position, 'frame_number': frame_number}
+
+
+def render_sample_frame(palette_name_or_id, palette_colors_tuple, save_path):
+    pass

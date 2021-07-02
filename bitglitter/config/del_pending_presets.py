@@ -1,11 +1,10 @@
 from pathlib import Path
 import pickle
 
-from bitglitter.config.del_pending_basemanager import BaseManager
 from bitglitter.validation.validatewrite import write_preset_validate
 
 
-class PresetManager(BaseManager):
+class PresetManager():
 
     def __init__(self):
         super().__init__()
@@ -14,7 +13,6 @@ class PresetManager(BaseManager):
         self.base_preset = Preset('base')  # desktop
         self.preset_dict = {}
 
-        self._save()
 
     def add_preset(self,
                    nickname,
