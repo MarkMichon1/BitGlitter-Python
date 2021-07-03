@@ -2,8 +2,8 @@ from pathlib import Path
 import pickle
 import time
 
-from bitglitter.palettes.palettes import CustomPalette, DefaultPalette, TwentyFourBitPalette
-from bitglitter.palettes.utilities import get_color_distance, get_palette_id_from_hash
+from bitglitter.config.palettemodels import CustomPalette
+from bitglitter.utilities.palette import get_color_distance, get_palette_id_from_hash
 from bitglitter.validation.utilities import proper_string_syntax
 
 #todo: merge into palettefunctions
@@ -13,113 +13,6 @@ class PaletteManager_pending_del():
     custom_palette_list and custom_palette_nickname_list in this object.
     """
 
-    def __init__(self):
-        super().__init__()
-        self._SAVE_FILE_NAME = 'palette_state'
-
-        self.DEFAULT_PALETTE_LIST = {'1': DefaultPalette("1 Bit Default",
-                                                         "Two colors, black and white.  While it has the lowest "
-                                                         "density of one bit of data per "
-                                                         "pixel, it has the highest reliability.",
-                                                         ((0, 0, 0), (255, 255, 255)), 441.67, 1),
-
-                                     '11': DefaultPalette("1 Bit Default Alternate",
-                                                          "Uses cyan/magenta instead of white/black.",
-                                                          ((255, 0, 255), (0, 255, 255)), 360.12, 11),
-
-                                     '2': DefaultPalette("2 Bit Default", "Four colors; black, red, green, blue.",
-                                                         ((0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255)), 255, 2),
-
-                                     '22': DefaultPalette("2 Bit Default Alternate",
-                                                          "Four colors; black, magenta, cyan, yellow.",
-                                                          ((0, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255)), 255,
-                                                          22),
-
-                                     '3': DefaultPalette("3 Bit Default",
-                                                         "Eight colors.", (
-                                                             (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255),
-                                                             (255, 255, 0), (0, 255, 255),
-                                                             (255, 0, 255), (255, 255, 255)), 255, 3),
-
-                                     '4': DefaultPalette("4 Bit Default", "Sixteen colors.",
-                                                         ((0, 0, 0), (128, 128, 128),
-                                                          (192, 192, 192), (128, 0, 0), (255, 0, 0), (128, 128, 0),
-                                                          (255, 255, 0), (0, 255, 0), (0, 128, 128),
-                                                          (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
-                                                          (128, 0, 128), (255, 0, 255), (255, 255, 255)),
-                                                         109.12, 4),
-
-                                     '6': DefaultPalette("6 Bit Default", "Sixty-four colors.", ((0, 0, 0), (0, 0, 85),
-                                                                                                 (0, 0, 170),
-                                                                                                 (0, 0, 255),
-                                                                                                 (0, 85, 0),
-                                                                                                 (0, 85, 85),
-                                                                                                 (0, 85, 170),
-                                                                                                 (0, 85, 255),
-                                                                                                 (0, 170, 0),
-                                                                                                 (0, 170, 85),
-                                                                                                 (0, 170, 170),
-                                                                                                 (0, 170, 255),
-                                                                                                 (0, 255, 0),
-                                                                                                 (0, 255, 85),
-                                                                                                 (0, 255, 170),
-                                                                                                 (0, 255, 255),
-                                                                                                 (85, 0, 0),
-                                                                                                 (85, 0, 85),
-                                                                                                 (85, 0, 170),
-                                                                                                 (85, 0, 255),
-                                                                                                 (85, 85, 0),
-                                                                                                 (85, 85, 85),
-                                                                                                 (85, 85, 170),
-                                                                                                 (85, 85, 255),
-                                                                                                 (85, 170, 0),
-                                                                                                 (85, 170, 85),
-                                                                                                 (85, 170, 170),
-                                                                                                 (85, 170, 255),
-                                                                                                 (85, 255, 0),
-                                                                                                 (85, 255, 85),
-                                                                                                 (85, 255, 170),
-                                                                                                 (85, 255, 255),
-                                                                                                 (170, 0, 0),
-                                                                                                 (170, 0, 85),
-                                                                                                 (170, 0, 170),
-                                                                                                 (170, 0, 255),
-                                                                                                 (170, 85, 0),
-                                                                                                 (170, 85, 85),
-                                                                                                 (170, 85, 170),
-                                                                                                 (170, 85, 255),
-                                                                                                 (170, 170, 0),
-                                                                                                 (170, 170, 85),
-                                                                                                 (170, 170, 170),
-                                                                                                 (170, 170, 255),
-                                                                                                 (170, 255, 0),
-                                                                                                 (170, 255, 85),
-                                                                                                 (170, 255, 170),
-                                                                                                 (170, 255, 255),
-                                                                                                 (255, 0, 0),
-                                                                                                 (255, 0, 85),
-                                                                                                 (255, 0, 170),
-                                                                                                 (255, 0, 255),
-                                                                                                 (255, 85, 0),
-                                                                                                 (255, 85, 85),
-                                                                                                 (255, 85, 170),
-                                                                                                 (255, 85, 255),
-                                                                                                 (255, 170, 0),
-                                                                                                 (255, 170, 85),
-                                                                                                 (255, 170, 170),
-                                                                                                 (255, 170, 255),
-                                                                                                 (255, 255, 0),
-                                                                                                 (255, 255, 85),
-                                                                                                 (255, 255, 170),
-                                                                                                 (255, 255, 255)), 85,
-                                                         6),
-
-                                     '24': TwentyFourBitPalette()
-                                     }
-
-        self.custom_palette_dict = {}
-        self.custom_palette_nickname_dict = {}
-        self._save()
 
     def _return_popped_palette(self, id_or_nick):
 
@@ -127,13 +20,13 @@ class PaletteManager_pending_del():
             palette = self.custom_palette_dict.pop(id_or_nick)
             if palette.nickname in self.custom_palette_nickname_dict:
                 del self.custom_palette_nickname_dict[palette.nickname]
-            self._save()
+            #self._save()
             return palette
 
         elif id_or_nick in self.custom_palette_nickname_dict:
             palette = self.custom_palette_nickname_dict.pop(id_or_nick)
             del self.custom_palette_dict[palette.palette_id]
-            self._save()
+            #self._save()
             return palette
 
         else:

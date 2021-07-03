@@ -1,6 +1,6 @@
 from bitglitter.config.config import Config, Constants, session, Statistics
 from bitglitter.config.defaultdbdata import load_default_db_data
-from bitglitter.palettes.palettes import Palette, PaletteColor
+from bitglitter.config.palettemodels import Palette, PaletteColor
 
 
 

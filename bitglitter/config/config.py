@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, create_engine, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -21,10 +21,11 @@ class SqlBaseClass(Base):
     id = Column(Integer, primary_key=True)
 
     @classmethod
-    def create(cls, **kw):
-        object_ = cls(**kw)
+    def create(cls, **kwargs):
+        object_ = cls(**kwargs)
         session.add(object_)
         session.commit()
+        return object_
 
     def delete(self):
         session.delete(self)

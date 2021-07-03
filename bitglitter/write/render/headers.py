@@ -6,7 +6,7 @@ from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
 from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.palettes.utilities import BitsToColor
+from bitglitter.utilities.palette import BitsToColor
 from bitglitter.utilities.compression import compress_bytes
 from bitglitter.utilities.encryption import encrypt_bytes, get_hash_from_bytes
 
@@ -34,7 +34,7 @@ def metadata_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, s
 
 
 def palette_initialization_header_process(palette):
-    """This header is ran after the stream setup header wheneve a custom palette is used for the stream."""
+    """This header is ran after the stream setup header whenever a custom palette is used for the stream."""
 
     adding_bytes = BitStream()
     text_string_to_bytes = bytes(f'\\\\{palette.name}\\\\{palette.description}\\\\', 'utf-8')

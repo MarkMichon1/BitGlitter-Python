@@ -74,7 +74,7 @@ class ColorsToBits:
         value_dict = {}
 
         if self.palette.bit_length != 24:
-            for value in range(len(self.palette.color_set)): #todo change to .number_of_colors
+            for value in range(len(self.palette.color_set)):  # todo change to .number_of_colors
                 temp_bin_holder = str(BitArray(uint=value, length=self.palette.bit_length))
                 temp_bin_holder = ConstBitStream(temp_bin_holder)
                 value_dict[self.palette[value]] = temp_bin_holder
@@ -89,20 +89,29 @@ class ColorsToBits:
             return self.return_value(color)
 
 
-def hex_to_rgb(hex_string):
-    stripped = hex_string.replace('#', '')
-    return tuple(int(stripped[i:i + 2], 16) for i in (0, 2, 4))
+def convert_hex_to_rgb(color_set):
+    """Takes the palette color set, converts any hex values into tuples, and returns a integer tuple of the R/G/B
+    color channels.
+    """
+
+    returned_list = []
+    for color in color_set:
+        if isinstance(color, str):  # is hex code
+            stripped = color.replace('#', '')
+            returned_list.append(tuple(int(stripped[i:i + 2], 16) for i in (0, 2, 4)))
+        else:  # Does nothing if already a tuple, simply adds it back to list to be returned.
+            returned_list.append(color)
+    return returned_list
 
 
-def get_color_distance(palette):
+def get_color_distance(color_set):
     """This function takes in the set of tuples in a palette, and calculates their proximity to each other in RGB space.
     Higher number denote 'safer' palettes to use in the field, as they are less prone to errors in the field.  Getting 0
-    returned means you have at least a single pair of identical RGB values.  All values must be unique!
+    returned means you have at least a single pair of identical RGB values.  All colors must be unique!
     """
 
     min_distance = None
-
-    for pair in itertools.combinations(palette, 2):
+    for pair in itertools.combinations(color_set, 2):
         first_color, second_color = pair
 
         r_distance = (second_color[0] - first_color[0]) ** 2
@@ -117,12 +126,11 @@ def get_color_distance(palette):
         else:
             min_distance = sum_of_distances
 
-    return round(min_distance, 2)
+    return round(min_distance, 3)
 
 
 def get_palette_id_from_hash(name, description, date_created, color_set):
-    """Taking in the various parameters, this creates a unique ID for the object."""
+    """Taking in the various parameters, this creates a unique ID for the custom palettes."""
 
-    color_set_string = str(color_set)
-    hasher = hashlib.sha256(str(name + description + date_created + color_set_string).encode())
+    hasher = hashlib.sha256(str(name + description + str(date_created) + str(color_set)).encode())
     return hasher.hexdigest()

@@ -1,5 +1,5 @@
 from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.palettes.utilities import ColorsToBits
+from bitglitter.utilities.palette import ColorsToBits
 
 
 class ScanHandler:
