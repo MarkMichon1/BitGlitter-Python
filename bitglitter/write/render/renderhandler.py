@@ -1,7 +1,7 @@
 import logging
 from multiprocessing import cpu_count, Pool
 
-from bitglitter.config.del_pending_palettes import palette_manager
+from bitglitter.config.palettefunctions import _return_palette
 from bitglitter.utilities.palette import BitsToColor
 from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.render.headers import metadata_header_process, palette_initialization_header_process, \
@@ -35,11 +35,10 @@ class RenderHandler:
         self.frames_wrote = 0
 
         # Pre render
-
         logging.info('Beginning pre-render processes...')
         create_default_output_folder(default_output_path)
-        initializer_palette = palette_manager.return_selected_palette('1')
-        stream_palette = palette_manager.return_selected_palette(stream_palette_id)
+        initializer_palette = _return_palette(palette_id='1')
+        stream_palette = _return_palette(palette_id=stream_palette_id)
 
         initializer_palette_dict = BitsToColor(initializer_palette, 'initializer_palette')
         stream_palette_dict = BitsToColor(stream_palette, 'stream_palette')
@@ -65,7 +64,6 @@ class RenderHandler:
         logging.info('Pre-render complete.')
 
         # Render
-
         if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
             pool_size = cpu_count()
         else:
@@ -77,16 +75,16 @@ class RenderHandler:
             logging.info(f'Beginning rendering on {pool_size} CPU cores...')
             count = 1
             for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
-                                                                                    pixel_width, protocol_version,
-                                                                                    initializer_palette, stream_palette,
-                                                                                    output_mode, output_path,
-                                                                                    output_name, working_dir,
-                                                                                    self.frames_wrote, stream_header,
-                                                                                    metadata_header_bytes,
-                                                                                    palette_header_bytes, stream_sha,
-                                                                                    initializer_palette_dict,
-                                                                                    stream_palette_dict,
-                                                                                    default_output_path), chunksize=1):
+                                                                                   pixel_width, protocol_version,
+                                                                                   initializer_palette, stream_palette,
+                                                                                   output_mode, output_path,
+                                                                                   output_name, working_dir,
+                                                                                   self.frames_wrote, stream_header,
+                                                                                   metadata_header_bytes,
+                                                                                   palette_header_bytes, stream_sha,
+                                                                                   initializer_palette_dict,
+                                                                                   stream_palette_dict,
+                                                                                   default_output_path), chunksize=1):
                 if frame_encode['frame_number'] == self.frames_wrote:
                     block_position = frame_encode['block_position']
                 logging.info(f'Processing frame {count} of {self.frames_wrote}... '
@@ -96,11 +94,9 @@ class RenderHandler:
         logging.info('Rendering frames complete.')
 
         # Video Render
-
         if output_mode == 'video':
             render_video(output_path, default_output_path, output_name, working_dir, self.frames_wrote,
                          frames_per_second, stream_sha)
 
         # Wrap-up
-
         self.blocks_wrote = (block_width * block_height) * self.frames_wrote + block_position

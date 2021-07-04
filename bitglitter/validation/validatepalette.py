@@ -23,3 +23,7 @@ def palette_geometry_verify(stream_palette_bit_length, block_width, block_height
         output_per_sec = bits_available_per_frame * fps
 
     return payload_frame_percentage, bits_available_per_frame, output_per_sec
+
+
+def custom_palette_values_validate(name_string, description_string, ):
+    pass

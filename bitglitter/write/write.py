@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from bitglitter.config.config import Config, Constants, session
+from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _write_update
+from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.del_pending_presets import preset_manager
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
@@ -35,6 +36,7 @@ def write(
 
         # Stream geometry, color, general config
         stream_palette_id='6',
+        stream_palette_nickname=None,
         pixel_width=24,
         block_height=45,
         block_width=80,
@@ -80,8 +82,8 @@ def write(
     else:
         write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
                                  file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
-                                 scrypt_n, scrypt_r, scrypt_p, stream_palette_id, pixel_width, block_height,
-                                 block_width, frames_per_second, preset_used=False)
+                                 scrypt_n, scrypt_r, scrypt_p, stream_palette_id, stream_palette_nickname, pixel_width,
+                                 block_height, block_width, frames_per_second, preset_used=False)
 
     # This sets the name of the temporary folder while the file is being written, as well as the default output path.
     working_dir = Path(constants.WRITE_WORKING_DIR)

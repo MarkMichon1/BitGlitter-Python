@@ -1,8 +1,7 @@
-from bitglitter.config.config import Config, Constants, session, Statistics
+from bitglitter.config.config import session
+from bitglitter.config.configmodels import Config, Constants, Statistics
 from bitglitter.config.defaultdbdata import load_default_db_data
 from bitglitter.config.palettemodels import Palette, PaletteColor
-
-
 
 
 def remove_session():
@@ -21,6 +20,12 @@ def output_stats():
     return stats.return_stats()
 
 
+def clear_stats():
+    """Resets all write and read values back to zero."""
+    stats = session.query(Statistics).first()
+    stats.clear_stats()
+
+
 def _write_update(blocks, frames, data):
     """Internal function to update stats after rendering completes, along with read update below."""
     stats = session.query(Statistics).first()
@@ -30,9 +35,3 @@ def _write_update(blocks, frames, data):
 def _read_update(blocks, frames, data):
     stats = session.query(Statistics).first()
     stats.read_update(blocks, frames, data)
-
-
-def clear_stats():
-    """Resets all write and read values back to zero."""
-    stats = session.query(Statistics).first()
-    stats.clear_stats()

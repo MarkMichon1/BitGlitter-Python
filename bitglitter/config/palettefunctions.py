@@ -1,22 +1,47 @@
-from bitglitter.config.del_pending_palettes import palette_manager
+from bitglitter.config.config import session
+from bitglitter.config.palettemodels import Palette
+from bitglitter.utilities.palette import render_sample_frame
+from bitglitter.validation.utilities import proper_string_syntax
+from bitglitter.validation.validatepalette import custom_palette_values_validate
 
 
-def add_custom_palette(palette_name, palette_description, color_set, optional_nickname=""):
+def _return_palette(palette_id=None, palette_nickname=None):
 
-    palette_id = palette_manager.add_custom_palette(palette_name, palette_description, color_set, optional_nickname)
+    if not palette_id and not palette_nickname:
+        raise ValueError('Must include palette_id or palette_nickname to return Palette object.')
+    if palette_id:
+        palette = session.query(Palette).filter(Palette.palette_id == palette_id).first()
+    else:
+       palette = session.query(Palette).filter(Palette.nickname == palette_nickname).first()
+    if palette:
+        return palette
+    else:
+        raise ValueError('No existing palettes with this palette_id or palette_nickname.')
+
+
+def add_custom_palette(palette_name, color_set=None, nickname=None, palette_description=None, only_accept_valid=True):
+    name_string = str(palette_name)
+    description_string = str(palette_description) if palette_description else ''
+    nickname_string = str(nickname) if nickname else ''
+
+    proper_string_syntax(name_string)
+    if description_string:
+        proper_string_syntax(description_string)
+
+    palette_id = None#palette_manager.add_custom_palette(palette_name, palette_description, color_set, nickname)
     return palette_id
 
 
 def remove_custom_palette(id_or_nick):
     """Removes custom palette completely from the config file."""
 
-    palette_manager.remove_custom_palette(id_or_nick)
+    #palette_manager.remove_custom_palette(id_or_nick)
 
 
 def edit_nickname_to_custom_palette(id_or_nick, new_name):
     """This changes the nickname of the given palette to something new, first checking if it's valid."""
 
-    palette_manager.edit_nickname_to_custom_palette(id_or_nick, new_name)
+    #palette_manager.edit_nickname_to_custom_palette(id_or_nick, new_name)
 
 
 def remove_custom_palette_nickname(id_or_nick):
@@ -24,38 +49,57 @@ def remove_custom_palette_nickname(id_or_nick):
     nickname.
     """
 
-    palette_manager.remove_custom_palette_nickname(id_or_nick)
+    #palette_manager.remove_custom_palette_nickname(id_or_nick)
 
 
 def remove_all_custom_palette_nicknames():
     """Removes all custom palette nicknames.  This does not delete the palettes themselves."""
 
-    palette_manager.remove_all_custom_palette_nicknames()
+    #palette_manager.remove_all_custom_palette_nicknames()
 
 
 def return_default_palettes():
-    returned_list = palette_manager.return_default_palettes()
+    returned_list = None#palette_manager.return_default_palettes()
     return returned_list
 
 
 def return_custom_palettes():
-    returned_list = palette_manager.return_custom_palettes()
+    returned_list = None#palette_manager.return_custom_palettes()
     return returned_list
 
 
 def remove_all_custom_palettes():
     """Removes all custom palettes from both the ID dictionary and nickname dictionary."""
 
-    palette_manager.remove_all_custom_palettes()
+    #palette_manager.remove_all_custom_palettes()
 
 
-def sample_frame(id_or_nick, path):
-    """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering"""
-    pass
+def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False):
+    """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering.
+    Alternatively, if all_palettes=True, all palettes in the database will be generated."""
+
+    if not all_palettes:
+        palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
+        render_sample_frame(palette.name, palette._convert_colors_to_tuple(), palette.is_24_bit, path)
+    else:
+        if include_default:
+            palettes = session.query(Palette).all()
+        else:
+            palettes = session.query(Palette).filter(Palette.is_custom == True)
+        for palette in palettes:
+            render_sample_frame(palette.name, palette._convert_colors_to_tuple(), palette.is_24_bit, path)
 
 
-def sample_frame_all(path, include_default=False):
-    """Does the same as sample_frame, except renders and outputs all available palettes, including (optionally) default
-    palettes.
-    """
-    pass
+def import_palette_base64(base64_string):
+    palette = None
+    # Validating data to ensure no funny business
+
+    new_palette = Palette()
+    return palette
+
+
+def export_palette_base64(palette_id=None, palette_nickname=None):
+    palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
+    assembled_string = ''
+    to_b64 = assembled_string
+    return to_b64

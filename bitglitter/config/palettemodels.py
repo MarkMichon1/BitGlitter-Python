@@ -18,7 +18,7 @@ class Palette(SqlBaseClass):
     is_included_with_repo = Column(Boolean, default=False) # for differentiating other people's colors & our fancy ones
 
     palette_id = Column(String, unique=True, nullable=False)
-    name = Column(String)
+    name = Column(String, unique=True, nullable=False)
     description = Column(String)
     nickname = Column(String, unique=True)
     color_set = relationship('PaletteColor', back_populates='palette', cascade='all, delete', passive_deletes=True)
@@ -58,9 +58,8 @@ class Palette(SqlBaseClass):
             self.save()
 
     def _convert_colors_to_tuple(self):
-        colors = [] #query list in proper sequence
         returned_list = []
-        for color in colors:
+        for color in self.color_set:
             returned_list.append((color.red_channel, color.green_channel, color.blue_channel))
         return returned_list
 

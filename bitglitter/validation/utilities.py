@@ -12,7 +12,7 @@ def is_int_over_zero(argument, some_variable):
     """Checks if variable is of type int and is greater than zero."""
 
     if not isinstance(some_variable, int) or some_variable < 0:
-        raise ValueError(f"Argument {argument} must be an integer greater than zero.")
+        raise ValueError(f"Argument {argument} must be an integer greater than zero, {some_variable} was provided")
 
 
 def proper_string_syntax(argument, inputted_string=""):

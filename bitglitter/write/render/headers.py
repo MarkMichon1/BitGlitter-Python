@@ -5,8 +5,6 @@ import zlib
 from bitstring import BitArray, BitStream, ConstBitStream
 from PIL import ImageDraw
 
-from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.utilities.palette import BitsToColor
 from bitglitter.utilities.compression import compress_bytes
 from bitglitter.utilities.encryption import encrypt_bytes, get_hash_from_bytes
 
@@ -138,8 +136,8 @@ def calibrator_header_process(image, block_height, block_width, pixel_width):
     block_height are encoded into this pattern, using alternating color palettes so no two repeating values produce a
     continuous block of color, interfering with the frame lock process."""
 
-    initializer_palette_dict_a = BitsToColor(palette_manager.return_selected_palette('1'), 'initializer_palette A')
-    initializer_palette_dict_b = BitsToColor(palette_manager.return_selected_palette('11'), 'initializer_palette B')
+    initializer_palette_dict_a = None #BitsToColor(palette_manager.return_selected_palette('1'), 'initializer_palette A')
+    initializer_palette_dict_b = None #TODO BitsToColor(palette_manager.return_selected_palette('11'), 'initializer_palette B')
 
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, pixel_width - 1, pixel_width - 1),
