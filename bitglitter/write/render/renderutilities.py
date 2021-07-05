@@ -57,8 +57,10 @@ def render_coords_generator(block_height, block_width, pixel_width, initializer_
 
 
 def draw_frame(dict_obj):
-    # Unpacking dictionary object into variables to easier reading of function.  A single argument must be passed
-    # here because multiprocessing's imap requires it.
+    """Unpacking dictionary object into variables for easier reading of function.  A single argument must be passed
+    here because multiprocessing's imap requires it.
+    """
+
     block_height = dict_obj['block_height']
     block_width = dict_obj['block_width']
     pixel_width = dict_obj['pixel_width']
@@ -67,6 +69,7 @@ def draw_frame(dict_obj):
     stream_palette_dict = dict_obj['stream_palette_dict']
     stream_palette_bit_length = dict_obj['stream_palette_bit_length']
     initializer_palette_dict = dict_obj['initializer_palette_dict']
+    initializer_palette_dict_b = dict_obj['initializer_palette_dict_b']
     initializer_palette = dict_obj['initializer_palette']
     output_mode = dict_obj['output_mode']
     output_name = dict_obj['output_name']
@@ -81,7 +84,8 @@ def draw_frame(dict_obj):
     draw = ImageDraw.Draw(image)
 
     if initializer_enabled:
-        image = calibrator_header_process(image, block_height, block_width, pixel_width)
+        image = calibrator_header_process(image, block_height, block_width, pixel_width, initializer_palette_dict,
+                                          initializer_palette_dict_b)
 
     next_coordinates = render_coords_generator(block_height, block_width, pixel_width, initializer_enabled)
     block_position = 0
@@ -103,6 +107,7 @@ def draw_frame(dict_obj):
         # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
         next_bits = frame_payload.read(f'bits : {bit_read_length}')
         color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
+
 
         # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
         block_coordinates = next(next_coordinates)

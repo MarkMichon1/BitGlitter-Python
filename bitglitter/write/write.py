@@ -3,7 +3,7 @@ from pathlib import Path
 from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _write_update
 from bitglitter.config.configmodels import Config, Constants
-from bitglitter.config.del_pending_presets import preset_manager
+from bitglitter.config.presetfunctions import return_preset
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
@@ -51,8 +51,8 @@ def write(
 
         # Session Data
         save_statistics=False,
-        _app_mode = False # overrides some configs if ran from Electron app
-        ):
+        _app_mode=False  # overrides some configs if ran from Electron app
+):
     """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page or project README
     for more information.
     """
@@ -67,7 +67,7 @@ def write(
     if preset_nickname:
         write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
                                  file_mask_enabled, encryption_key, preset_used=True)
-        preset = preset_manager.return_preset(preset_nickname)
+        preset = return_preset(preset_nickname)
         output_mode = preset.output_mode
         compression_enabled = preset.compression_enabled
         scrypt_n = preset.scrypt_n

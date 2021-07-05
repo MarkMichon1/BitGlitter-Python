@@ -9,16 +9,16 @@ from bitglitter.write.write import write
 from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session
 
 # READ CONFIGURATION
-from bitglitter.config.readfunctions import * #Todo
+from bitglitter.config.readfunctions import * #todo
 
 # PALETTE CONFIGURATION
 from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
     remove_all_custom_palettes, remove_all_custom_palette_nicknames, remove_custom_palette, \
-    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes #todo ensure all are here
+    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes
 
 # PRESET CONFIGURATION
 from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
-    return_all_preset_data, return_preset_data
+    return_all_preset_data, return_preset
 
 # ===============================================================================
 # The MIT License (MIT)

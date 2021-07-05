@@ -41,8 +41,8 @@ def verify_write_params_render_values(stream_palette_id, stream_palette_nickname
                                                                         palette.bit_length, block_width,
                                                                         block_height, output_mode, frames_per_second)
     if not preset_validation:
-        logging.info(f'{humanize_file_size(bits_available_per_frame)}, or ~{payload_frame_percentage}% of payload '
-                     f'frames are allocated for the payload itself (higher is better)')
+        logging.info(f'{humanize_file_size(bits_available_per_frame)}/frame, or ~{payload_frame_percentage}% of'
+                     f' frames are allocated for the payload itself (higher is better)')
 
         if output_mode == 'video':
             logging.info(f'As a video, it will effectively be transporting '

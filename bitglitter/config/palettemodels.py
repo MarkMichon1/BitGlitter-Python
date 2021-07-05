@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, St
 from sqlalchemy.orm import relationship
 
 from bitglitter.config.config import SqlBaseClass, engine, session
-from bitglitter.utilities.palette import convert_hex_to_rgb, get_color_distance,\
+from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
     get_palette_id_from_hash
 
 from datetime import datetime
@@ -15,7 +15,7 @@ class Palette(SqlBaseClass):
     is_valid = Column(Boolean, default=False)
     is_24_bit = Column(Boolean, default=False)
     is_custom = Column(Boolean, default=True)
-    is_included_with_repo = Column(Boolean, default=False) # for differentiating other people's colors & our fancy ones
+    is_included_with_repo = Column(Boolean, default=False)  # for differentiating other people's colors & our fancy ones
 
     palette_id = Column(String, unique=True, nullable=False)
     name = Column(String, unique=True, nullable=False)
@@ -25,7 +25,7 @@ class Palette(SqlBaseClass):
     color_distance = Column(Float, default=0, nullable=False)
     number_of_colors = Column(Integer, default=0, nullable=False)
     bit_length = Column(Integer, default=0, nullable=False)
-    datetime_created = Column(DateTime, default=datetime.now())
+    datetime_created = Column(DateTime, default=datetime.now)
 
     @classmethod
     def create(cls, color_set, **kwargs):
@@ -58,9 +58,13 @@ class Palette(SqlBaseClass):
             self.save()
 
     def _convert_colors_to_tuple(self):
+        """Since each of their colors are their own PaletteColor object, this function retrieves them and returns them
+        in a more usable format.
+        """
+
         returned_list = []
         for color in self.color_set:
-            returned_list.append((color.red_channel, color.green_channel, color.blue_channel))
+            returned_list.append(color.return_rgb_tuple())
         return returned_list
 
     def _initialize_colors(self, color_set):
@@ -80,31 +84,18 @@ class Palette(SqlBaseClass):
             session.bulk_save_objects(color_objects)
         if self.is_custom:
             self.palette_id = get_palette_id_from_hash(self.name, self.description, self.datetime_created,
-                                                          color_set_cleaned)
+                                                       color_set_cleaned)
 
         self.save()
 
-
-    def return_encoder(self):
+    def return_encoder(self, palette_type):
         color_set_tupled = self._convert_colors_to_tuple()
-        if not self.is_24_bit:
-            pass
-        else:
-            pass
+        return BitsToColor(color_set_tupled, self.bit_length, palette_type)
+
 
     def return_decoder(self):
         color_set_tupled = self._convert_colors_to_tuple()
-        if not self.is_24_bit:
-            pass
-        else:
-            pass
-
-    def return_as_dict(self):
-        pass  # below, old data
-        return {'name': self.name, 'description': self.description, 'color_set': self.color_set, 'color_distance':
-            self.color_distance, 'id': self.palette_id, 'palette_type': self.palette_type, 'number_of_colors':
-            self.number_of_colors, 'bit_length': self.bit_length
-                }
+        return ColorsToBits(color_set_tupled)
 
 
 class PaletteColor(SqlBaseClass):
@@ -116,6 +107,9 @@ class PaletteColor(SqlBaseClass):
     red_channel = Column(Integer, nullable=False)
     green_channel = Column(Integer, nullable=False)
     blue_channel = Column(Integer, nullable=False)
+
+    def return_rgb_tuple(self):
+        return (self.red_channel, self.green_channel, self.blue_channel)
 
 
 SqlBaseClass.metadata.create_all(engine)

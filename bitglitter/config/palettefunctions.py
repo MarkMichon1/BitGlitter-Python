@@ -20,6 +20,9 @@ def _return_palette(palette_id=None, palette_nickname=None):
 
 
 def add_custom_palette(palette_name, color_set=None, nickname=None, palette_description=None, only_accept_valid=True):
+
+
+    # TEMP NOTE:
     name_string = str(palette_name)
     description_string = str(palette_description) if palette_description else ''
     nickname_string = str(nickname) if nickname else ''
@@ -28,55 +31,68 @@ def add_custom_palette(palette_name, color_set=None, nickname=None, palette_desc
     if description_string:
         proper_string_syntax(description_string)
 
-    palette_id = None#palette_manager.add_custom_palette(palette_name, palette_description, color_set, nickname)
+    palette_id = None
     return palette_id
 
 
-def remove_custom_palette(id_or_nick):
-    """Removes custom palette completely from the config file."""
+def remove_custom_palette(palette_id, nickname):
+    """Removes custom palette completely from the database."""
 
-    #palette_manager.remove_custom_palette(id_or_nick)
-
-
-def edit_nickname_to_custom_palette(id_or_nick, new_name):
-    """This changes the nickname of the given palette to something new, first checking if it's valid."""
-
-    #palette_manager.edit_nickname_to_custom_palette(id_or_nick, new_name)
+    palette = _return_palette(palette_id, nickname)
+    palette.delete()
 
 
-def remove_custom_palette_nickname(id_or_nick):
-    """Removes the palette nickname from the corresponding dictionary.  This does not delete the palette, only the
-    nickname.
-    """
+def edit_nickname_to_custom_palette(palette_id, existing_nickname, new_nickname):
+    """This changes the nickname of the given palette to something new, first checking if its valid."""
 
-    #palette_manager.remove_custom_palette_nickname(id_or_nick)
+    palette = _return_palette(palette_id, existing_nickname)
+    already_existing_with_nickname = session.query(Palette).filter(Palette.nickname == new_nickname).first()
+    if already_existing_with_nickname:
+        raise ValueError(f'Palette {already_existing_with_nickname.name} already uses this nickname.')
+    else:
+        palette.nickname = new_nickname
+        palette.save()
+
+
+def remove_custom_palette_nickname(palette_id, existing_nickname):
+    """Removes the palette nickname.  This does not delete the palette, only the nickname."""
+
+    palette = _return_palette(palette_id, existing_nickname)
+    palette.nickname = None
+    palette.save()
 
 
 def remove_all_custom_palette_nicknames():
-    """Removes all custom palette nicknames.  This does not delete the palettes themselves."""
+    """Removes all custom palette nicknames, including those included with default data.  This does not delete the
+    palettes themselves.
+    """
 
-    #palette_manager.remove_all_custom_palette_nicknames()
+    palettes = session.query(Palette).filter(Palette.is_custom == True)
+    for palette in palettes:
+        palette.nickname = None
+        palette.save()
 
 
 def return_default_palettes():
-    returned_list = None#palette_manager.return_default_palettes()
+    returned_list = session.query(Palette).filter(Palette.is_custom == False)
     return returned_list
 
 
 def return_custom_palettes():
-    returned_list = None#palette_manager.return_custom_palettes()
+    returned_list = session.query(Palette).filter(Palette.is_custom == True)
     return returned_list
 
 
 def remove_all_custom_palettes():
-    """Removes all custom palettes from both the ID dictionary and nickname dictionary."""
-
-    #palette_manager.remove_all_custom_palettes()
+    """Removes all custom palettes from the database."""
+    session.query(Palette).filter(Palette.is_custom == True).delete()
 
 
 def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False):
-    """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering.
-    Alternatively, if all_palettes=True, all palettes in the database will be generated."""
+    """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering, selecting
+    random colors from the palette for each of the blocks.  Alternatively, if all_palettes=True, all palettes in the
+    database will be generated.  Argument include_default toggles whether default palettes are included as well.
+    """
 
     if not all_palettes:
         palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)

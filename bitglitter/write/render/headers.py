@@ -113,7 +113,7 @@ def initializer_header_process(block_height, block_width, protocol_version, stre
     adding_bytes.append(BitArray(uint=block_height, length=16))
     adding_bytes.append(BitArray(uint=block_width, length=16))
 
-    if stream_palette.palette_type == 'default':
+    if not stream_palette.is_custom:
         adding_bytes.append(BitArray(uint=int(stream_palette.palette_id), length=256))
     else:
         adding_bytes.append(BitArray(hex=stream_palette.palette_id))
@@ -130,14 +130,12 @@ def initializer_header_process(block_height, block_width, protocol_version, stre
     return adding_bytes
 
 
-def calibrator_header_process(image, block_height, block_width, pixel_width):
+def calibrator_header_process(image, block_height, block_width, pixel_width, initializer_palette_dict,
+                              initializer_palette_dict_b):
     """This creates the checkboard-like pattern along the top and left of the first frame of video streams, and every
     frame of image streams.  This is what the reader uses to initially lock onto the frame.  Stream block_width and
     block_height are encoded into this pattern, using alternating color palettes so no two repeating values produce a
     continuous block of color, interfering with the frame lock process."""
-
-    initializer_palette_dict_a = None #BitsToColor(palette_manager.return_selected_palette('1'), 'initializer_palette A')
-    initializer_palette_dict_b = None #TODO BitsToColor(palette_manager.return_selected_palette('11'), 'initializer_palette B')
 
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, pixel_width - 1, pixel_width - 1),
@@ -154,7 +152,7 @@ def calibrator_header_process(image, block_height, block_width, pixel_width):
             color_value = initializer_palette_dict_b.get_color(ConstBitStream(next_bit))
 
         else:
-            color_value = initializer_palette_dict_a.get_color(ConstBitStream(next_bit))
+            color_value = initializer_palette_dict.get_color(ConstBitStream(next_bit))
 
         draw.rectangle((pixel_width * i + pixel_width,
                         0,
@@ -173,7 +171,7 @@ def calibrator_header_process(image, block_height, block_width, pixel_width):
             color_value = initializer_palette_dict_b.get_color(ConstBitStream(next_bit))
 
         else:
-            color_value = initializer_palette_dict_a.get_color(ConstBitStream(next_bit))
+            color_value = initializer_palette_dict.get_color(ConstBitStream(next_bit))
 
         draw.rectangle((0,
                         pixel_width * i + pixel_width,

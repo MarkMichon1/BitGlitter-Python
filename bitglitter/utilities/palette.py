@@ -18,11 +18,11 @@ class BitsToColor:
     different ways, and this provides a single clean interface for that.
     """
 
-    def __init__(self, palette, palette_type):
+    def __init__(self, color_set_tupled, bit_length, palette_type):
 
         logging.debug(f'Generating binary : color dictionary for {palette_type}...')
-        self.palette = palette
-        self.bit_length = self.palette.bit_length
+        self.color_set_tupled = color_set_tupled
+        self.bit_length = bit_length
         self.return_value = self.generate_dictionary()
 
     def generate_dictionary(self):
@@ -35,12 +35,12 @@ class BitsToColor:
             return red_channel, green_channel, blue_channel
 
         color_dict = {}
-        if self.palette.bit_length != 24:
+        if self.bit_length != 24:
 
-            for value in range(len(self.palette.color_set)):
-                temp_bin_holder = str(BitArray(uint=value, length=self.palette.bit_length))
+            for value in range(len(self.color_set_tupled)):
+                temp_bin_holder = str(BitArray(uint=value, length=self.bit_length))
                 temp_bin_holder = ConstBitStream(temp_bin_holder)
-                color_dict[temp_bin_holder] = self.palette.color_set[value]
+                color_dict[temp_bin_holder] = self.color_set_tupled[value]
             return color_dict
 
         else:
