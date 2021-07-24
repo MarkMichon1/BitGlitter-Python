@@ -193,7 +193,7 @@ to customize the stream, but there is only one required argument.  Everything el
 `preset_nickname` allows you to use a saved assortment of `write` arguments with a `str` nickname for easy switching 
 between preferred configs.  Learn more below in the **Preset Configuration** section.
 
-`stream_name=''` is what you can use to optionally title your stream, which will be printed out on the screen of whoever
+`stream_name=''` **Required** argument to name your stream, which will be printed out on the screen of whoever
 reads the file, along with other stream data.
 
 `stream_description=''` serves as a text field to optionally put a description for the stream.

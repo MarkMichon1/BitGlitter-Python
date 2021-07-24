@@ -33,19 +33,26 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
     # Final preparations for stream header parts.
     stream_payload = ConstBitStream(filename=working_directory / 'processed.bin')
+    logging.debug(f'stream_payload.len {stream_payload.len}')
     pre_stream_palette_headers = BitStream(stream_header)
+    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
     metadata_header_bitstream = BitStream(metadata_header)
+    logging.debug(f'metadata_header_bitstream.len {metadata_header_bitstream.len}')
     pre_stream_palette_headers.append(metadata_header_bitstream)
+    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
     palette_header_bitstream = BitStream(palette_header)
+    logging.debug(f'palette_header_bitstream.len {palette_header_bitstream.len}')
     pre_stream_palette_headers.append(palette_header_bitstream)
+    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
     pre_stream_palette_headers = ConstBitStream(pre_stream_palette_headers)
+    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
 
     frame_number = 1
 
     # This is the primary loop; it will yield until it traverses the entire file.
     while stream_payload.bitpos != stream_payload.length:
 
-        logging.debug(f'Generating frame data for {frame_number} of {total_frames} ...')
+        logging.debug(f'GENERATOR:  Generating frame data for {frame_number} of {total_frames} ...')
 
         initializer_bits = BitStream()
         setup_headers_bits = BitStream()

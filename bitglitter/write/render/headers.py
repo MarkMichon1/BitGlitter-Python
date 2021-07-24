@@ -22,12 +22,14 @@ def metadata_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, s
 
     raw_header_to_bytes = bytes(meta_data_string, 'UTF-8')
     raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes, byte_output=True)
-    processed_header = compress_bytes(raw_header_to_bytes)
+    # processed_header = compress_bytes(raw_header_to_bytes)
+    processed_header = raw_header_to_bytes #TODO UNDO, HERE FOR TESTING
     if file_mask_enabled and crypto_key:
         logging.debug('Encrypting...')
         processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
 
     logging.debug('Metadata header generated.')
+    logging.debug(f'processed_header length: {len(processed_header)}')
     return processed_header, raw_header_hash_bytes
 
 

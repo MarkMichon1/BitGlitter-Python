@@ -80,6 +80,7 @@ def draw_frame(dict_obj):
     stream_sha = dict_obj['stream_sha']
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
+    logging.debug(f'{frame_number} {frame_payload.len}')
     image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
     draw = ImageDraw.Draw(image)
 

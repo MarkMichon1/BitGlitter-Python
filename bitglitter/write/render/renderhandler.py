@@ -46,9 +46,9 @@ class RenderHandler:
         stream_palette_dict = stream_palette.return_encoder('stream_palette')
 
         metadata_header_bytes, metadata_header_hash_bytes = metadata_header_process(file_mask_enabled, crypto_key,
-                                                                                    scrypt_n,
-                                                                                    scrypt_r, scrypt_p, bg_version,
-                                                                                    stream_name, datetime_started,
+                                                                                    scrypt_n, scrypt_r, scrypt_p,
+                                                                                    bg_version, stream_name,
+                                                                                    datetime_started,
                                                                                     stream_description, manifest)
         palette_header_bytes = b''
         palette_header_hash_bytes = b''

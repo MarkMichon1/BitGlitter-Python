@@ -80,6 +80,9 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
     if not encryption_key and file_mask_enabled:
         raise ValueError('file_mask_enabled can only be set to True if an encryption key is provided.')
 
+    if not stream_name:
+        raise ValueError('Write argument stream_name is required.')
+
     if stream_output_path:
         is_valid_directory('stream_output_path', stream_output_path)
     verify_write_params_output_mode(output_mode)

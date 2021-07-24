@@ -5,7 +5,7 @@ with open("README.md", "r") as openReadMe:
 
 setup(
     name="BitGlitter",
-    version="2.0.0", #todo for next release
+    version="2.0.0",
     author="Mark Michon",
     author_email="markmichon7@gmail.com",
     description="⚡ Embed data payloads inside of ordinary images or video, through high performance 2-D matrix codes.",
