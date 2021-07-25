@@ -96,7 +96,7 @@ def write(
     # This is where the final steps leading up to rendering as well as rendering itself takes place.
     render_handler = RenderHandler(stream_name, stream_description, working_dir, default_output_path, encryption_key,
                                    scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
-                                   stream_palette_id, max_cpu_cores, pre_processor.stream_sha,
+                                   stream_palette_id, max_cpu_cores, pre_processor.stream_sha256,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, constants.BG_VERSION,
                                    pre_processor.manifest, constants.PROTOCOL_VERSION, frames_per_second,
@@ -108,4 +108,4 @@ def write(
     if save_statistics:
         _write_update(render_handler.blocks_wrote, render_handler.frames_wrote, pre_processor.size_in_bytes)
 
-    return pre_processor.stream_sha
+    return pre_processor.stream_sha256

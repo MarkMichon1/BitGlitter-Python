@@ -8,7 +8,7 @@ from bitglitter.write.render.headers import initializer_header_process, frame_he
 
 def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette,
                           stream_palette, output_mode, stream_output_path, output_name, working_directory, total_frames,
-                          stream_header, metadata_header, palette_header, stream_sha,
+                          stream_header, metadata_header, palette_header, stream_sha256,
                           initializer_palette_dict, initializer_palette_dict_b, stream_palette_dict,
                           default_output_path):
     """This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
@@ -27,25 +27,19 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
     # Constants
     TOTAL_BLOCKS = block_height * block_width
-    INITIALIZER_CALIBRATOR_BLOCK_OVERHEAD = block_height + block_width + 579
+    INITIALIZER_CALIBRATOR_BLOCK_OVERHEAD = (block_height + block_width - 1) + 580  # calibrator + initializer
     INITIALIZER_BIT_OVERHEAD = 580
     FRAME_HEADER_BIT_OVERHEAD = 352
 
-    # Final preparations for stream header parts.
+    #  Final preparations for stream header parts.
     stream_payload = ConstBitStream(filename=working_directory / 'processed.bin')
-    logging.debug(f'stream_payload.len {stream_payload.len}')
-    pre_stream_palette_headers = BitStream(stream_header)
-    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
-    metadata_header_bitstream = BitStream(metadata_header)
-    logging.debug(f'metadata_header_bitstream.len {metadata_header_bitstream.len}')
-    pre_stream_palette_headers.append(metadata_header_bitstream)
-    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
-    palette_header_bitstream = BitStream(palette_header)
-    logging.debug(f'palette_header_bitstream.len {palette_header_bitstream.len}')
-    pre_stream_palette_headers.append(palette_header_bitstream)
-    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
-    pre_stream_palette_headers = ConstBitStream(pre_stream_palette_headers)
-    logging.debug(f'pre_stream_palette_headers.len {pre_stream_palette_headers.len}')
+
+    #  These are the headers before stream palette is used, to be perfectly clear
+    pre_stream_palette_headers_merged = BitStream()
+    pre_stream_palette_headers_merged.append(BitStream(stream_header))
+    pre_stream_palette_headers_merged.append(BitStream(metadata_header))
+    pre_stream_palette_headers_merged.append(palette_header)
+    pre_stream_palette_headers_merged = ConstBitStream(pre_stream_palette_headers_merged)
 
     frame_number = 1
 
@@ -58,11 +52,11 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         setup_headers_bits = BitStream()
         payload_bits = BitStream()
         padding_bits = BitStream()
-        stream_sha_bytes = bytes(stream_sha, 'UTF-8')
+        stream_sha_bytes = bytes(stream_sha256, 'UTF-8')
 
         max_allowable_payload_bits = len(stream_payload) - stream_payload.bitpos
-        max_allowable_pre_stream_palette_header_bits = pre_stream_palette_headers.length \
-                                                       - pre_stream_palette_headers.bitpos
+        max_allowable_pre_stream_palette_header_bits = pre_stream_palette_headers_merged.length \
+                                                       - pre_stream_palette_headers_merged.bitpos
         blocks_left_this_frame = TOTAL_BLOCKS
         initializer_enabled = False
         initializer_palette_blocks_used = 0
@@ -76,18 +70,19 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             initializer_enabled = True
 
         # Pre stream palette headers to be rendered on these frames
-        if pre_stream_palette_headers.bitpos != pre_stream_palette_headers.length:
+        if pre_stream_palette_headers_merged.bitpos != pre_stream_palette_headers_merged.length:
             blocks_left_this_frame -= FRAME_HEADER_BIT_OVERHEAD
             initializer_palette_blocks_used += FRAME_HEADER_BIT_OVERHEAD
 
             # Pre stream palette headers don't have enough room to finish on this frame.
             if blocks_left_this_frame <= max_allowable_pre_stream_palette_header_bits:
-                setup_headers_bits = pre_stream_palette_headers.read(blocks_left_this_frame)
+                setup_headers_bits = pre_stream_palette_headers_merged.read(blocks_left_this_frame)
                 initializer_palette_blocks_used += blocks_left_this_frame
 
             # Pre stream palette headers have enough room to finish on this frame.
             else:
-                setup_headers_bits = pre_stream_palette_headers.read(max_allowable_pre_stream_palette_header_bits)
+                setup_headers_bits = pre_stream_palette_headers_merged.read(
+                    max_allowable_pre_stream_palette_header_bits)
                 initializer_palette_blocks_used += max_allowable_pre_stream_palette_header_bits
                 blocks_left_this_frame -= max_allowable_pre_stream_palette_header_bits
 
@@ -128,12 +123,12 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
         yield {
             'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
-            frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
+                frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
             'stream_palette_dict': stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length,
             'initializer_palette_dict': initializer_palette_dict, 'initializer_palette_dict_b':
-            initializer_palette_dict_b, 'initializer_palette': initializer_palette, 'output_mode': output_mode,
+                initializer_palette_dict_b, 'initializer_palette': initializer_palette, 'output_mode': output_mode,
             'output_name': output_name, 'initializer_enabled': initializer_enabled, 'frame_number': frame_number,
-            'total_frames': total_frames, 'image_output_path': image_output_path, 'stream_sha': stream_sha
+            'total_frames': total_frames, 'image_output_path': image_output_path, 'stream_sha256': stream_sha256
         }
 
         frame_number += 1

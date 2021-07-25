@@ -16,30 +16,32 @@ def total_frames_estimator(block_height, block_width, metadata_header_length, pa
 
     # Constants
     TOTAL_BLOCKS_PER_FRAME = block_height * block_width
-    INITIALIZER_OVERHEAD = block_height + block_width + 835
-    FRAME_HEADER_OVERHEAD = 352
-    STREAM_SETUP_HEADER = 685
-    pre_stream_palette_header_data_left = STREAM_SETUP_HEADER + palette_header_length + metadata_header_length
-    payload_data_left = size_in_bytes * 8
+    CALIBRATOR_BLOCK_OVERHEAD = block_height + block_width - 1
+    INITIALIZER_BIT_OVERHEAD = 580
+    FRAME_HEADER_BIT_OVERHEAD = 352
+    STREAM_HEADER_BIT_OVERHEAD = 685
+    pre_stream_data_left_bits = STREAM_HEADER_BIT_OVERHEAD + ((palette_header_length + metadata_header_length) * 8)
+    logging.info(f'palette_header_length {palette_header_length} metadata_header_length {metadata_header_length}')
+    payload_data_left_bits = size_in_bytes * 8
     STREAM_PALETTE_BIT_LENGTH = stream_palette.bit_length
 
     total_frames = 1
 
-    while pre_stream_palette_header_data_left:
-        remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_OVERHEAD - (INITIALIZER_OVERHEAD *
+    while pre_stream_data_left_bits:
+        remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_BIT_OVERHEAD - ((INITIALIZER_BIT_OVERHEAD + CALIBRATOR_BLOCK_OVERHEAD) *
                                                                     int(total_frames == 1 or output_mode == 'image'))
-        if remaining_blocks_this_frame < pre_stream_palette_header_data_left:
-            pre_stream_palette_header_data_left -= remaining_blocks_this_frame
+        if remaining_blocks_this_frame < pre_stream_data_left_bits:
+            pre_stream_data_left_bits -= remaining_blocks_this_frame
             total_frames += 1
         else:
-            remaining_blocks_this_frame -= pre_stream_palette_header_data_left
-            pre_stream_palette_header_data_left = 0
-            payload_data_left = max(0, payload_data_left - (remaining_blocks_this_frame * STREAM_PALETTE_BIT_LENGTH))
+            remaining_blocks_this_frame -= pre_stream_data_left_bits
+            pre_stream_data_left_bits = 0
+            payload_data_left_bits = max(0, payload_data_left_bits - (remaining_blocks_this_frame * STREAM_PALETTE_BIT_LENGTH))
 
-    if payload_data_left:
-        remaining_blocks = TOTAL_BLOCKS_PER_FRAME - (1 * output_mode == 'image')
-        payload_bits_per_frame = (remaining_blocks * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_OVERHEAD
-        total_frames += math.ceil(payload_data_left / payload_bits_per_frame)
+    if payload_data_left_bits:
+        remaining_blocks = TOTAL_BLOCKS_PER_FRAME - ((INITIALIZER_BIT_OVERHEAD + CALIBRATOR_BLOCK_OVERHEAD) * output_mode == 'image')
+        payload_bits_per_frame = (remaining_blocks * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_BIT_OVERHEAD
+        total_frames += math.ceil(payload_data_left_bits / payload_bits_per_frame)
 
     logging.info(f'{total_frames} frame(s) required for this write process.')
     return total_frames
@@ -77,7 +79,7 @@ def draw_frame(dict_obj):
     frame_number = dict_obj['frame_number']
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
-    stream_sha = dict_obj['stream_sha']
+    stream_sha256 = dict_obj['stream_sha256']
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
     logging.debug(f'{frame_number} {frame_payload.len}')
@@ -127,7 +129,7 @@ def draw_frame(dict_obj):
         if output_name:
             file_name = output_name + ' - ' + str(frame_number)
         else:
-            file_name = stream_sha + ' - ' + str(frame_number)
+            file_name = stream_sha256 + ' - ' + str(frame_number)
 
     save_path = Path(image_output_path / f'{str(file_name)}.png')
     image.save(save_path)

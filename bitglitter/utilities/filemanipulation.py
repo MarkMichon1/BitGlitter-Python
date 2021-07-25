@@ -21,7 +21,7 @@ def refresh_working_folder(active_path):
 
 def remove_working_folder(working_directory):
     if os.path.isdir(working_directory):
-        logging.debug('Purging working directory...')
+        logging.debug('Deleting temporary working directory for task...')
         shutil.rmtree(working_directory)
 
 

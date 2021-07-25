@@ -31,8 +31,8 @@ class PreProcessor:
                                               scrypt_n, scrypt_r, scrypt_p)
 
         self.processed_binary_path = working_directory / 'processed.bin'
-        self.stream_sha = get_hash_from_file(self.processed_binary_path)
-        logging.info(f"Stream SHA-256 Hash: {self.stream_sha}")
+        self.stream_sha256 = get_hash_from_file(self.processed_binary_path)
+        logging.info(f"Stream SHA-256 Hash: {self.stream_sha256}")
         self.size_in_bytes = return_file_size(self.processed_binary_path)
         logging.info(f'Pre-Processed Payload Size: {humanize_file_size(self.size_in_bytes)}')
         logging.debug(f'^ ({self.size_in_bytes} B)')

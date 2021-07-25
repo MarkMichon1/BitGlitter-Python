@@ -32,7 +32,7 @@ def remove_all_partial_save_data():
     pass
 
 
-def update_partial_save():
+def update_partial_save(stream_sha):
     pass
 
     # def update_partial_save(stream_sha, reattempt_assembly=True, password_update=None, scrypt_n=None,

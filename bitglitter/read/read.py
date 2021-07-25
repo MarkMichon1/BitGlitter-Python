@@ -55,7 +55,7 @@ def read(file_path,
                                       encryption_key, scrypt_n, scrypt_r, scrypt_p, save_statistics, partial_save_path)
 
     # Review decoded data to check if any files can be extracted.
-    decode_handler.review_data()
+    decode_handler.review_data()  #todo- merge
 
     # Save statistics if enabled.
     if save_statistics:

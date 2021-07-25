@@ -1,8 +1,6 @@
 import cv2
 import logging
 
-from bitglitter.read.framescan.frameprocess import frame_process
-
 
 def initial_video_stream_lockon(video_input_path, output_path, bad_frame_strikes, block_height_override,
                                 block_width_override, stream_palette_id_override, encryption_key, scrypt_n, scrypt_r,
