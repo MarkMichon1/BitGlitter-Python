@@ -486,4 +486,4 @@ def load_default_db_data():
         Palette.create(palette_id=palette['palette_id'], is_valid=True, is_24_bit=palette['is_24_bit'],
                        is_custom=palette['is_custom'], name=palette['name'], description=palette['description'],
                        nickname=palette['nickname'], is_included_with_repo=True,
-                       datetime_created=datetime.fromtimestamp(946706400), color_set=palette['color_set'])
+                       time_created=946706400, color_set=palette['color_set'])

@@ -68,7 +68,7 @@
 # elif cli_argument == 'write':
 #      write_parser.set_defaults(func=CliArgumentParser.write(vars(write_parser.parse_known_args()[0])))
 
-# TODO:
+#
 # parser.add_argument('--clearSession',
 #                     help='Tries to remove the session pickle if it exists, clearing all statistics and custom colors.')
 # parser.add_argument('--clearStats',

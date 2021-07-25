@@ -5,8 +5,8 @@ from bitglitter.config.config import SqlBaseClass, engine, session
 from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
     get_palette_id_from_hash
 
-from datetime import datetime
 import math
+import time
 
 
 class Palette(SqlBaseClass):
@@ -25,7 +25,7 @@ class Palette(SqlBaseClass):
     color_distance = Column(Float, default=0, nullable=False)
     number_of_colors = Column(Integer, default=0, nullable=False)
     bit_length = Column(Integer, default=0, nullable=False)
-    datetime_created = Column(DateTime, default=datetime.now)
+    time_created = Column(Integer, default=time.time)
 
     @classmethod
     def create(cls, color_set, **kwargs):
@@ -57,7 +57,7 @@ class Palette(SqlBaseClass):
         if save:  # Added to prevent repetitive saves if used in other methods
             self.save()
 
-    def _convert_colors_to_tuple(self):
+    def convert_colors_to_tuple(self):
         """Since each of their colors are their own PaletteColor object, this function retrieves them and returns them
         in a more usable format.
         """
@@ -83,18 +83,18 @@ class Palette(SqlBaseClass):
                 sequence_number += 1
             session.bulk_save_objects(color_objects)
         if self.is_custom:
-            self.palette_id = get_palette_id_from_hash(self.name, self.description, self.datetime_created,
+            self.palette_id = get_palette_id_from_hash(self.name, self.description, self.time_created,
                                                        color_set_cleaned)
 
         self.save()
 
     def return_encoder(self, palette_type):
-        color_set_tupled = self._convert_colors_to_tuple()
+        color_set_tupled = self.convert_colors_to_tuple()
         return BitsToColor(color_set_tupled, self.bit_length, palette_type)
 
 
     def return_decoder(self):
-        color_set_tupled = self._convert_colors_to_tuple()
+        color_set_tupled = self.convert_colors_to_tuple()
         return ColorsToBits(color_set_tupled)
 
 

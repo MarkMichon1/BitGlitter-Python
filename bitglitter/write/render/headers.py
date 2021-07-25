@@ -22,14 +22,14 @@ def metadata_header_process(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, s
 
     raw_header_to_bytes = bytes(meta_data_string, 'UTF-8')
     raw_header_hash_bytes = get_hash_from_bytes(raw_header_to_bytes, byte_output=True)
-    # processed_header = compress_bytes(raw_header_to_bytes)
-    processed_header = raw_header_to_bytes #TODO UNDO, HERE FOR TESTING
+    processed_header = compress_bytes(raw_header_to_bytes)
+
     if file_mask_enabled and crypto_key:
         logging.debug('Encrypting...')
         processed_header = encrypt_bytes(processed_header, crypto_key, scrypt_n, scrypt_r, scrypt_p)
 
     logging.debug('Metadata header generated.')
-    logging.debug(f'processed_header length: {len(processed_header)}')
+    logging.debug(f'Processed metadata length: {len(processed_header)}')
     return processed_header, raw_header_hash_bytes
 
 
@@ -37,10 +37,10 @@ def palette_initialization_header_process(palette):
     """This header is ran after the stream setup header whenever a custom palette is used for the stream."""
 
     adding_bytes = BitStream()
-    text_string_to_bytes = bytes(f'\\\\{palette.name}\\\\{palette.description}\\\\', 'utf-8')
+    text_string_to_bytes = bytes('\\\\'.join([palette.name, palette.description, str(palette.time_created)]), 'utf-8')
     adding_bytes.append(BitArray(text_string_to_bytes))
-    adding_bytes.append(BitArray(uint=palette.datetime_created, length=40))
-    for color in palette.color_set:
+    adding_bytes.append(BitArray(uint=palette.time_created, length=40))
+    for color in palette.convert_colors_to_tuple():
         for color_channel in color:
             adding_bytes.append(BitArray(uint=color_channel, length=8))
     to_bytes = bytes(adding_bytes)

@@ -79,7 +79,7 @@ class ColorsToBits:
         value_dict = {}
 
         if self.palette.bit_length != 24:
-            for value in range(len(self.palette.color_set)):  # todo change to .number_of_colors
+            for value in range(self.palette.number_of_colors):
                 temp_bin_holder = str(BitArray(uint=value, length=self.palette.bit_length))
                 temp_bin_holder = ConstBitStream(temp_bin_holder)
                 value_dict[self.palette[value]] = temp_bin_holder
@@ -134,10 +134,15 @@ def get_color_distance(color_set):
     return round(min_distance, 3)
 
 
-def get_palette_id_from_hash(name, description, date_created, color_set):
+def get_palette_id_from_hash(name, description, time_created, color_set):
     """Taking in the various parameters, this creates a unique ID for the custom palettes."""
 
-    hasher = hashlib.sha256(str(name + description + str(date_created) + str(color_set)).encode())
+    # Normalizes list brackets to tuples to ensure consistent hashing across context/usage
+    color_set_string = str(color_set)
+    color_set_string.replace('[', '(')
+    color_set_string.replace(']', ')')
+
+    hasher = hashlib.sha256(str(name + description + str(time_created) + color_set_string).encode())
     return hasher.hexdigest()
 
 

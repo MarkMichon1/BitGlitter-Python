@@ -16,7 +16,8 @@ class PreProcessor:
     """
 
     def __init__(self, working_directory, input_path, crypto_key, compression_enabled, scrypt_n, scrypt_r, scrypt_p):
-        self.datetime_started = int(time.time())
+        # self.datetime_started = int(time.time()) TODO: TEMP FOR DEBUGGING
+        self.datetime_started = 1627147587
         self.active_folder = refresh_working_folder(working_directory)
         self.encryption_enabled = True if crypto_key else False
         logging.info("Preprocess initializing...")
@@ -34,4 +35,5 @@ class PreProcessor:
         logging.info(f"Stream SHA-256 Hash: {self.stream_sha}")
         self.size_in_bytes = return_file_size(self.processed_binary_path)
         logging.info(f'Pre-Processed Payload Size: {humanize_file_size(self.size_in_bytes)}')
+        logging.debug(f'^ ({self.size_in_bytes} B)')
         logging.info("Preprocess complete.")

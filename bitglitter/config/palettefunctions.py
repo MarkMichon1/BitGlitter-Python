@@ -1,38 +1,48 @@
+import ast
+import base64
+import time
+
 from bitglitter.config.config import session
 from bitglitter.config.palettemodels import Palette
-from bitglitter.utilities.palette import render_sample_frame
+from bitglitter.utilities.palette import get_palette_id_from_hash, render_sample_frame
 from bitglitter.validation.utilities import proper_string_syntax
 from bitglitter.validation.validatepalette import custom_palette_values_validate
 
 
 def _return_palette(palette_id=None, palette_nickname=None):
-
     if not palette_id and not palette_nickname:
         raise ValueError('Must include palette_id or palette_nickname to return Palette object.')
     if palette_id:
         palette = session.query(Palette).filter(Palette.palette_id == palette_id).first()
     else:
-       palette = session.query(Palette).filter(Palette.nickname == palette_nickname).first()
+        palette = session.query(Palette).filter(Palette.nickname == palette_nickname).first()
     if palette:
         return palette
     else:
         raise ValueError('No existing palettes with this palette_id or palette_nickname.')
 
 
-def add_custom_palette(palette_name, color_set=None, nickname=None, palette_description=None, only_accept_valid=True):
+def add_custom_palette(palette_name, color_set, nickname=None, palette_description=''):
+    custom_palette_values_validate(palette_name, palette_description, color_set)
 
+    proper_string_syntax(palette_name)
+    if palette_description:
+        proper_string_syntax(palette_description)
 
-    # TEMP NOTE:
-    name_string = str(palette_name)
-    description_string = str(palette_description) if palette_description else ''
-    nickname_string = str(nickname) if nickname else ''
+    palette = session.query(Palette).filter(Palette.name == palette_name).first()
+    if palette:
+        raise ValueError(f'Name {palette_name} is already taken, please choose another.')
 
-    proper_string_syntax(name_string)
-    if description_string:
-        proper_string_syntax(description_string)
+    if nickname:
+        proper_string_syntax(nickname)
+        palette = session.query(Palette).filter(Palette.nickname == nickname).first()
+        if palette:
+            raise ValueError(f"Nickname '{nickname}' is already taken, please choose another.")
 
-    palette_id = None
-    return palette_id
+    new_palette = Palette.create(is_valid=True, is_custom=True, name=palette_name, palette_id='', nickname=nickname,
+                                 description=palette_description, time_created=int(time.time()), color_set=color_set)
+
+    return new_palette.palette_id
 
 
 def remove_custom_palette(palette_id, nickname):
@@ -96,26 +106,45 @@ def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_pale
 
     if not all_palettes:
         palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
-        render_sample_frame(palette.name, palette._convert_colors_to_tuple(), palette.is_24_bit, path)
+        render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, path)
     else:
         if include_default:
             palettes = session.query(Palette).all()
         else:
             palettes = session.query(Palette).filter(Palette.is_custom == True)
         for palette in palettes:
-            render_sample_frame(palette.name, palette._convert_colors_to_tuple(), palette.is_24_bit, path)
+            render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, path)
 
 
 def import_palette_base64(base64_string):
-    palette = None
-    # Validating data to ensure no funny business
+    decoded_string = base64.b64decode(base64_string.encode()).decode()
+    palette_id, palette_name, palette_description, time_created, color_set_str = decoded_string.split('\\\\')
 
-    new_palette = Palette()
-    return palette
+    # Validating data to ensure no funny business
+    calculated_hash = get_palette_id_from_hash(palette_name, palette_description, time_created, color_set_str)
+    if calculated_hash != palette_id:
+        raise ValueError('Corrupted string.  Please ensure you have the full b64 string and try again.')
+
+    palette = session.query(Palette).filter(Palette.palette_id == palette_id).first()
+    if palette:
+        raise ValueError('Palette already exists locally!')
+    if palette.name == palette_name:
+        raise ValueError('Palette with this name already exists.')
+
+    color_set_list = ast.literal_eval(color_set_str)
+    custom_palette_values_validate(palette_name, palette_description, color_set_list)
+
+    palette = Palette.create(palette_id=palette_id, is_valid=True, is_custom=True, name=palette_name,
+                             description=palette_description, time_created=time_created, color_set=color_set_list)
+
+    return palette.id
 
 
 def export_palette_base64(palette_id=None, palette_nickname=None):
     palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
-    assembled_string = ''
-    to_b64 = assembled_string
-    return to_b64
+    if not palette.is_valid:
+        raise ValueError('Cannot export invalid palettes')
+
+    assembled_string = '\\\\'.join([palette.palette_id, palette.name, palette.description, str(palette.time_created),
+                                    str(palette.convert_colors_to_tuple())])
+    return base64.b64encode(assembled_string.encode()).decode()

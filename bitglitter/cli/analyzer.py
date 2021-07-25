@@ -11,9 +11,6 @@
 #     to parse all CLI args.
 #     """
 #
-#     # TODO: To check if output path is a valid path and hold
-#     # possible exceptions that may occur there just like write and read path.
-#
 #
 #     @staticmethod
 #     def read(arguments:dict):

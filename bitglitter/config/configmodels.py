@@ -16,7 +16,7 @@ class Config(SqlBaseClass):
     log_output = Column(Boolean, default=False)
     maximum_cpu_cores = Column(Integer, default=cpu_count())
     save_statistics = Column(Boolean, default=True)
-
+    output_stream_title = Column(Boolean, default=True)
 
 class Constants(SqlBaseClass):
     __abstract__ = False

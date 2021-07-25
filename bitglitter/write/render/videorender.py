@@ -20,7 +20,9 @@ def render_video(stream_output_path, default_output_path, output_name, working_d
 
     formatted_input_path = Path(working_directory / f'%{len(str(total_frames))}d.png')
     save_path = f"{Path(video_output_path / video_name)}.mp4"
-    ffmpeg.input(formatted_input_path, framerate=frames_per_second).output(save_path).run()
+    ffmpeg\
+        .input(formatted_input_path, framerate=frames_per_second)\
+        .output(save_path, vcodec='copy', f='mp4').run()
 
     logging.info('Rendering video complete.')
     logging.info(f'Video save path: {save_path}')
