@@ -2,8 +2,6 @@ from bitglitter.config.config import session
 from bitglitter.config.configmodels import Config, Constants, Statistics
 from bitglitter.config.palettemodels import Palette
 
-from datetime import datetime
-
 
 def load_default_db_data():
     """Populates config.db with required models as well as some default palettes"""
@@ -13,7 +11,6 @@ def load_default_db_data():
     Constants.create()
     Statistics.create()
     Config.create()
-
 
     # Palette create
     default_palette_data = [
@@ -70,7 +67,9 @@ def load_default_db_data():
             'name': '4 Bit Default',
             'description': 'Sixteen colors.',
             'color_set': ((0, 0, 0), (128, 128, 128), (192, 192, 192), (128, 0, 0), (255, 0, 0), (128, 128, 0), (255,
-                          255, 0), (0, 255, 0), (0, 128, 128), (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
+                                                                                                                 255,
+                                                                                                                 0),
+                          (0, 255, 0), (0, 128, 128), (0, 128, 0), (0, 0, 128), (0, 0, 255), (0, 255, 255),
                           (128, 0, 128), (255, 0, 255), (255, 255, 255)),
             'is_24_bit': False,
             'is_custom': False

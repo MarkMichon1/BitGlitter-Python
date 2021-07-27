@@ -15,7 +15,7 @@ def logging_setter(logging_level, logging_stdout_output, logging_txt_output, log
     logging_level_dict = {None: None, False: None, 'debug': logging.DEBUG, 'info': logging.INFO}
     if logging_txt_output:
         if not os.path.isdir(logging_save_path):
-            os.mkdir(logging_save_path) #todo test
+            os.mkdir(logging_save_path)  # todo test
         log_output_name = f"logs\\{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.txt"
         output_log = logging.getLogger()
         output_log_handler = logging.FileHandler(log_output_name)

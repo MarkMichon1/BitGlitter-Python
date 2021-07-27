@@ -3,7 +3,7 @@ load_default_db_data()
 
 # CORE USES
 from bitglitter.write.write import write
-# from bitglitter.read.read import read
+#from bitglitter.read.read import read
 
 # GENERAL CONFIGURATION
 from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session
@@ -20,10 +20,11 @@ from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname
 from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
     return_all_preset_data, return_preset
 
+
 # ===============================================================================
 # The MIT License (MIT)
 #
-# Copyright (c) 2020 - ∞ Mark Michon
+# Copyright (c) 2021 - ∞ Mark Michon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -45,19 +46,16 @@ from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets
 #
 # ===============================================================================
 #
-# Official project page (Python library):
+# Python library project page:
+# https://github.com/MarkMichon1/BitGlitter-Python
+#
+# Electron App project page:
 # https://github.com/MarkMichon1/BitGlitter
-#
-# Official project page (desktop app to be released sometime in 2021):
-# https://github.com/MarkMichon1/BitGlitter-GUI
-#
-# Guides and roadmap (under construction!):
-# https://github.com/MarkMichon1/BitGlitter/wiki
 #
 # Discord server:
 # https://discord.gg/t9uv2pZ
 #
-# Have fun! :)
+# Enjoy! :)
 #
 #   - Mark
 # ===============================================================================

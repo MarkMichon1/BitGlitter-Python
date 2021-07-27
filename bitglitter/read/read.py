@@ -1,6 +1,9 @@
 import logging
+from pathlib import Path
 
+from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _read_update
+from bitglitter.config.configmodels import Config, Constants
 from bitglitter.read.inputdecode.framereadhandler import FrameReadHandler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validateread import verify_read_parameters
@@ -10,6 +13,7 @@ def read(file_path,
          output_directory=False,
          bad_frame_strikes=25,
          max_cpu_cores=0,
+         live_payload_unpackaging=False,
 
          # Overrides
          block_height_override=False,
@@ -36,8 +40,11 @@ def read(file_path,
     contained within them.  This along with write() are the two primary functions of this library.
     """
 
+    config = session.query(Config).first()
+    constants = session.query(Constants).first()
+
     # Logging initializing.
-    logging_setter(logging_level, logging_screen_output, logging_save_output, settings_manager.log_txt_path)
+    logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_path))
     logging.info('Beginning read...')
 
     # Are all parameters acceptable?
@@ -46,7 +53,7 @@ def read(file_path,
                                         stream_palette_id_override, save_statistics)
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
-    partial_save_path = settings_manager.DEFAULT_PARTIAL_SAVE_DATA_PATH
+    partial_save_path = Path(constants.DEFAULT_PARTIAL_SAVE_DATA_PATH)
 
 
     # Pull valid frame data from the inputted file.
@@ -55,7 +62,7 @@ def read(file_path,
                                       encryption_key, scrypt_n, scrypt_r, scrypt_p, save_statistics, partial_save_path)
 
     # Review decoded data to check if any files can be extracted.
-    decode_handler.review_data()  #todo- merge
+    #todo- merge decode_handler.review_data()
 
     # Save statistics if enabled.
     if save_statistics:

@@ -1,7 +1,7 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from bitglitter.config.config import SqlBaseClass, engine, session
+from bitglitter.config.config import engine, session, SqlBaseClass
 from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
     get_palette_id_from_hash
 
@@ -92,7 +92,6 @@ class Palette(SqlBaseClass):
         color_set_tupled = self.convert_colors_to_tuple()
         return BitsToColor(color_set_tupled, self.bit_length, palette_type)
 
-
     def return_decoder(self):
         color_set_tupled = self.convert_colors_to_tuple()
         return ColorsToBits(color_set_tupled)
@@ -109,7 +108,7 @@ class PaletteColor(SqlBaseClass):
     blue_channel = Column(Integer, nullable=False)
 
     def return_rgb_tuple(self):
-        return (self.red_channel, self.green_channel, self.blue_channel)
+        return self.red_channel, self.green_channel, self.blue_channel
 
 
 SqlBaseClass.metadata.create_all(engine)

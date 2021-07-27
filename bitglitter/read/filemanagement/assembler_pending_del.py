@@ -2,7 +2,7 @@ import logging
 import shutil
 
 from bitglitter.config.defaultvalues import DEFAULT_READ_PATH
-from bitglitter.read.filemanagement.savedstream import SavedStream
+from bitglitter.read.filemanagement.del_pending_savedstream import SavedStream
 
 
 class Assembler: #todo- merge with config manager

@@ -18,7 +18,9 @@ class Config(SqlBaseClass):
     save_statistics = Column(Boolean, default=True)
     output_stream_title = Column(Boolean, default=True)
 
+
 class Constants(SqlBaseClass):
+
     __abstract__ = False
     __tablename__ = 'constants'
     BG_VERSION = Column(String, default='2.0', nullable=False)

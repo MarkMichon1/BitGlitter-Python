@@ -28,18 +28,20 @@ def total_frames_estimator(block_height, block_width, metadata_header_length, pa
     total_frames = 1
 
     while pre_stream_data_left_bits:
-        remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_BIT_OVERHEAD - ((INITIALIZER_BIT_OVERHEAD + CALIBRATOR_BLOCK_OVERHEAD) *
-                                                                    int(total_frames == 1 or output_mode == 'image'))
+        remaining_blocks_this_frame = TOTAL_BLOCKS_PER_FRAME - FRAME_HEADER_BIT_OVERHEAD - ((INITIALIZER_BIT_OVERHEAD +
+                                         CALIBRATOR_BLOCK_OVERHEAD) * int(total_frames == 1 or output_mode == 'image'))
         if remaining_blocks_this_frame < pre_stream_data_left_bits:
             pre_stream_data_left_bits -= remaining_blocks_this_frame
             total_frames += 1
         else:
             remaining_blocks_this_frame -= pre_stream_data_left_bits
             pre_stream_data_left_bits = 0
-            payload_data_left_bits = max(0, payload_data_left_bits - (remaining_blocks_this_frame * STREAM_PALETTE_BIT_LENGTH))
+            payload_data_left_bits = max(0, payload_data_left_bits - (remaining_blocks_this_frame *
+                                                                      STREAM_PALETTE_BIT_LENGTH))
 
     if payload_data_left_bits:
-        remaining_blocks = TOTAL_BLOCKS_PER_FRAME - ((INITIALIZER_BIT_OVERHEAD + CALIBRATOR_BLOCK_OVERHEAD) * output_mode == 'image')
+        remaining_blocks = TOTAL_BLOCKS_PER_FRAME - ((INITIALIZER_BIT_OVERHEAD + CALIBRATOR_BLOCK_OVERHEAD)
+                                                     * output_mode == 'image')
         payload_bits_per_frame = (remaining_blocks * STREAM_PALETTE_BIT_LENGTH) - FRAME_HEADER_BIT_OVERHEAD
         total_frames += math.ceil(payload_data_left_bits / payload_bits_per_frame)
 
@@ -110,7 +112,6 @@ def draw_frame(dict_obj):
         # This is loading the next bit(s) to be written in the frame, and then converting it to an RGB value.
         next_bits = frame_payload.read(f'bits : {bit_read_length}')
         color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
-
 
         # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
         block_coordinates = next(next_coordinates)

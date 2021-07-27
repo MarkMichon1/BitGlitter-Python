@@ -14,7 +14,7 @@ def configure(some_args):
     pass  # tba
 
 
-def return_stream_manifest(stream_sha):
+def return_stream_manifest(stream_sha256):
     pass
 
 
@@ -23,7 +23,7 @@ def change_decoded_files_save_path(folder_path):
     pass
 
 
-def remove_partial_save(stream_sha):
+def remove_partial_save(stream_sha256):
     pass
 
 
@@ -32,7 +32,7 @@ def remove_all_partial_save_data():
     pass
 
 
-def update_partial_save(stream_sha):
+def update_stream_read(stream_sha256):
     pass
 
     # def update_partial_save(stream_sha, reattempt_assembly=True, password_update=None, scrypt_n=None,

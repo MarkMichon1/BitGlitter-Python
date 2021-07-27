@@ -3,7 +3,7 @@ from bitglitter.config.configmodels import Config, Constants, Statistics
 from bitglitter.config.defaultdbdata import load_default_db_data
 from bitglitter.config.palettemodels import Palette, PaletteColor
 from bitglitter.config.presetmodels import Preset
-from bitglitter.config.readmodels import StreamRead
+from bitglitter.config.readmodels.streamread import StreamRead
 
 
 def remove_session():

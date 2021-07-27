@@ -307,6 +307,8 @@ This allows you to break out of a stream relatively quickly if the video is subs
 `max_cpu_cores=0` determines the amount of CPU cores to utilize during decoding, like `write()`.  The default value of 0
 sets it to maximum.
 
+`live_payload_unpackaging=False` gives you the option to receive files in realtime as frame payloads get processed, rather than them getting processed all at once at the end of the frame processing.  The tradeoff is a small amount of overhead at the end of each frame to do the necessarily calculations/checks.  Enable this if you're reading a large stream with a large amount of files, and you'd like to start receiving them ASAP.
+
 `block_height_override=False` and `block_width_override=False` allow you to manually input the stream's block height and 
 block width.  Normally you'll never need to use this, as these values are automatically obtained as the frame is locked
 onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
@@ -483,7 +485,7 @@ A big thank you to Jack Robison as well for his continued wisdom.
 + `Pillow` - Frame creation and output, as well as loading images and reading pixel values
 
 # MIT License
-© 2019 - ∞ Mark Michon
+© 2021 - ∞ Mark Michon
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
