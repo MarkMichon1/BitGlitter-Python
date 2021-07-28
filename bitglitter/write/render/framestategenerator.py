@@ -3,7 +3,7 @@ from pathlib import Path
 
 from bitstring import BitStream, ConstBitStream
 
-from bitglitter.write.render.headers import initializer_header_process, frame_header_process
+from bitglitter.write.render.headerencode import initializer_header_encode, frame_header_encode
 
 
 def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette,
@@ -63,8 +63,8 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         last_frame = False
 
         if frame_number == 1 or output_mode == 'image':
-            initializer_bits = initializer_header_process(block_height, block_width, protocol_version, stream_palette,
-                                                          stream_sha_bytes)
+            initializer_bits = initializer_header_encode(block_height, block_width, protocol_version, stream_palette,
+                                                         stream_sha_bytes)
             initializer_palette_blocks_used += INITIALIZER_BIT_OVERHEAD
             blocks_left_this_frame -= INITIALIZER_CALIBRATOR_BLOCK_OVERHEAD
             initializer_enabled = True
@@ -117,7 +117,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             padding_bits = BitStream(bin=f"{'0' * remainder_bits}")
             frame_hashable_bits.append(padding_bits)
 
-        frame_header_holder = frame_header_process(frame_hashable_bits.tobytes(), frame_number)
+        frame_header_holder = frame_header_encode(frame_hashable_bits.tobytes(), frame_number)
         merged_pieces = initializer_bits + frame_header_holder + setup_headers_bits + payload_bits + padding_bits
         frame_payload = ConstBitStream(merged_pieces)
 

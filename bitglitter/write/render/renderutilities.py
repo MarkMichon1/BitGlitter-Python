@@ -1,11 +1,12 @@
 from bitstring import ConstBitStream
-from PIL import Image, ImageDraw
+import cv2
+import numpy
 
 import logging
 import math
 from pathlib import Path
 
-from bitglitter.write.render.headers import calibrator_header_process
+from bitglitter.write.render.headerencode import calibrator_header_render
 
 
 def total_frames_estimator(block_height, block_width, metadata_header_length, palette_header_length, size_in_bytes,
@@ -84,13 +85,12 @@ def draw_frame(dict_obj):
     stream_sha256 = dict_obj['stream_sha256']
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
-    logging.debug(f'{frame_number} {frame_payload.len}')
-    image = Image.new('RGB', (pixel_width * block_width, pixel_width * block_height), 'black')
-    draw = ImageDraw.Draw(image)
+    image = numpy.zeros((pixel_width * block_height, pixel_width * block_width, 3), dtype='uint8')
 
     if initializer_enabled:
-        image = calibrator_header_process(image, block_height, block_width, pixel_width, initializer_palette_dict,
-                                          initializer_palette_dict_b)
+        pass
+        image = calibrator_header_render(image, block_height, block_width, pixel_width, initializer_palette_dict,
+                                         initializer_palette_dict_b)
 
     next_coordinates = render_coords_generator(block_height, block_width, pixel_width, initializer_enabled)
     block_position = 0
@@ -113,18 +113,17 @@ def draw_frame(dict_obj):
         next_bits = frame_payload.read(f'bits : {bit_read_length}')
         color_value = active_palette_dict.get_color(ConstBitStream(next_bits))
 
-        # With the color loaded, we'll get the coordinates of the next block (each corner), and draw it in.
+        # With the color loaded, we'll get the coordinates of the next block (top left + bottom corner), and draw it in.
         block_coordinates = next(next_coordinates)
-        draw.rectangle((block_coordinates[0], block_coordinates[1], block_coordinates[2], block_coordinates[3]),
-                       fill=f'rgb{str(color_value)}')
-
+        cv2.rectangle(image, (block_coordinates[0], block_coordinates[1]), (block_coordinates[2], block_coordinates[3]),
+                      (color_value[2], color_value[1], color_value[0]), -1)
         block_position += 1
 
     # Frames get saved as .png files.
     frame_number_to_string = str(frame_number)
 
     if output_mode == 'video':
-        file_name = frame_number_to_string.zfill(math.ceil(math.log(total_frames + 1, 10)))
+        file_name = frame_number_to_string
 
     else:
         if output_name:
@@ -132,8 +131,8 @@ def draw_frame(dict_obj):
         else:
             file_name = stream_sha256 + ' - ' + str(frame_number)
 
-    save_path = Path(image_output_path / f'{str(file_name)}.png')
-    image.save(save_path)
+    # save_path = Path(image_output_path / f'{str(file_name)}.png')
+    cv2.imwrite(str(Path(image_output_path / f'{str(file_name)}.png')), image)
 
     # Ensure every bit in payload is accounted for.
     assert frame_payload.len == frame_payload.bitpos

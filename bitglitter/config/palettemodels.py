@@ -37,6 +37,10 @@ class Palette(SqlBaseClass):
         UniqueConstraint('palette_id'),
     )
 
+    def __str__(self):
+        palette_type = 'Custom' if self.is_custom else 'Default'
+        return f'{palette_type} Palette - {self.name} - {self.number_of_colors} Colors'
+
     def _calculate_palette_math(self, color_set, save=True):
         """Runs during model creation and when color set is updated."""
 
@@ -106,6 +110,10 @@ class PaletteColor(SqlBaseClass):
     red_channel = Column(Integer, nullable=False)
     green_channel = Column(Integer, nullable=False)
     blue_channel = Column(Integer, nullable=False)
+
+    def __str__(self):
+        return f'Color for {self.palette.name} - ({self.red_channel}, {self.green_channel}, {self.blue_channel}) ' \
+               f'- {self.palette_sequence} seq'
 
     def return_rgb_tuple(self):
         return self.red_channel, self.green_channel, self.blue_channel

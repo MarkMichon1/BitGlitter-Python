@@ -8,14 +8,17 @@ class StreamFrame(SqlBaseClass):
     __tablename__ = 'stream_frames'
     __abstract__ = False
 
-    #note- sha256 not included as its only verification prior to addition
+    # note- sha256 not included as its only verification prior to addition
 
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead', back_populates='frames')
-    payload_bits = Column(Integer) #  Length of payload bits within this frame, tracked to ensure padding removed
+    payload_bits = Column(Integer)  # Length of payload bits within this frame, tracked to ensure padding removed
     frame_number = Column(Integer)
 
     is_scanned = Column(Boolean, default=False)
+
+    def __str__(self):
+        return f'Frame {self.frame_number}/{self.stream.number_of_frames} for {self.stream.stream_name}'
 
 
 class StreamFile(SqlBaseClass):
@@ -33,20 +36,25 @@ class StreamFile(SqlBaseClass):
     raw_file_size = Column(Integer)
     raw_file_hash = Column(String)
     processed_file_size = Column(Integer)
-    processed_file_hash = Column(String) # only if compression or crypto
+    processed_file_hash = Column(String)  # only if compression or crypto
+
+    def __str__(self):
+        return f'File {self.name} in {self.stream.stream_name}'
 
 
 class StreamDirectory(SqlBaseClass):
     __tablename__ = 'stream_directories'
     __abstract__ = False
 
-
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead', back_populates = 'directories')
+    stream = relationship('StreamRead', back_populates='directories')
     parent_directory_id = Column(Integer, ForeignKey('stream_directories.id'))
     parent_directory = relationship('StreamDirectory')
     name = Column(String)
     files = relationship('StreamFile', back_populates='parent_directory', cascade='all, delete', passive_deletes=True)
+
+    def __str__(self):
+        return f'Directory {self.name} in {self.stream.stream_name}'
 
     # def delete(self):
     #     super() todo- both for recursive
@@ -61,18 +69,27 @@ class StreamDataProgress(SqlBaseClass):
     __tablename__ = 'stream_data_progress'
     __abstract__ = False
 
+    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
+    stream = relationship('StreamRead', back_populates='progress')
+    bit_start_position = Column(Integer)
+    bit_end_position = Column(Integer)
+
+    def __str__(self):
+        return f'Progress slice for {self.stream.stream_name} - bit pos {self.bit_start_position}-' \
+               f'{self.bit_end_position}'
+
     @classmethod
     def create(cls, stream_sha256, stream_id, bit_start_position, bit_end_position, **kwargs):
         """Before an object is created, checking to see if an adjacent payload frame has already been read.  Rather than
         making a new object, the old instance will 'pool' the new edges together.
         """
-        previous_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id)\
+        previous_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id) \
             .filter(StreamDataProgress.bit_end_position == bit_start_position - 1).first()
         if previous_progress:
             previous_progress.bit_end_position = bit_end_position
             previous_progress.save()
 
-        next_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id)\
+        next_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id) \
             .filter(StreamDataProgress.bit_start_position == bit_end_position + 1).first()
         if next_progress:
             if previous_progress:
@@ -91,13 +108,6 @@ class StreamDataProgress(SqlBaseClass):
         kwargs['bit_start_position'] = bit_start_position
         kwargs['bit_end_position'] = bit_end_position
         super().create(**kwargs)
-
-
-
-    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead', back_populates='progress')
-    bit_start_position = Column(Integer)
-    bit_end_position = Column(Integer)
 
 
 SqlBaseClass.metadata.create_all(engine)

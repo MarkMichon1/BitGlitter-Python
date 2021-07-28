@@ -18,21 +18,22 @@ class StreamRead(SqlBaseClass):
     time_started = Column(Integer, default=time.time)
     bg_version = Column(String)
     protocol_version = Column(Integer)
-    stream_sha256 = Column(String, unique=True, nullable=False) #req
-    stream_is_video = Column(Boolean, nullable=False) #req
-    stream_palette = None #todo
-    stream_palette_id = None #todo
+    stream_sha256 = Column(String, unique=True, nullable=False)  # req
+    stream_is_video = Column(Boolean, nullable=False)  # req
+    stream_palette = None  # todo
+    stream_palette_id = None  # todo
     custom_palette_used = Column(Boolean)
     number_of_frames = Column(Integer)
     compression_enabled = Column(Boolean)
     encryption_enabled = Column(Boolean)
     file_mask_enabled = Column(Boolean)
-    manifest = Column(String) #temporary todo
+    manifest = Column(String)  # temporary todo
 
     # Read State
-    payload_offset_bits = Column(Integer) # todo revisit, may need more variables for tracking state
+    payload_offset_bits = Column(Integer)  # todo revisit, may need more variables for tracking state
     metadata_headers_ran = Column(Boolean)
     completed_frames = Column(Integer, default=0)
+    aborted = Column(Boolean, default=False)
 
     # Geometry
     pixel_width = Column(Integer)
@@ -57,6 +58,9 @@ class StreamRead(SqlBaseClass):
     files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True)
     progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
 
+    def __str__(self):
+        return f'{self.stream_name} - {self.stream_sha256}'
+
     def accept_frame(self, payload_bits, frame_number):
         pass
 
@@ -67,6 +71,8 @@ class StreamRead(SqlBaseClass):
     def _delete_stream(self):
         self.delete()
 
+
 # v This needs to be at bottom to resolve import/DB relationship issues.
 import bitglitter.config.readmodels.readmodels
+
 SqlBaseClass.metadata.create_all(engine)
