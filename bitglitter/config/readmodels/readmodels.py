@@ -31,6 +31,7 @@ class StreamFile(SqlBaseClass):
     payload_bit_end_position = Column(Integer)
     parent_directory_id = Column(Integer, ForeignKey('stream_directories.id'))
     parent_directory = relationship('StreamDirectory', back_populates='files')
+    is_processed = Column(Boolean, default=False)
 
     name = Column(String)
     raw_file_size = Column(Integer)

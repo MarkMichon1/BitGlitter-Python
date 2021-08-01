@@ -1,17 +1,16 @@
-from bitstring import ConstBitStream
-
 import ast
+from datetime import datetime
 import logging
-import zlib
 
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Constants
 from bitglitter.config.palettemodels import Palette
-
-# todo- normalize logging messages, should all be debug except initializer
+from read.inputdecode.headerutilities import crc_verify
+from bitglitter.utilities.compression import decompress_bytes
+from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
 
 #  When there is an integrity error in these functions, two tiers of errors can be returned:
-FRAME_FAILURE_RETURN = {'abort': True}  # Failures that invalidate the frame, but the stream can continue.
+FAILURE_RETURN = {'abort': True}  # Generic failure, can be a frame failing or an incorrect decryption key.
 STREAM_FAILURE_RETURN = {'abort': True, 'complete': True}  # The stream stops after these
 
 
@@ -29,15 +28,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
     logging.debug('initializer_header_decode running...')
     assert len(bit_stream.bin) == 580
 
-    #TODO TEMP:
-    bit_stream = ConstBitStream(bit_stream)
-
-    bit_stream.pos = 0
-    full_bit_stream_to_hash = bit_stream.read('bits : 548')
-    converted_to_bytes = full_bit_stream_to_hash.tobytes()
-    calculated_crc = zlib.crc32(converted_to_bytes)
-    read_crc = bit_stream.read('uint : 32')
-    if calculated_crc != read_crc:
+    if not crc_verify(bit_stream):
         logging.warning('Initializer checksum failure.  Aborting...')
         return STREAM_FAILURE_RETURN
 
@@ -96,93 +87,96 @@ def frame_header_decode(bit_stream):
     logging.debug('frame_header_decode running...')
     assert len(bit_stream.bin) == 352
 
-    full_bit_stream_to_hash = bit_stream.read('bytes : 72')
-    calculated_crc = zlib.crc32(full_bit_stream_to_hash)
-    read_crc = bit_stream.read('uint : 32')
-    if calculated_crc != read_crc:
-        logging.warning('Frame header checksum failure!  Aborting...')
-        return False, False, False, False
+    if not crc_verify(bit_stream):
+        logging.warning('Frame header checksum failure!  Aborting frame...')
+        return FAILURE_RETURN
 
     bit_stream.pos = 0
-    stream_sha = bit_stream.read('hex : 256')
-    frame_sha = bit_stream.read('hex : 256')
+    bits_to_read = bit_stream.read('uint : 32')
     frame_number = bit_stream.read('uint : 32')
-    blocks_to_read = bit_stream.read('uint : 32')
+    frame_sha256 = bit_stream.read('hex : 256')
 
-    logging.debug('read_frame_header successfully ran.')
-    return stream_sha, frame_sha, frame_number, blocks_to_read
+    logging.debug('frame_header_decode successfully ran.')
+
+    return {'frame_sha256': frame_sha256, 'frame_number': frame_number, 'bits_to_read': bits_to_read}
 
 
 def stream_header_decode(bit_stream):
     """This function takes the raw bit string taken from the frame(s) and extracts stream data from it."""
 
     logging.debug('stream_header_decode running...')
-    # TODO TEMP:
-    bit_stream = ConstBitStream(bit_stream)
     assert len(bit_stream.bin) == 685
 
+    if not crc_verify(bit_stream):
+        logging.warning('Stream header checksum failure!  Aborting...')
+        return STREAM_FAILURE_RETURN
+
+    bit_stream.pos = 0
     size_in_bytes = bit_stream.read('uint : 64')
     total_frames = bit_stream.read('uint : 32')
     compression_enabled = bit_stream.read('bool')
     encryption_enabled = bit_stream.read('bool')
     file_masking_enabled = bit_stream.read('bool')
-    is_custom_palette = bit_stream.read('bool')
-    date_created = bit_stream.read('uint : 34')
 
-    if not is_custom_palette:
-        stream_palette_id = str(bit_stream.read('uint : 256'))
+    metadata_header_length = bit_stream.read('uint : 32')
+    metadata_header_hash = bit_stream.read('hex : 256')
+    custom_palette_header_length = bit_stream.read('uint : 10')
+    custom_palette_header_hash = bit_stream.read('hex : 256')
 
-    else:
-        stream_palette_id = str(bit_stream.read('hex : 256'))
-
-    ascii_header_compressed_in_bytes = bit_stream.read('uint : 32')
-
-    return size_in_bytes, total_frames, compression_enabled, encryption_enabled, file_masking_enabled, \
-           is_custom_palette, date_created, stream_palette_id, ascii_header_compressed_in_bytes
+    return {'size_in_bytes': size_in_bytes, 'total_frames': total_frames, 'compression_enabled': compression_enabled,
+            'encryption_enabled': encryption_enabled, 'file_masking_enabled': file_masking_enabled,
+            'metadata_header_length': metadata_header_length, 'metadata_header_hash': metadata_header_hash,
+            'custom_palette_header_length': custom_palette_header_length, 'custom_palette_header_hash':
+                custom_palette_header_hash}
 
 
-def metadata_header_decode(bit_stream):
+def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encryption_enabled, scrypt_n=14, scrypt_r=8,
+                                    scrypt_p=1):
     logging.debug('metadata_header_decode running...')
 
-
-def custom_palette_header_decode(bit_stream):
-    logging.debug('custom_palette_header_decode running...')
-
-
-# todo....?
-def decode_text_header(bitstream, custom_color_enabled, encryption_enabled):
-    """This function encodes the raw bit string taken from the frame(s) back into ASCII, and returns the split
-    managers inside of it.
-    """
-
-    logging.debug('Reading stream header...')
-    custom_color_name = None
-    custom_color_description = None
-    custom_color_date_created = None
-    custom_color_palette = None
-    post_compression_sha = None
-
-    to_bytes = bitstream.tobytes()
-    logging.debug(f'ASCII header byte size inputted to read function: {int(len(bitstream) / 8)} B')
-    uncompressed_string = zlib.decompress(to_bytes).decode()
-    string_broken_into_parts = uncompressed_string.split('\\\\')[1:-1]
-    bg_version = string_broken_into_parts[0]
-    stream_name = string_broken_into_parts[1]
-    stream_description = string_broken_into_parts[2]
-    file_list = string_broken_into_parts[3]
-
-    index_bump = 0
-    if custom_color_enabled:
-        custom_color_name = string_broken_into_parts[4]
-        custom_color_description = string_broken_into_parts[5]
-        custom_color_date_created = string_broken_into_parts[6]
-        custom_color_palette = ast.literal_eval(string_broken_into_parts[7])
-        index_bump += 4
-
+    #  Attempt decryption if encryption enabled
+    decrypted_bytes = None
     if encryption_enabled:
-        post_compression_sha = string_broken_into_parts[4 + index_bump]
+        decrypted_bytes = decrypt_bytes(header_bytes, crypto_key, scrypt_n, scrypt_r, scrypt_p)
+        if not decrypted_bytes:  # Signalling there was a decryption failure
+            logging.warning('Provided decryption values (key, scrypt_n, scrypt_r, scrypt_p) invalid.  Cannot extract'
+                            ' files until correct parameters received.')
+            return FAILURE_RETURN
 
-    logging.debug('Stream header ASCII part successfully read.')
+    decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled else header_bytes)
 
-    return bg_version, stream_name, stream_description, file_list, custom_color_name, custom_color_description, \
-           custom_color_date_created, custom_color_palette, post_compression_sha
+    #  Integrity check
+    calculated_sha256 = get_sha256_hash_from_bytes(decompressed_bytes)
+    if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
+        logging.warning('Read Stream SHA-256 does not match calculated.  This should never (in theory) be seen'
+                        'from the other layers of integrity checks.  Aborting...')
+        return STREAM_FAILURE_RETURN
+
+    decoded = decompressed_bytes.decode()
+    bg_version, stream_name, stream_description, time_created, manifest_string = decoded.split('\\\\')
+    time_created = int(time_created)
+    time_datetime = datetime.fromtimestamp(time_created)
+    logging.info(f"Metadata successfully decoded:\nStream name: {stream_name}\nStream description: "
+                 f"{stream_description}\nTime created: {time_datetime.strftime('%b %d, %Y %I:%M:%S %p')}")
+    return {'bg_version': bg_version, 'stream_name': stream_name, 'stream_description': stream_description,
+            'time_created': time_created, 'manifest_string': manifest_string}
+
+
+def custom_palette_header_validate_decode(header_bytes, read_sha256):
+    logging.debug('custom_palette_header_decode running...')
+    decompressed_bytes = decompress_bytes(header_bytes)
+
+    #  Integrity check
+    calculated_sha256 = get_sha256_hash_from_bytes(decompressed_bytes)
+    if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
+        logging.warning('Read palette header SHA-256 does not match calculated.  This should never (in theory) be seen'
+                        ' from the other layers of integrity checks.  Aborting...')
+        return STREAM_FAILURE_RETURN
+    palette_id, palette_name, palette_description, time_created, number_of_colors, color_list = \
+        decompressed_bytes.decode().split('\\\\')
+    time_created = int(time_created)
+    number_of_colors = int(number_of_colors)
+    color_list = ast.literal_eval(color_list)
+
+    return {'palette_id': palette_id, 'palette_name': palette_name, 'palette_description': palette_description,
+            'time_created': time_created, 'number_of_colors': number_of_colors, 'color_list': color_list}

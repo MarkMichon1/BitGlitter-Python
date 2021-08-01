@@ -1,4 +1,5 @@
 import hashlib
+from io import BytesIO
 import os
 
 from cryptography.hazmat.primitives.ciphers import Cipher, modes
@@ -42,7 +43,7 @@ def encrypt_file(input_file, output_file, write_mode, encryption_key, scrypt_n=1
         os.remove(input_file)
 
 
-def encrypt_bytes(input_bytes, encryption_key, scrypt_n, scrypt_r, scrypt_p):
+def encrypt_bytes(input_bytes, encryption_key, scrypt_n=14, scrypt_r=8, scrypt_p=1):
     backend = default_backend()
     initialization_vector_aes = os.urandom(AES.block_size // 8)
     salt = os.urandom(AES.block_size // 8)
@@ -79,9 +80,26 @@ def decrypt_file(input_file, output_file, encryption_key, scrypt_n=14, scrypt_r=
         os.remove(input_file)
 
 
-def decrypt_bytes():
-    pass  # todo
-
+def decrypt_bytes(input_bytes, encryption_key, scrypt_n=14, scrypt_r=8, scrypt_p=1):
+    backend = default_backend()
+    returned_bytes = b''
+    with BytesIO(input_bytes) as encrypted:
+        initialization_vector = encrypted.read(AES.block_size // 8)
+        salt = encrypted.read(AES.block_size // 8)
+        key = _derive_key(encryption_key, salt, scrypt_n, scrypt_r, scrypt_p, backend)
+        chunk_size = 1048576
+        try:
+            while True:
+                chunk = encrypted.read(chunk_size)
+                if chunk:
+                    returned_bytes += (_decrypt_bytes_chunk(key, initialization_vector, chunk, backend,
+                                                         chunk_size=chunk_size))
+                else:
+                    break
+        #  Incorrect decryption values
+        except ValueError:
+            return None
+    return returned_bytes
 
 def _encrypt_bytes_chunk(key, initialization_vector, data, backend):
     """This is an internal function used in encrypt_file(), and for future functionality of this program.  It returns

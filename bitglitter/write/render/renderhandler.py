@@ -59,8 +59,8 @@ class RenderHandler:
                                                    output_mode)
 
         stream_header = stream_header_encode(size_in_bytes, self.frames_wrote, compression_enabled,
-                                             encryption_enabled, file_mask_enabled, metadata_header_bytes,
-                                             metadata_header_hash_bytes, palette_header_bytes,
+                                             encryption_enabled, file_mask_enabled, len(metadata_header_bytes),
+                                             metadata_header_hash_bytes, len(palette_header_bytes),
                                              palette_header_hash_bytes)
         logging.info('Pre-render complete.')
 

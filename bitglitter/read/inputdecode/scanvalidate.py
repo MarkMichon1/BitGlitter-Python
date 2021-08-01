@@ -5,7 +5,7 @@ from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
 from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.read.inputdecode.scan.scanutilities import color_snap, return_distance, scan_block
+from read.inputdecode.scanutilities import color_snap, return_distance, scan_block
 from bitglitter.utilities.palette import ColorsToBits
 
 

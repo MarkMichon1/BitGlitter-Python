@@ -15,7 +15,8 @@ class PreProcessor:
     processed such as stream size and hash, that will be added into the headers.
     """
 
-    def __init__(self, working_directory, input_path, crypto_key, compression_enabled, scrypt_n, scrypt_r, scrypt_p):
+    def __init__(self, working_directory, input_path, crypto_key, compression_enabled, scrypt_n, scrypt_r, scrypt_p,
+                 stream_name):
         self.datetime_started = int(time.time())
         self.active_folder = refresh_working_folder(working_directory)
         self.encryption_enabled = True if crypto_key else False
@@ -27,7 +28,7 @@ class PreProcessor:
                                          scrypt_p, compression_enabled)
         else:
             self.manifest = directory_crawler(input_path, working_directory, compression_enabled, crypto_key,
-                                              scrypt_n, scrypt_r, scrypt_p)
+                                              scrypt_n, scrypt_r, scrypt_p, stream_name=stream_name, recursive=False)
 
         self.processed_binary_path = working_directory / 'processed.bin'
         self.stream_sha256 = get_hash_from_file(self.processed_binary_path)

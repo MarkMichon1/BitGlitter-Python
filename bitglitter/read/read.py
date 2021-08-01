@@ -67,3 +67,5 @@ def read(file_path,
     # Save statistics if enabled.
     if save_statistics:
         _read_update(decode_handler.blocks_read, decode_handler.unique_frames_read, decode_handler.data_read)
+
+    # return stream sha256 string

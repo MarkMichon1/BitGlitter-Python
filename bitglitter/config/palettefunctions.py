@@ -77,25 +77,25 @@ def remove_all_custom_palette_nicknames():
     palettes themselves.
     """
 
-    palettes = session.query(Palette).filter(Palette.is_custom == True)
+    palettes = session.query(Palette).filter(Palette.is_custom)
     for palette in palettes:
         palette.nickname = None
         palette.save()
 
 
 def return_default_palettes():
-    returned_list = session.query(Palette).filter(Palette.is_custom == False)
+    returned_list = session.query(Palette).filter(Palette.is_custom)
     return returned_list
 
 
 def return_custom_palettes():
-    returned_list = session.query(Palette).filter(Palette.is_custom == True)
+    returned_list = session.query(Palette).filter(Palette.is_custom)
     return returned_list
 
 
 def remove_all_custom_palettes():
     """Removes all custom palettes from the database."""
-    session.query(Palette).filter(Palette.is_custom == True).delete()
+    session.query(Palette).filter(Palette.is_custom).delete()
 
 
 def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False):
@@ -111,7 +111,7 @@ def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_pale
         if include_default:
             palettes = session.query(Palette).all()
         else:
-            palettes = session.query(Palette).filter(Palette.is_custom == True)
+            palettes = session.query(Palette).filter(Palette.is_custom)
         for palette in palettes:
             render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, path)
 

@@ -86,18 +86,18 @@ def initializer_header_encode(block_height, block_width, protocol_version, strea
     return adding_bits
 
 
-def frame_header_encode(frame_payload_bits, frame_number):
+def frame_header_encode(frame_payload_bytes, unpadded_bit_length, frame_number):
     """This is ran on the top of every frame (after the initializer if used) to give important information specifically
-    for this frame, such as the area to scan, and the hash of the frame.
+    for this frame, such as how many bits to scan, frame number, and its SHA-256 hash.
     """
 
     adding_bits = BitArray()
-    adding_bits.append(BitArray(uint=len(frame_payload_bits), length=32))
+    adding_bits.append(BitArray(uint=unpadded_bit_length, length=32))
     adding_bits.append(BitArray(uint=frame_number, length=32))
-    byte_hash = get_sha256_hash_from_bytes(frame_payload_bits, byte_output=True)
+    byte_hash = get_sha256_hash_from_bytes(frame_payload_bytes, byte_output=True)
     adding_bits.append(BitArray(bytes=byte_hash, length=256))
 
-    full_bit_string_to_hash = adding_bits.bytes
+    full_bit_string_to_hash = adding_bits.tobytes()
     crc_output = zlib.crc32(full_bit_string_to_hash)
     adding_bits.append(BitArray(uint=crc_output, length=32))
     assert len(adding_bits.bin) == 352
@@ -107,8 +107,8 @@ def frame_header_encode(frame_payload_bits, frame_number):
 
 
 def stream_header_encode(size_in_bytes, total_frames, compression_enabled, encryption_enabled,
-                         file_mask_enabled, metadata_header, metadata_header_hash,
-                         custom_palette_header, custom_palette_header_hash):
+                         file_mask_enabled, metadata_header_length, metadata_header_hash,
+                         custom_palette_header_length, custom_palette_header_hash):
     """The stream header precedes the payload, and contains 2nd priority orientation data."""
 
     adding_bits = BitStream()
@@ -118,15 +118,15 @@ def stream_header_encode(size_in_bytes, total_frames, compression_enabled, encry
     adding_bits.append(BitArray([int(compression_enabled), int(encryption_enabled),
                                  int(file_mask_enabled)]))
 
-    adding_bits.append(BitArray(uint=len(metadata_header), length=32))
+    adding_bits.append(BitArray(uint=metadata_header_length, length=32))
     adding_bits.append(BitArray(bytes=metadata_header_hash, length=256))
 
-    adding_bits.append(BitArray(uint=len(custom_palette_header), length=10))
+    adding_bits.append(BitArray(uint=custom_palette_header_length, length=10))
     if custom_palette_header_hash:
         adding_bits.append(BitArray(bytes=custom_palette_header_hash, length=256))
     else:
-        adding_bits.append(BitArray(bytes=bytearray(256), length=256))
-    to_bytes = bytes(adding_bits)
+        adding_bits.append(BitArray(bytes=bytearray(32), length=256))
+    to_bytes = adding_bits.tobytes()
     crc_output = zlib.crc32(to_bytes)
     adding_bits.append(BitArray(uint=crc_output, length=32))
 
@@ -162,17 +162,13 @@ def metadata_header_encode(file_mask_enabled, crypto_key, scrypt_n, scrypt_r, sc
 def custom_palette_header_encode(palette):
     """This header is ran after the stream setup header whenever a custom palette is used for the stream."""
 
-    adding_bits = BitStream()
+    # adding_bits = BitStream()
     text_string_to_bytes = bytes('\\\\'.join([palette.palette_id, palette.name, palette.description,
-                                              str(palette.time_created), palette.number_of_colors]), 'utf-8')
-    adding_bits.append(BitArray(text_string_to_bytes))
-    for color in palette.convert_colors_to_tuple():
-        for rgb_color_channel in color:
-            adding_bits.append(BitArray(uint=rgb_color_channel, length=8))
-    to_bytes = bytes(adding_bits)
-    raw_header_hash_bytes = get_sha256_hash_from_bytes(to_bytes, byte_output=True)
+                                              str(palette.time_created), str(palette.number_of_colors),
+                                              str(palette.convert_colors_to_tuple())]), 'utf-8')
 
-    compressed_header_bytes = compress_bytes(to_bytes)
+    raw_header_hash_bytes = get_sha256_hash_from_bytes(text_string_to_bytes, byte_output=True)
+    compressed_header_bytes = compress_bytes(text_string_to_bytes)
 
     logging.debug('Palette initialization header generated.')
     return compressed_header_bytes, raw_header_hash_bytes

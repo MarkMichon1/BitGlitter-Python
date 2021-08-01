@@ -117,7 +117,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             padding_bits = BitStream(bin=f"{'0' * remainder_bits}")
             frame_hashable_bits.append(padding_bits)
 
-        frame_header_holder = frame_header_encode(frame_hashable_bits.tobytes(), frame_number)
+        frame_header_holder = frame_header_encode(frame_hashable_bits.tobytes(), frame_hashable_bits.len, frame_number)
         merged_pieces = initializer_bits + frame_header_holder + setup_headers_bits + payload_bits + padding_bits
         frame_payload = ConstBitStream(merged_pieces)
 
