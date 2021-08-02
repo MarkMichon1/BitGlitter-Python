@@ -3,7 +3,7 @@ load_default_db_data()
 
 # CORE USES
 from bitglitter.write.write import write
-# from bitglitter.read.read import read
+from bitglitter.read.read import read
 
 # GENERAL CONFIGURATION
 from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session

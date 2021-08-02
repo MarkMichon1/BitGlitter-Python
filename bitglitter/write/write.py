@@ -2,7 +2,7 @@ from pathlib import Path
 
 from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _write_update
-from bitglitter.config.configmodels import Config, Constants
+from bitglitter.config.configmodels import Config, Constants, CurrentJobState
 from bitglitter.config.presetfunctions import return_preset
 from bitglitter.utilities.filemanipulation import remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
@@ -104,6 +104,7 @@ def write(
 
     # Removing temporary files
     remove_working_folder(working_dir)
+    CurrentJobState.end_task()
 
     if save_statistics:
         _write_update(render_handler.blocks_wrote, render_handler.frames_wrote, pre_processor.size_in_bytes)

@@ -1,35 +1,41 @@
-# class FrameProcessor:
-#     '''FrameHandler object is what traverses the actual frame, and returns bit data.  It's designed as an easy to use
-#     API, hiding much of the moving parts behind the scenes of a frame scan.
-#     '''
-#
-#     def __init__(self, initializer_palette, initializer_palette_dict, final_pass=False):
-#
-#         # Setup
-#         self.image = None
-#         self.block_height = None
-#         self.block_width = None
-#         self.pixel_width = None
-#
-#         # Palette Variables
-#         self.initializer_palette = initializer_palette
-#         self.initializer_palette_dict = initializer_palette_dict
-#         self.header_palette = None
-#         self.header_palette_dict = None
-#         self.stream_palette = None
-#         self.stream_palette_dict = None
-#         self.primary_palette = None
-#         self.primary_palette_dict = None
-#
-#         # Dictionaries
-#         self.palette_dict = {'initializer_palette': self.initializer_palette,
-#                             'primary_palette': self.primary_palette,
-#                             'header_palette': self.header_palette,
-#                             'stream_palette': self.stream_palette}
-#         self.palette_conversion_dict = {'initializer_palette' : self.initializer_palette_dict,
-#                                       'primary_palette': self.primary_palette_dict,
-#                                       'header_palette' : self.header_palette_dict,
-#                                       'stream_palette' : self.stream_palette_dict}
+from bitstring import BitString
+
+class ScanHandler:
+    """This performs the low level scanning of the frame, and returns the raw bit/byte data for further validating and
+    processing.
+    """
+
+    def __init__(self, frame, initializer_palette_dict):
+        #  Core
+        self.frame = frame
+        self.block_height = None
+        self.block_width = None
+        self.pixel_width = None
+
+        #  Palette
+        self.initializer_palette_dict = None
+        self.stream_palette_dict = None
+        self.initializer_palette_bit_length = 1
+        self.stream_palette_bit_length = None
+
+        #  Scan state
+        self.payload_bits_this_frame = 0
+
+        self.bit_buffer = BitString()
+
+        #  Setup
+        if 'a':
+            pass
+
+    def return_initializer_bits(self):
+        pass
+
+    def return_frame_header_bytes(self):
+        pass
+
+    def return_payload_bits(self):
+        pass
+
 #
 #         # Scan State
 #         self.is_first_frame = True

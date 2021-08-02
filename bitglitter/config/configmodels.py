@@ -3,7 +3,7 @@ from sqlalchemy import Boolean, Column, Integer, String
 from multiprocessing import cpu_count
 from pathlib import Path
 
-from bitglitter.config.config import engine, SqlBaseClass
+from bitglitter.config.config import engine, session, SqlBaseClass
 
 
 class Config(SqlBaseClass):
@@ -29,7 +29,7 @@ class Constants(SqlBaseClass):
     WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
     DEFAULT_OUTPUT_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'),
                                  nullable=False)
-    DEFAULT_PARTIAL_SAVE_DATA_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent /
+    DEFAULT_TEMP_SAVE_DATA_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent /
                                                                 'Partial Stream Data'), nullable=False)
     VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
     VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)
@@ -80,6 +80,43 @@ class Statistics(SqlBaseClass):
         self.frames_read = 0
         self.data_read = 0
         self.save()
+
+
+class CurrentJobState(SqlBaseClass):
+    """Lightweight singleton object that is queried for every frame read or written when ran with Electron app, to
+    indicate if the current job has been cancelled.  This runs at the beginning of each frame.
+    """
+
+    __abstract__ = False
+    __tablename__ = 'current_job_state'
+
+    active_stream_sha256 = Column(String)
+    is_cancelled = Column(Boolean, default=False)
+
+    @classmethod
+    def new_task(cls, stream_sha256):
+        singleton = session.query(CurrentJobState).first()
+        singleton.is_cancelled = False
+        singleton.active_stream_sha256 = stream_sha256
+        singleton.save()
+
+    @classmethod
+    def check_state(cls):
+        singleton = session.query(CurrentJobState).first()
+        return singleton.active_stream_sha256, singleton.is_cancelled
+
+    @classmethod
+    def cancel(cls):
+        singleton = session.query(CurrentJobState).first()
+        singleton.is_cancelled = True
+        singleton.save()
+
+    @classmethod
+    def end_task(cls):
+        singleton = session.query(CurrentJobState).first()
+        singleton.active_stream_sha256 = None
+        singleton.is_cancelled = False
+        singleton.save()
 
 
 SqlBaseClass.metadata.create_all(engine)

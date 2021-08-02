@@ -1,6 +1,7 @@
 import logging
 from multiprocessing import cpu_count, Pool
 
+from bitglitter.config.configmodels import CurrentJobState
 from bitglitter.config.palettefunctions import _return_palette
 from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.render.headerencode import metadata_header_encode, custom_palette_header_encode, \
@@ -102,3 +103,4 @@ class RenderHandler:
 
         # Wrap-up
         self.blocks_wrote = (block_width * block_height) * self.frames_wrote + block_position
+        CurrentJobState.end_task()

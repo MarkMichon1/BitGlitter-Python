@@ -1,56 +1,104 @@
-from read.inputdecode.scanvalidate import frame_lock_on, minimum_block_checkpoint
-from read.inputdecode.scanhandler import ScanHandler
+import logging
 
-def frame_process(frame, mode, frame_number, block_height_override=None, block_width_override=None, stream_sha=None,
-                  stream_palette=None, block_width=None, block_height=None,
-                  pixel_width=None, meta_mode=False, meta_length=None, meta_consumed=0): # meta_length
-    """Processes frames to extract the data in a wide variety of ways, depending on context."""
-    # var instantiation
+from bitglitter.config.readmodels.streamread import StreamRead
+from bitglitter.read.inputdecode.headerdecode import custom_palette_header_validate_decode, frame_header_decode, \
+    initializer_header_decode, metadata_header_validate_decode, stream_header_decode
+from bitglitter.read.inputdecode.scanvalidate import frame_lock_on, minimum_block_checkpoint
+from bitglitter.read.inputdecode.scanhandler import ScanHandler
 
-    # Setting ScanHandler state
-    if mode == 'image' or frame_number == 1:
-        scan_handler = ScanHandler(frame, is_calibrator_frame=True)
+def frame_process(dict_object):
+    """This is ran each time an individual frame is processed, orchestrating scanning, decoding, validation, and finally
+    passing the data to StreamRead for saving and file extraction.  Multiprocessing supports only passing one argument,
+    hence all arguments being packaged inside dict_object.
+    """
+
+    #  Unpackaging variables from dict_object, these are consistent across conditions this function is used
+    frame = dict_object['frame']
+    mode = dict_object['mode']
+    output_path = dict_object['output_path']
+    block_height_override = dict_object['block_height_override']
+    block_width_override = dict_object['block_width_override']
+    encryption_key = dict_object['encryption_key']
+    scrypt_n = dict_object['scrypt_n']
+    scrypt_r = dict_object['scrypt_r']
+    scrypt_p = dict_object['scrypt_p']
+    temp_save_path = dict_object['temp_save_path']
+    live_payload_unpackaging = dict_object['live_payload_unpackaging']
+
+    if mode == 'video':
+        current_frame_position = dict_object['current_frame_position']
+        total_video_frames = dict_object['total_video_frames']
+        logging.info(f'Scanning frame {current_frame_position}/{total_video_frames}') #todo- put outside if out of order w/ mp, add %
+
+        if current_frame_position != 1:
+            pass  # standard sequence
+
+        else:  #  First frame
+            pass
+
+        if 'in' in 'asd':
+            pass
+            #  Multiprocessing setup
+            i = 0
+
+    elif mode == 'image':
+        pass
+
     else:
-        scan_handler = ScanHandler(frame, is_calibrator_frame=False)
-    if block_height and block_width and pixel_width:
-        scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
-
-    frame_pixel_height, frame_pixel_width, unused = frame.shape
-
-    def first_frame_setup():
-        """This is a series of tasks that must be done for the first frames of video and image frames.  The frame is
-        locked onto, and the frame's initializer is validated and loaded.
-        """
-        checkpoint_passed = minimum_block_checkpoint(block_height_override, block_width_override,
-                                                                  frame_pixel_width, frame_pixel_height)
-        if not checkpoint_passed:
-            return False
-
-        block_height, block_width, pixel_width = frame_lock_on(frame, block_height_override, block_width_override,
-                                                               frame_pixel_width, frame_pixel_height)
-        if not pixel_width:
-            return False
-
-        scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
+        raise ValueError('Invalid mode for frame_process()')
 
 
 
-    if mode == 'image':
-        pass #todo last
-        """
-        first frame setup
-        image frame setup
-        frame validation
-        payload process
-        """
-    elif mode == 'video':
-        if frame_number == 1:
-            pass
-        else:
-            pass
+    # # Setting ScanHandler state #todo- load from generator or not
+    # if mode == 'image' or frame_number == 1:
+    #     scan_handler = ScanHandler(frame, is_calibrator_frame=True)
+    # else:
+    #     scan_handler = ScanHandler(frame, is_calibrator_frame=False)
+    # if block_height and block_width and pixel_width:
+    #     scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
 
-        def test():
-            pass
+    frame_pixel_height = frame.shape[0]
+    frame_pixel_width = frame.shape[1]
+
+    if live_payload_unpackaging:
+        pass  # call streamread and check progress
+
+    # todo- return state data, failures, and carry over bits
+
+    # def first_frame_setup():
+    #     """This is a series of tasks that must be done for the first frames of video and image frames.  The frame is
+    #     locked onto, and the frame's initializer is validated and loaded.
+    #     """
+    #     checkpoint_passed = minimum_block_checkpoint(block_height_override, block_width_override,
+    #                                                               frame_pixel_width, frame_pixel_height)
+    #     if not checkpoint_passed:
+    #         return False
+    #
+    #     block_height, block_width, pixel_width = frame_lock_on(frame, block_height_override, block_width_override,
+    #                                                            frame_pixel_width, frame_pixel_height)
+    #     if not pixel_width:
+    #         return False
+    #
+    #     scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
+
+
+
+    # if mode == 'image':
+    #     pass #todo last
+    #     """
+    #     first frame setup
+    #     image frame setup
+    #     frame validation
+    #     payload process
+    #     """
+    # elif mode == 'video':
+    #     if frame_number == 1:
+    #         pass
+    #     else:
+    #         pass
+    #
+    #     def test():
+    #         pass
 
 
     # validate overrides- stream palette AND geometry
@@ -330,7 +378,7 @@ def frame_process(frame, mode, frame_number, block_height_override=None, block_w
 #         self.frame_handler.update_dictionaries('primary_palette', self.primary_palette_dict, self.primary_palette)
 #
 #
-#     def _video_first_frame_setup(self):
+#     def _video_first_frame_setup():
 #         '''This method is ran on the first frame of the decoded video, to load in the header palette.  To prevent a
 #         duplicate explanation, please see _imagePaletteSetup directly above.
 #         '''

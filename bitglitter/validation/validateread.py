@@ -2,8 +2,8 @@ import logging
 import os
 from pathlib import Path
 
-from bitglitter.config.del_pending_palettes import palette_manager
-from bitglitter.config.config import Constants, session
+from bitglitter.config.config import session
+from bitglitter.config.configmodels import Constants
 from bitglitter.validation.utilities import is_valid_directory, is_int_over_zero, proper_string_syntax, \
     is_bool
 

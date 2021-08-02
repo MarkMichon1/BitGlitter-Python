@@ -2,9 +2,9 @@
 
 # BitGlitter-Python [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
-**(7/18/21) v2.0 Overhaul in progress!**
+**(8/1/21) v2.0 Overhaul in progress!**
 
-In this staging branch, work is currently being done to move BitGlitter to v2.0 from v1.0.3.  Major components are being overhauled and optimized.  Plus, BitGlitter is being prepared to integrate into the future Electronjs desktop app.  The previous stable version 1.0.3 is still available via `pip` as well as the master branch.
+In this staging branch, work is currently being done to move BitGlitter to v2.0 from v1.0.3.  Major components are being overhauled and optimized, and many many new features are being added.  Plus, BitGlitter is being prepared to integrate into the future Electronjs desktop app.  The previous stable version 1.0.3 is still available via `pip` as well as the master branch.
 
 **[Discord Server](https://discord.gg/t9uv2pZ)**
 

@@ -30,7 +30,9 @@ class StreamRead(SqlBaseClass):
     manifest = Column(String)  # temporary todo
 
     # Read State
-    payload_offset_bits = Column(Integer)  # todo revisit, may need more variables for tracking state
+    payload_start_frame = Column(Integer)
+    payload_first_frame_bits = Column(Integer)
+    payload_bits_per_standard_frame = Column(Integer)
     metadata_headers_ran = Column(Boolean)
     completed_frames = Column(Integer, default=0)
     aborted = Column(Boolean, default=False)
@@ -60,6 +62,12 @@ class StreamRead(SqlBaseClass):
 
     def __str__(self):
         return f'{self.stream_name} - {self.stream_sha256}'
+
+    def manifest_load(self):
+        pass
+
+    def geometry_load(self):
+        pass
 
     def accept_frame(self, payload_bits, frame_number):
         pass
