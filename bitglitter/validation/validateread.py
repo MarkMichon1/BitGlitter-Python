@@ -9,8 +9,8 @@ from bitglitter.validation.utilities import is_valid_directory, is_int_over_zero
 
 
 def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
-                           block_height_override, block_width_override, max_cpu_cores, stream_palette_id_override,
-                           save_statistics):
+                           block_height_override, block_width_override, max_cpu_cores, save_statistics,
+                           live_payload_unpackaging, bad_frame_strikes):
     """This function verifies the arguments going into read() to ensure they comform with the required format for
     processing.
     """
@@ -41,9 +41,11 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
 
     proper_string_syntax('encryption_key', encryption_key)
 
-    is_int_over_zero('scryptOverrideN', scrypt_n)
-    is_int_over_zero('scryptOverrideR', scrypt_r)
-    is_int_over_zero('scryptOverrideP', scrypt_p)
+    is_int_over_zero('bad_frame_strikes', bad_frame_strikes)
+
+    is_int_over_zero('scrypt_n', scrypt_n)
+    is_int_over_zero('scrypt_r', scrypt_r)
+    is_int_over_zero('scrypt_p', scrypt_p)
 
     is_int_over_zero('block_height_override', block_height_override)
     is_int_over_zero('block_width_override', block_width_override)
@@ -51,10 +53,7 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
     if not isinstance(max_cpu_cores, int) or max_cpu_cores < 0:
         raise ValueError('max_cpu_cores must be an integer greater than or equal to 0.')
 
-    if stream_palette_id_override:
-        palette_manager.does_palette_exist(stream_palette_id_override)
-
     is_bool('save_statistics', save_statistics)
-
+    is_bool('live_payload_unpackaging', live_payload_unpackaging)
     logging.info("Read parameters validated.")
     return input_type

@@ -1,59 +1,99 @@
-from bitstring import BitString
+import logging
+
+from bitstring import BitStream, ConstBitStream
+
+from bitglitter.read.inputdecode.scanutilities import color_snap, scan_block
 
 class ScanHandler:
     """This performs the low level scanning of the frame, and returns the raw bit/byte data for further validating and
     processing.
     """
 
-    def __init__(self, frame, initializer_palette_dict):
+    def __init__(self, frame, has_initializer, initializer_palette, initializer_palette_dict, initializer_color_set,
+                 block_height=None, block_width=None, pixel_width=None, stream_palette=None, stream_palette_dict=None,
+                 stream_palette_color_set=None):
         #  Core
         self.frame = frame
-        self.block_height = None
-        self.block_width = None
-        self.pixel_width = None
+        self.has_initializer = has_initializer
+        self.block_height = block_height
+        self.block_width = block_width
+        self.pixel_width = pixel_width
 
         #  Palette
-        self.initializer_palette_dict = None
-        self.stream_palette_dict = None
-        self.initializer_palette_bit_length = 1
-        self.stream_palette_bit_length = None
+        self.initializer_palette = initializer_palette
+        self.initializer_palette_dict = initializer_palette_dict
+        self.initializer_color_set = initializer_color_set
+
+        self.stream_palette = stream_palette
+        self.stream_palette_dict = stream_palette_dict
+        self.stream_palette_color_set = stream_palette_color_set
 
         #  Scan state
+        self.next_block = None
+        self.block_position = 0
+        self.SCANNABLE_BLOCKS = 0
         self.payload_bits_this_frame = 0
+        self.leftover_bits = BitStream()
 
-        self.bit_buffer = BitString()
+        #  Additional setup if we have more starting data
+        if self.block_height and self.block_width and self.pixel_width:
+            self.next_block = self._setup_frame_grid()
 
-        #  Setup
-        if 'a':
-            pass
+    def _setup_frame_grid(self):
+        """Creates a generator that outputs the correct block coordinates for scan_block to utilize.  This depends on
+         whether an initializer is used in this frame or not.
+        """
+        x_range = self.block_width - int(self.has_initializer)
+        y_range = self.block_height - int(self.has_initializer)
+        self.SCANNABLE_BLOCKS = x_range * y_range
+
+        for y_block in range(y_range):
+            for x_block in range(x_range):
+                yield x_block + int(self.has_initializer), y_block + int(self.has_initializer)
+
+    def _return_bits(self, number_of_bits, is_initializer_palette):
+        if is_initializer_palette:
+            active_color_set = self.initializer_color_set
+            active_color_dict = self.initializer_palette_dict
+        else:
+            active_color_set = self.stream_palette_color_set
+            active_color_dict = self.stream_palette_dict
+
+        bits = BitStream()
+
+        for block in range(number):
+            block_coordinates = next(self.next_block)
+            average_rgb = scan_block(self.frame, self.pixel_width, block_coordinates[0], block_coordinates[1])
+
+            if active_color_set: #  Non-24 bit palette
+                bits.append(active_color_dict.get_value(color_snap(average_rgb, active_color_set)))
+            else: #  24 bit palette
+                bits.append(active_color_dict.get_value(average_rgb))
+        self.block_position += number
+
+        return {'blocks_read': number, 'bits': ConstBitStream(bits)}
+
+
+    def set_scan_geometry(self, block_height, block_width, pixel_width):
+        self.block_height = block_height
+        self.block_width = block_width
+        self.pixel_width = pixel_width
+        self.next_block = self._setup_frame_grid()
 
     def return_initializer_bits(self):
-        pass
+        """returns the initializer bitstring for the frame."""
+
+        results = self._blocks_to_bits(580, True)
+        assert len(results['bits']) == 580
+        return results
 
     def return_frame_header_bytes(self):
-        pass
+        pass #352
 
     def return_payload_bits(self):
         pass
 
-#
-#         # Scan State
-#         self.is_first_frame = True
-#         self.non_calibrator_blocks = 0
-#         self.next_block = 0
-#         self.block_position = 0
-#
-#
-#     def _setup_frame_grid(self, has_initializer):
-#         '''Ran on initialization, this creates a generator that outputs the correct block coordinates for scan_block
-#         to utilize.  This depends on whether an initializer is used in this frame or not.
-#         '''
-#
-#         for y_block in range(self.block_height - int(has_initializer)):
-#             for x_block in range(self.block_width - int(has_initializer)):
-#                 yield x_block + int(has_initializer), y_block + int(has_initializer)
-#
-#
+
 #     def _blocks_to_bits(self, how_many, palette_type):
 #         '''This is an internal method that, based on how many blocks it was told to scan as well as the palette type
 #         used, will scan that amount on the image and return those converted bits.

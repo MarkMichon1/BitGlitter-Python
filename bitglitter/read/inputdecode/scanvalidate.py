@@ -1,16 +1,15 @@
-import hashlib
-import logging
-
 from bitstring import BitArray, ConstBitStream
 from numpy import flip
 
+import hashlib
+import logging
 
 from read.inputdecode.scanutilities import color_snap, return_distance, scan_block
 from bitglitter.utilities.palette import ColorsToBits
 
 
-def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_width,
-                             active_frame_size_height):
+def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_height,
+                             active_frame_size_width):
     """If block_height_override and block_width_override have been entered, this checks those values against the height
     and width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that
     is finest detail you can have with an image), any values beyond that are invalid, and stopped here.
@@ -26,65 +25,63 @@ def minimum_block_checkpoint(block_height_override, block_width_override, active
     return True
 
 
-def frame_lock_on(image, block_height_override, block_width_override, frame_width, frame_height):
+def frame_lock_on(frame, block_height_override, block_width_override, frame_pixel_height, frame_pixel_width,
+                  initializer_palette_a_color_set, initializer_palette_b_color_set, initializer_palette_a_dict,
+                  initializer_palette_b_dict):
     """This function is used to lock onto the frame.  If override values are present, these will be used.  Otherwise,
     it will attempt to extract the correct values from the X and Y calibrator on the initial frame."""
 
-    logging.debug('Locking onto frame...')
-    initializer_palette_a = palette_manager.return_selected_palette('1')
-    initializer_palette_b = palette_manager.return_selected_palette('11')
-    initializer_palette_a_dict = ColorsToBits(initializer_palette_a)
-    initializer_palette_b_dict = ColorsToBits(initializer_palette_b)
-    combined_colors = initializer_palette_a.color_set + initializer_palette_b.color_set
+    logging.debug('Calibrator lock on...')
+    combined_colors = initializer_palette_a_color_set + initializer_palette_b_color_set
 
     if block_height_override and block_width_override:  # Jump straight to validation
         logging.info("block_height_override and block_width_override parameters detected.  Attempting to lock with "
                      "these values...")
-        pixel_width = ((frame_width / block_width_override) + (frame_height / block_height_override)) / 2
+        pixel_width = ((frame_pixel_width / block_width_override) + (frame_pixel_height / block_height_override)) / 2
 
-        checkpoint = verify_blocks_x(image, pixel_width, block_width_override, combined_colors,
+        checkpoint = verify_blocks_x(frame, pixel_width, block_width_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if not checkpoint:
-            return False, False, False
+            return {'abort': True}
 
-        checkpoint = verify_blocks_y(image, pixel_width, block_height_override, combined_colors,
+        checkpoint = verify_blocks_y(frame, pixel_width, block_height_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if not checkpoint:
-            return False, False, False
+            return {'abort': True}
 
         block_width, block_height = block_width_override, block_height_override
 
     else:
         # First checkpoint.  Does pixel 0,0 have color_distance value of under 100 for black (0,0,0)?
-        if return_distance(image[0, 0], (0, 0, 0)) > 100:
+        if return_distance(frame[0, 0], (0, 0, 0)) > 100:
             logging.warning('Frame lock fail!  Initial pixel value exceeds maximum color distance allowed for a '
                             'reliable lock.')
-            return False, False, False
+            return {'abort': True}
 
-        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b,
+        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
                                                          combined_colors, initializer_palette_a_dict,
-                                                         initializer_palette_b_dict, frame_width, frame_height,
+                                                         initializer_palette_b_dict, frame_pixel_width, frame_pixel_height,
                                                          width=True)
-        checkpoint = verify_blocks_x(image, pixel_width, block_dimension_guess, combined_colors,
+        checkpoint = verify_blocks_x(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
         if not checkpoint:
-            return False, False, False
+            return {'abort': True}
 
         block_width = block_dimension_guess
-        pixel_width, block_dimension_guess = pixel_creep(image, initializer_palette_a, initializer_palette_b,
+        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
                                                          combined_colors, initializer_palette_a_dict,
-                                                         initializer_palette_b_dict, frame_width, frame_height,
+                                                         initializer_palette_b_dict, frame_pixel_width, frame_pixel_height,
                                                          width=False)
-        checkpoint = verify_blocks_y(image, pixel_width, block_dimension_guess, combined_colors,
+        checkpoint = verify_blocks_y(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
 
         if not checkpoint:
-            return False, False, False
+            return {'abort': True}
         block_height = block_dimension_guess
 
     logging.debug(f'Lockon successful.\npixel_width: {pixel_width}\nblock_height: {block_height}\nblock_width: '
                   f'{block_width}')
-    return block_height, block_width, pixel_width
+    return {'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width}
 
 
 def verify_blocks_x(image, pixel_width, block_width_estimate, combined_colors, initializer_palette_a_dict,
@@ -167,8 +164,8 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
     return True
 
 
-def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_colors, initializer_palette_a_dict,
-                initializer_palette_b_dict, image_width, image_height, width):
+def pixel_creep(image, initializer_palette_a_color_set, initializer_palette_b_color_set, combined_colors,
+                initializer_palette_a_dict, initializer_palette_b_dict, image_width, image_height, width):
     """This function moves across the calibrator on the top and left of the frame one pixel at a time, and after
     'snapping' the colors, decodes an unsigned integer from each axis, which if read correctly, is the block width and
     block height of the frame.
@@ -206,10 +203,10 @@ def pixel_creep(image, initializer_palette_a, initializer_palette_b, combined_co
 
             else:  # We are determining if we are within < 100 dist of a new color, or are in fuzzy space.
                 if not palette_a_is_active:
-                    active_palette = initializer_palette_b.color_set
+                    active_palette = initializer_palette_b_color_set
 
                 else:
-                    active_palette = initializer_palette_a.color_set
+                    active_palette = initializer_palette_a_color_set
 
                 for color in active_palette:
                     active_distance = return_distance(active_scan, color)

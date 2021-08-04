@@ -18,7 +18,6 @@ def read(file_path,
          # Overrides
          block_height_override=False,
          block_width_override=False,
-         stream_palette_id_override=False,
 
          # Crypto Input
          encryption_key=None,
@@ -51,8 +50,8 @@ def read(file_path,
 
     # Are all parameters acceptable?
     input_type = verify_read_parameters(file_path, output_directory, encryption_key, scrypt_n, scrypt_r, scrypt_p,
-                                        block_height_override, block_width_override, max_cpu_cores,
-                                        stream_palette_id_override, save_statistics)
+                                        block_height_override, block_width_override, max_cpu_cores, save_statistics,
+                                        live_payload_unpackaging, bad_frame_strikes)
 
     # Pull valid frame data from the inputted file.
     returned = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,

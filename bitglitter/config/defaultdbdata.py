@@ -20,7 +20,8 @@ def load_default_db_data():
             'nickname': '1',
             'name': '1 Bit Default',
             'description': 'Two colors, black and white.  While it has the lowest density of one bit of data per pixel,'
-                           ' it has the highest reliability.',
+                           ' it has the highest reliability.  This palette is used in all initial headers, displaying'
+                           ' core stream metadata.',
             'color_set': ((0, 0, 0), (255, 255, 255)),
             'is_24_bit': False,
             'is_custom': False
@@ -29,7 +30,9 @@ def load_default_db_data():
             'palette_id': '11',
             'nickname': '11',
             'name': '1 Bit Default Alternate',
-            'description': 'Alternate version.  Uses cyan/magenta instead of white/black.',
+            'description': 'Alternate version.  Uses cyan/magenta instead of white/black.  This palette is used in the'
+                           ' vertical and horizontal calibration blocks seen in all image frames, and the first frame'
+                           ' of videos.',
             'color_set': ((255, 0, 255), (0, 255, 255)),
             'is_24_bit': False,
             'is_custom': False

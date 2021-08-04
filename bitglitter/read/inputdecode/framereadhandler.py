@@ -20,14 +20,20 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
     logging.info(f'Processing {input_path}...')
 
     #  Generic setup
+    initializer_palette_a = Palette.query.filter(Palette.nickname == '1').first()
+    initializer_palette_b = Palette.query.filter(Palette.nickname == '11').first()
+    initializer_palette_a_color_set = initializer_palette_a.convert_colors_to_tuple()
+    initializer_palette_b_color_set = initializer_palette_b.convert_colors_to_tuple()
+    initializer_palette_a_dict = initializer_palette_a.return_decoder()
+    initializer_palette_b_dict = initializer_palette_b.return_decoder()
     dict_object = {'output_path': output_path, 'block_height_override': block_height_override, 'block_width_override':
                    block_width_override, 'encryption_key': encryption_key, 'scrypt_n': scrypt_n, 'scrypt_r': scrypt_r,
-                   'scrypt_p': scrypt_p, 'temp_save_path': temp_save_path}
-    initializer_palette_a = Palette.query.filter(Palette.nickname == '1')
-    initializer_palette_b = Palette.query.filter(Palette.nickname == '11')
-    initializer_palette_a_dict = initializer_palette_a
-    initializer_palette_b_dict = initializer_palette_b
-
+                   'scrypt_p': scrypt_p, 'temp_save_path': temp_save_path, 'live_payload_unpackaging':
+                   live_payload_unpackaging, 'initializer_palette_a': initializer_palette_a,
+                   'initializer_palette_a_color_set': initializer_palette_a_color_set,
+                   'initializer_palette_b_color_set': initializer_palette_b_color_set,'initializer_palette_b':
+                   initializer_palette_b, 'initializer_palette_a_dict': initializer_palette_a_dict,
+                   'initializer_palette_b_dict': initializer_palette_b_dict}
 
     if input_type == 'video':
 
@@ -47,12 +53,17 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
             dict_object['total_video_frames'] = next_frame_data['total_video_frames']
 
             frame_results = frame_process(dict_object)
+            if 'abort' in frame_results: #  Errors in these frames are always total aborts, as they have key stream data
+                logging.warning('Critical error, cannot continue.')
+                return {'abort': True}
             if 'strike' and bad_frame_strikes:  # placeholder todo
                 frame_strike_count += 1
                 logging.warning(f'Bad frame strike {frame_strike_count}/{bad_frame_strikes}')
                 if frame_strike_count >= bad_frame_strikes:
                     logging.warning('Reached frame strike limit.  Aborting...')
                     return {'abort': True}
+
+            #stats add
 
             #  frame_results processing
 
@@ -64,15 +75,15 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
             pool_size = max_cpu_cores
 
         # return stat data
-        with Pool(processes=pool_size) as worker_pool:
-            logging.info('Metadata decoded, switching to multicore..')
-            for frame_decode in worker_pool.imap(frame_process, decode_multicore_state_generator()):
-                if frame_decode['strike']:
-                    frame_strike_count += 1
-                else:
-                    if frame_decode['is_unique_frame']:
-                        pass
-                    blocks_read += frame_decode['blocks_read']
+        # with Pool(processes=pool_size) as worker_pool:
+        #     logging.info('Metadata decoded, switching to multicore..')
+        #     for frame_decode in worker_pool.imap(frame_process, decode_multicore_state_generator()):
+        #         if frame_decode['strike']:
+        #             frame_strike_count += 1
+        #         else:
+        #             if frame_decode['is_unique_frame']:
+        #                 pass
+        #             blocks_read += frame_decode['blocks_read']
                 # logging.info(f'Processing frame {video_frame_position} of {total_frames}...'
                 #              f'({round(((video_frame_position / total_frames) * 100), 2):.2f} %)')
 

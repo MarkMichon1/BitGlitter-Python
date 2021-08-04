@@ -6,13 +6,14 @@ from bitglitter.read.inputdecode.headerdecode import custom_palette_header_valid
 from bitglitter.read.inputdecode.scanvalidate import frame_lock_on, minimum_block_checkpoint
 from bitglitter.read.inputdecode.scanhandler import ScanHandler
 
+
 def frame_process(dict_object):
     """This is ran each time an individual frame is processed, orchestrating scanning, decoding, validation, and finally
     passing the data to StreamRead for saving and file extraction.  Multiprocessing supports only passing one argument,
     hence all arguments being packaged inside dict_object.
     """
 
-    #  Unpackaging variables from dict_object, these are consistent across conditions this function is used
+    #  Unpackaging generic variables from dict_object, these are consistent across conditions this function is used
     frame = dict_object['frame']
     mode = dict_object['mode']
     output_path = dict_object['output_path']
@@ -24,22 +25,68 @@ def frame_process(dict_object):
     scrypt_p = dict_object['scrypt_p']
     temp_save_path = dict_object['temp_save_path']
     live_payload_unpackaging = dict_object['live_payload_unpackaging']
+    initializer_palette_a = dict_object['initializer_palette_a']
+    initializer_palette_b = dict_object['initializer_palette_b']
+    initializer_palette_a_color_set = dict_object['initializer_palette_a_color_set']
+    initializer_palette_b_color_set = dict_object['initializer_palette_b_color_set']
+    initializer_palette_a_dict = dict_object['initializer_palette_a_dict']
+    initializer_palette_b_dict = dict_object['initializer_palette_b_dict']
+
+    frame_pixel_height = frame.shape[0]
+    frame_pixel_width = frame.shape[1]
+
+    blocks_read = 0
+    data_read = 0
 
     if mode == 'video':
         current_frame_position = dict_object['current_frame_position']
         total_video_frames = dict_object['total_video_frames']
         logging.info(f'Scanning frame {current_frame_position}/{total_video_frames}') #todo- put outside if out of order w/ mp, add %
 
-        if current_frame_position != 1:
-            pass  # standard sequence
+        if current_frame_position != 1:  #  standard sequence
+            pass
+
+            if 'in' in 'asd':
+                pass
+                #  Multiprocessing setup
+                i = 0
 
         else:  #  First frame
-            pass
 
-        if 'in' in 'asd':
-            pass
-            #  Multiprocessing setup
-            i = 0
+            #  Ensuring override parameters (if given) don't exceed frame pixel dimensions
+            if not minimum_block_checkpoint(block_height_override, block_width_override, frame_pixel_height,
+                                               frame_pixel_width):
+                return {'abort': True}
+
+            #  Frame lock on
+            lock_on_results = frame_lock_on(frame, block_height_override, block_width_override, frame_pixel_height,
+                                            frame_pixel_width, initializer_palette_a_color_set,
+                                            initializer_palette_b_color_set, initializer_palette_a_dict,
+                                            initializer_palette_b_dict)
+            if 'abort' in lock_on_results:
+                logging.warning('Frame lock fail.  Aborting...')
+                return {'abort': True}
+            block_height = lock_on_results['block_height']
+            block_width = lock_on_results['block_width']
+            pixel_width = lock_on_results['pixel_width']
+
+            #  Now we passed minimum frame validation, moving to ScanHandler setup
+            scan_handler = ScanHandler(frame, True, initializer_palette_a, initializer_palette_a_dict,
+                                       initializer_palette_a_color_set)
+            scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
+
+            #  Initializer scan and decode
+            results = scan_handler.return_initializer_bits()
+            initializer_bits = results['bits']
+            blocks_read += results['blocks_read']
+            data_read += results['blocks_read']
+            results = initializer_header_decode(initializer_bits, block_height, block_width)
+            logging.info(results) #temp todo
+            if 'abort' in results:
+                return {'abort': True}
+
+
+
 
     elif mode == 'image':
         pass
@@ -56,9 +103,6 @@ def frame_process(dict_object):
     #     scan_handler = ScanHandler(frame, is_calibrator_frame=False)
     # if block_height and block_width and pixel_width:
     #     scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
-
-    frame_pixel_height = frame.shape[0]
-    frame_pixel_width = frame.shape[1]
 
     if live_payload_unpackaging:
         pass  # call streamread and check progress
@@ -90,22 +134,6 @@ def frame_process(dict_object):
     #     image frame setup
     #     frame validation
     #     payload process
-    #     """
-    # elif mode == 'video':
-    #     if frame_number == 1:
-    #         pass
-    #     else:
-    #         pass
-    #
-    #     def test():
-    #         pass
-
-
-    # validate overrides- stream palette AND geometry
-
-    # strikeout
-
-    # accept frame
 
     # todo- check if initializer protocol is in supported protocols in settings manager
 
@@ -249,29 +277,6 @@ def frame_process(dict_object):
 #
 #             if self._payload_process('stream_palette') == False:
 #                 return False
-#
-#
-#     def _first_frame_setup(self):
-#         '''This is a series of tasks that must be done for the first frames of both video and images.  The frame is
-#         locked onto, and the initializer from the frame is validated and loaded.
-#         '''
-#
-#         self.checkpoint_passed = minimum_block_checkpoint(self.block_height_override, self.block_width_override,
-#                                                           self.frame_width, self.frame_height)
-#         if self.checkpoint_passed == False:
-#             return False
-#
-#         self.block_height = self.block_height_override
-#         self.block_width = self.block_width_override
-#
-#         self.block_height, self.block_width, self.pixel_width = frame_lock_on(self.active_frame, self.block_height_override,
-#                                                                               self.block_width_override, self.frame_width,
-#                                                                               self.frame_height)
-#         if self.pixel_width == False:
-#             return False
-#
-#         self.frame_handler.update_scan_geometry(self.block_height, self.block_width, self.pixel_width)
-#
 #
 #     def _frame_validation(self, palette_type):
 #         '''This internal method first validates the frame by checking the frame header, and then checks with the

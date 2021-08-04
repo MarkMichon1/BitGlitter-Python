@@ -52,7 +52,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         setup_headers_bits = BitStream()
         payload_bits = BitStream()
         padding_bits = BitStream()
-        stream_sha_bytes = bytes(stream_sha256, 'UTF-8')
+        stream_sha_bytes = bytes.fromhex(stream_sha256)
 
         max_allowable_payload_bits = len(stream_payload) - stream_payload.bitpos
         max_allowable_pre_stream_palette_header_bits = pre_stream_palette_headers_merged.length \

@@ -45,7 +45,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
     decoded_block_width = bit_stream.read('uint : 16')
     if decoded_block_height != block_height_estimate or decoded_block_width != block_width_estimate:
         logging.warning('Geometry assertion failure.  This occurs from corrupted header data, or when frame scanning'
-                        'cannot properly read the calibrator.  Aborting...')
+                        ' cannot properly read the calibrator.  Aborting...')
         logging.debug(f'decoded_block_height: {decoded_block_height} block_height_estimate: {block_height_estimate}'
                       f'\ndecoded_block_width: {decoded_block_width} block_width_estimate: {block_width_estimate}')
         return STREAM_FAILURE_RETURN
@@ -64,7 +64,6 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
             return {}
         else:
             logging.info(f'Known custom palette \'{palette.name}\' detected.')
-            return {'palette': palette}
 
     #  default palette used
     else:
@@ -76,7 +75,11 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
             return STREAM_FAILURE_RETURN
         else:
             logging.info(f'Default palette \'{palette.name}\' detected.')
-            return {'palette': palette}
+
+    # Get Stream SHA-256
+    stream_sha256 = bit_stream.read('hex : 256')
+
+    return {'palette': palette, 'stream_sha256': stream_sha256}
 
 
 def frame_header_decode(bit_stream):

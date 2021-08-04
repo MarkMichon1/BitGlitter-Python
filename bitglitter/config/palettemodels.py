@@ -21,7 +21,7 @@ class Palette(SqlBaseClass):
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
     nickname = Column(String, unique=True)
-    color_set = relationship('PaletteColor', back_populates='palette', cascade='all, delete', passive_deletes=True)
+    color_set = Column(String)
     color_distance = Column(Float, default=0, nullable=False)
     number_of_colors = Column(Integer, default=0, nullable=False)
     bit_length = Column(Integer, default=0, nullable=False)
@@ -62,14 +62,20 @@ class Palette(SqlBaseClass):
             self.save()
 
     def convert_colors_to_tuple(self):
-        """Since each of their colors are their own PaletteColor object, this function retrieves them and returns them
-        in a more usable format.
+        """Since all of their colors are stored as a single string for speed, this function retrieves it and returns
+        them in a more usable list format.
         """
 
-        returned_list = []
-        for color in self.color_set:
-            returned_list.append(color.return_rgb_tuple())
-        return returned_list
+        if not self.is_24_bit:
+            string_split = self.color_set.split('|')
+            returned_list = []
+            for piece in string_split:
+                channels = piece.split(',')
+                channels = [int(channel) for channel in channels]
+                returned_list.append((channels[0], channels[1], channels[2]))
+            return returned_list
+        else:
+            return None
 
     def _initialize_colors(self, color_set):
         """An internal method that blindly accepts tuples.  Use palettefunctions functions for prior necessary
@@ -79,44 +85,29 @@ class Palette(SqlBaseClass):
         color_set_cleaned = convert_hex_to_rgb(color_set) if color_set else None
         if not self.is_24_bit:
             self._calculate_palette_math(color_set_cleaned, save=False)
-            sequence_number = 0
-            color_objects = []
+
+            string_list = []
             for color in color_set_cleaned:
-                color_objects.append(PaletteColor(palette_id=self.id, palette_sequence=sequence_number,
-                                                  red_channel=color[0], green_channel=color[1], blue_channel=color[2]))
-                sequence_number += 1
-            session.bulk_save_objects(color_objects)
+                to_string = [str(channel) for channel in color]
+                string_list.append(','.join(to_string))
+
+            self.color_set = '|'.join(string_list)
+
+
+
         if self.is_custom:
             self.palette_id = get_palette_id_from_hash(self.name, self.description, self.time_created,
                                                        color_set_cleaned)
 
         self.save()
 
-    def return_encoder(self, palette_type):
+    def return_encoder(self):
         color_set_tupled = self.convert_colors_to_tuple()
-        return BitsToColor(color_set_tupled, self.bit_length, palette_type)
+        return BitsToColor(color_set_tupled, self.bit_length, self.name)
 
     def return_decoder(self):
         color_set_tupled = self.convert_colors_to_tuple()
-        return ColorsToBits(color_set_tupled)
-
-
-class PaletteColor(SqlBaseClass):
-    __tablename__ = 'palette_colors'
-    __abstract__ = False
-    palette_id = Column(Integer, ForeignKey('palettes.id'))
-    palette = relationship('Palette', back_populates='color_set')
-    palette_sequence = Column(Integer, nullable=False)
-    red_channel = Column(Integer, nullable=False)
-    green_channel = Column(Integer, nullable=False)
-    blue_channel = Column(Integer, nullable=False)
-
-    def __str__(self):
-        return f'Color for {self.palette.name} - ({self.red_channel}, {self.green_channel}, {self.blue_channel}) ' \
-               f'- {self.palette_sequence} seq'
-
-    def return_rgb_tuple(self):
-        return self.red_channel, self.green_channel, self.blue_channel
+        return ColorsToBits(color_set_tupled, self.bit_length, self.name)
 
 
 SqlBaseClass.metadata.create_all(engine)

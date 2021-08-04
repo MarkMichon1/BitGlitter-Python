@@ -41,9 +41,9 @@ class RenderHandler:
         initializer_palette_b = _return_palette('11')
         stream_palette = _return_palette(palette_id=stream_palette_id)
 
-        initializer_palette_dict = initializer_palette.return_encoder('initializer_palette A')
-        initializer_palette_dict_b = initializer_palette_b.return_encoder('initializer_palette B')
-        stream_palette_dict = stream_palette.return_encoder('stream_palette')
+        initializer_palette_dict = initializer_palette.return_encoder()
+        initializer_palette_dict_b = initializer_palette_b.return_encoder()
+        stream_palette_dict = stream_palette.return_encoder()
 
         metadata_header_bytes, metadata_header_hash_bytes = metadata_header_encode(file_mask_enabled, crypto_key,
                                                                                    scrypt_n, scrypt_r, scrypt_p,

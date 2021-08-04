@@ -18,9 +18,9 @@ class BitsToColor:
     different ways, and this provides a single clean interface for that.
     """
 
-    def __init__(self, color_set_tupled, bit_length, palette_type):
+    def __init__(self, color_set_tupled, bit_length, palette_name):
 
-        logging.debug(f'Generating binary : color dictionary for {palette_type}...')
+        logging.debug(f'Generating encoder for {palette_name}...')
         self.color_set_tupled = color_set_tupled
         self.bit_length = bit_length
         self.return_value = self.generate_dictionary()
@@ -61,9 +61,10 @@ class ColorsToBits:
     an unsigned integer for each of it's three color channels, and then returns that color.
     """
 
-    def __init__(self, palette):
-
-        self.palette = palette
+    def __init__(self, color_set_tupled, bit_length, palette_name):
+        logging.debug(f'Generating decoder for {palette_name}...')
+        self.color_set_tupled = color_set_tupled
+        self.bit_length = bit_length
         self.return_value = self.generate_dictionary()
 
     def generate_dictionary(self):
@@ -78,17 +79,17 @@ class ColorsToBits:
 
         value_dict = {}
 
-        if self.palette.bit_length != 24:
-            for value in range(self.palette.number_of_colors):
-                temp_bin_holder = str(BitArray(uint=value, length=self.palette.bit_length))
+        if self.bit_length != 24:
+            for value in range(len(self.color_set_tupled)):
+                temp_bin_holder = str(BitArray(uint=value, length=self.bit_length))
                 temp_bin_holder = ConstBitStream(temp_bin_holder)
-                value_dict[self.palette[value]] = temp_bin_holder
+                value_dict[self.color_set_tupled[value]] = temp_bin_holder
             return value_dict
         else:
             return twenty_four_bit_values
 
     def get_value(self, color):
-        if self.palette.bit_length != 24:
+        if self.bit_length != 24:
             return self.return_value[color]
         else:
             return self.return_value(color)
