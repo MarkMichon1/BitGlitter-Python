@@ -7,10 +7,10 @@ from bitglitter.write.render.headerencode import initializer_header_encode, fram
 
 
 def frame_state_generator(block_height, block_width, pixel_width, protocol_version, initializer_palette,
-                          stream_palette, output_mode, stream_output_path, output_name, working_directory, total_frames,
-                          stream_header, metadata_header, palette_header, stream_sha256,
+                          stream_palette, output_mode, stream_output_path, stream_name_file_output, working_directory,
+                          total_frames, stream_header, metadata_header, palette_header, stream_sha256,
                           initializer_palette_dict, initializer_palette_dict_b, stream_palette_dict,
-                          default_output_path):
+                          default_output_path, stream_name):
     """This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     comments in this function that describe what each part is doing, to follow along.
     """
@@ -123,12 +123,12 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
 
         yield {
             'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
-                frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used,
-            'stream_palette_dict': stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length,
-            'initializer_palette_dict': initializer_palette_dict, 'initializer_palette_dict_b':
-                initializer_palette_dict_b, 'initializer_palette': initializer_palette, 'output_mode': output_mode,
-            'output_name': output_name, 'initializer_enabled': initializer_enabled, 'frame_number': frame_number,
-            'total_frames': total_frames, 'image_output_path': image_output_path, 'stream_sha256': stream_sha256
+            frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used, 'stream_palette_dict':
+            stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length, 'initializer_palette_dict':
+            initializer_palette_dict, 'initializer_palette_dict_b': initializer_palette_dict_b, 'initializer_palette':
+            initializer_palette, 'output_mode': output_mode, 'stream_name_file_output': stream_name_file_output,
+            'initializer_enabled': initializer_enabled, 'frame_number': frame_number, 'total_frames': total_frames,
+            'image_output_path': image_output_path, 'stream_sha256': stream_sha256, 'stream_name': stream_name
         }
 
         frame_number += 1

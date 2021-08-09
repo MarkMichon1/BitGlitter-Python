@@ -50,7 +50,7 @@ def verify_write_params_render_values(stream_palette_id, stream_palette_nickname
         logging.info('Minimum geometry requirements met.')
 
 
-def write_parameter_validate(input_path, stream_name, stream_description, stream_output_path, output_name,
+def write_parameter_validate(input_path, stream_name, stream_description, stream_output_path, stream_name_file_output,
                              file_mask_enabled, encryption_key, max_cpu_cores=None, output_mode=None,
                              compression_enabled=None, scrypt_n=None, scrypt_r=None, scrypt_p=None,
                              stream_palette_id=None, stream_palette_nickname=None, pixel_width=None, block_height=None,
@@ -75,7 +75,7 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
 
     proper_string_syntax(stream_name, 'stream_name')
     proper_string_syntax(stream_description, 'stream_description')
-    proper_string_syntax(output_name, 'output_name')
+    is_bool('output_name', stream_name_file_output)
     is_bool('file_mask_enabled', file_mask_enabled)
     if not encryption_key and file_mask_enabled:
         raise ValueError('file_mask_enabled can only be set to True if an encryption key is provided.')
@@ -104,6 +104,6 @@ def write_preset_validate(nickname, output_mode, compression_enabled, scrypt_n, 
 
     is_bool('compression_enabled', compression_enabled)
     verify_write_params_output_mode(output_mode)
-    verify_write_params_render_values(stream_palette_id, pixel_width, block_height, block_width,
+    verify_write_params_render_values(stream_palette_id, nickname, pixel_width, block_height, block_width,
                                       frames_per_second, output_mode, preset_validation=True)
     verify_write_params_scrypt(scrypt_n, scrypt_r, scrypt_p)

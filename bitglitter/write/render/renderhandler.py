@@ -27,7 +27,7 @@ class RenderHandler:
                  datetime_started, bg_version, manifest, protocol_version,
 
                  # Render Output
-                 frames_per_second, output_mode, output_path, output_name
+                 frames_per_second, output_mode, output_path, stream_name_file_output
 
                  ):
 
@@ -77,17 +77,12 @@ class RenderHandler:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
             count = 1
             for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
-                                                                                   pixel_width, protocol_version,
-                                                                                   initializer_palette, stream_palette,
-                                                                                   output_mode, output_path,
-                                                                                   output_name, working_dir,
-                                                                                   self.frames_wrote, stream_header,
-                                                                                   metadata_header_bytes,
-                                                                                   palette_header_bytes, stream_sha256,
-                                                                                   initializer_palette_dict,
-                                                                                   initializer_palette_dict_b,
-                                                                                   stream_palette_dict,
-                                                                                   default_output_path), chunksize=1):
+                                                 pixel_width, protocol_version, initializer_palette, stream_palette,
+                                                 output_mode, output_path, stream_name_file_output, working_dir,
+                                                 self.frames_wrote, stream_header, metadata_header_bytes,
+                                                 palette_header_bytes, stream_sha256, initializer_palette_dict,
+                                                 initializer_palette_dict_b, stream_palette_dict, default_output_path,
+                                                 stream_name), chunksize=1):
                 if frame_encode['frame_number'] == self.frames_wrote:
                     block_position = frame_encode['block_position']
                 logging.info(f'Generating frame {count} of {self.frames_wrote}... '
@@ -98,8 +93,8 @@ class RenderHandler:
 
         # Video Render
         if output_mode == 'video':
-            render_video(output_path, default_output_path, output_name, working_dir, self.frames_wrote,
-                         frames_per_second, stream_sha256, block_width, block_height, pixel_width)
+            render_video(output_path, default_output_path, stream_name_file_output, working_dir, self.frames_wrote,
+                         frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name)
 
         # Wrap-up
         self.blocks_wrote = (block_width * block_height) * self.frames_wrote + block_position

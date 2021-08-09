@@ -1,6 +1,6 @@
 #  This class has its own module because of its large size
 
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import BLOB, Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 import time
@@ -30,6 +30,9 @@ class StreamRead(SqlBaseClass):
     manifest = Column(String)  # temporary todo
 
     # Read State
+    remaining_pre_payload_bits = Column(Integer)
+    carry_over_header_bytes = Column(BLOB)
+    carry_over_padding_bits = Column(Integer)
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)

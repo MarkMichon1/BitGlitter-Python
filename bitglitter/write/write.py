@@ -20,7 +20,7 @@ def write(
         stream_description="",
         output_directory=None,
         output_mode="video",
-        output_name="",
+        stream_name_file_output=False,
         max_cpu_cores=0,
 
         # Stream configuration
@@ -65,7 +65,7 @@ def write(
 
     # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
     if preset_nickname:
-        write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, stream_name_file_output,
                                  file_mask_enabled, encryption_key, preset_used=True)
         preset = return_preset(preset_nickname)
         output_mode = preset.output_mode
@@ -80,7 +80,7 @@ def write(
         block_width = preset.block_width
         frames_per_second = preset.frames_per_second
     else:
-        write_parameter_validate(input_path, stream_name, stream_description, output_directory, output_name,
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, stream_name_file_output,
                                  file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
                                  scrypt_n, scrypt_r, scrypt_p, stream_palette_id, stream_palette_nickname, pixel_width,
                                  block_height, block_width, frames_per_second, preset_used=False)
@@ -100,7 +100,7 @@ def write(
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, constants.BG_VERSION,
                                    pre_processor.manifest, constants.PROTOCOL_VERSION, frames_per_second,
-                                   output_mode, output_directory, output_name)
+                                   output_mode, output_directory, stream_name_file_output)
 
     # Removing temporary files
     remove_working_folder(working_dir)

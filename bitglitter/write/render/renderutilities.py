@@ -77,7 +77,8 @@ def draw_frame(dict_obj):
     initializer_palette_dict_b = dict_obj['initializer_palette_dict_b']
     initializer_palette = dict_obj['initializer_palette']
     output_mode = dict_obj['output_mode']
-    output_name = dict_obj['output_name']
+    stream_name_file_output = dict_obj['stream_name_file_output']
+    stream_name = dict_obj['stream_name']
     initializer_enabled = dict_obj['initializer_enabled']
     frame_number = dict_obj['frame_number']
     total_frames = dict_obj['total_frames']
@@ -126,8 +127,8 @@ def draw_frame(dict_obj):
         file_name = frame_number_to_string
 
     else:
-        if output_name:
-            file_name = output_name + ' - ' + str(frame_number)
+        if stream_name_file_output:
+            file_name = stream_name + ' - ' + str(frame_number)
         else:
             file_name = stream_sha256 + ' - ' + str(frame_number)
 

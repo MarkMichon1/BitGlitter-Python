@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 
 
-def render_video(stream_output_path, default_output_path, output_name, working_directory, total_frames,
-                 frames_per_second, stream_sha256, block_width, block_height, pixel_width):
+def render_video(stream_output_path, default_output_path, stream_name_file_output, working_directory, total_frames,
+                 frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name):
     """Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 ."""
 
     logging.info('Rendering video...')
@@ -13,8 +13,8 @@ def render_video(stream_output_path, default_output_path, output_name, working_d
         video_output_path = Path(stream_output_path)
     else:
         video_output_path = Path(default_output_path)
-    if output_name:
-        video_name = output_name
+    if stream_name_file_output:
+        video_name = stream_name
     else:
         video_name = stream_sha256
 
