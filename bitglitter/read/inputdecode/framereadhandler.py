@@ -3,6 +3,7 @@ from multiprocessing import cpu_count, Pool
 
 from cv2 import imread
 
+from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.config.palettemodels import Palette
 from bitglitter.read.inputdecode.videoframegenerator import video_frame_generator
 from bitglitter.read.inputdecode.frameprocess import frame_process
@@ -47,6 +48,10 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
 
         stream_header_termination = False
         while not stream_header_termination:
+            if 'total_video_frames' in dict_object:
+                if dict_object['current_frame_position'] == dict_object['total_video_frames']: #  Reached end of video
+                    return {'unique_frames_read': unique_frames_read, 'blocks_read': blocks_read, 'data_read':
+                        data_read, 'stream_sha256': stream_sha256}
             next_frame_data = next(frame_generator)
             dict_object['frame'] = next_frame_data['frame']
             dict_object['current_frame_position'] = next_frame_data['current_frame_position']

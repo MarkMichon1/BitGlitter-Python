@@ -62,8 +62,12 @@ class ScanHandler:
             active_color_dict = self.stream_palette_dict
             active_bit_length = self.stream_palette.bit_length
 
+        complete_header = True
         if number_of_bits:  # Set amount of bits to scan
             number_of_blocks = (number_of_bits - self.leftover_bits.len) // active_bit_length
+            if number_of_blocks > self.remaining_blocks:
+                number_of_blocks = self.remaining_blocks
+                complete_header = False
         else:  # If 0, scans the rest of the frame
             number_of_blocks = self.remaining_blocks
 
@@ -84,8 +88,11 @@ class ScanHandler:
             bits.pos = number_of_bits
             self.leftover_bits = bits.read(bits.len - number_of_bits)
             bits.pos = 0
-        assert bits.len == number_of_bits
-        return {'blocks_read': number_of_blocks, 'bits': bits}
+            bits = bits.read(number_of_bits)
+        if complete_header:
+            logging.debug(f'{bits.len=} {number_of_bits=}')
+            assert bits.len == number_of_bits
+        return {'blocks_read': number_of_blocks, 'bits': bits, 'complete_header': complete_header}
 
     def set_scan_geometry(self, block_height, block_width, pixel_width):
         self.block_height = block_height
@@ -105,8 +112,11 @@ class ScanHandler:
         """returns the initializer bitstring for the frame."""
         return self._return_bits(580, True)
 
-    def return_frame_header_bytes(self):
-        pass  # 352
+    def return_frame_header_bits(self, is_initializer_palette):
+        return self._return_bits(352, is_initializer_palette)
+
+    def return_stream_header_bits(self, is_initializer_palette):
+        return self._return_bits(685, is_initializer_palette)
 
     def return_payload_bits(self):
         pass

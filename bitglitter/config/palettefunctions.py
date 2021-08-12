@@ -83,6 +83,11 @@ def remove_all_custom_palette_nicknames():
         palette.save()
 
 
+def return_all_palettes():
+    returned_list = session.query(Palette).all()
+    return returned_list
+
+
 def return_default_palettes():
     returned_list = session.query(Palette).filter(Palette.is_custom)
     return returned_list

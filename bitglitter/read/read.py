@@ -4,6 +4,7 @@ from pathlib import Path
 from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _read_update
 from bitglitter.config.configmodels import Config, Constants
+from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.read.inputdecode.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validateread import verify_read_parameters
@@ -57,6 +58,10 @@ def read(file_path,
     returned = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                                   block_height_override, block_width_override, encryption_key, scrypt_n, scrypt_r,
                                   scrypt_p, temp_save_path, live_payload_unpackaging)
+
+    #  Remove incomplete frames from db
+    session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()
+    session.commit()
 
     # Save statistics if enabled.
     if save_statistics and 'abort' not in returned:

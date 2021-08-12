@@ -31,14 +31,18 @@ class StreamRead(SqlBaseClass):
 
     # Read State
     remaining_pre_payload_bits = Column(Integer)
-    carry_over_header_bytes = Column(BLOB)
-    carry_over_padding_bits = Column(Integer)
+    # carry_over_header_bytes = Column(BLOB)
+    # carry_over_padding_bits = Column(Integer)
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)
-    metadata_headers_ran = Column(Boolean)
+    palette_header_size_bits = Column(Integer)
+    metadata_header_size_bits = Column(Integer)
+    stream_header_complete = Column(Boolean)
+    palette_header_complete = Column(Boolean)
+    metadata_header_complete = Column(Boolean)
     completed_frames = Column(Integer, default=0)
-    aborted = Column(Boolean, default=False)
+    aborted = Column(Boolean, default=False)  # For desktop app
 
     # Geometry
     pixel_width = Column(Integer)

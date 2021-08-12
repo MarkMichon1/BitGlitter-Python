@@ -11,10 +11,13 @@ class Config(SqlBaseClass):
     __tablename__ = 'config'
     decoded_files_output_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
     read_bad_frame_strikes = Column(Integer, default=10)
+    disable_bad_frame_strikes = Column(Boolean, default=False)
     write_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'))
     log_txt_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Logs'))
     log_output = Column(Boolean, default=False)
+    logging_level = Column(Integer, default=1)
     maximum_cpu_cores = Column(Integer, default=cpu_count())
+    MAX_SUPPORTED_CPU_CORES = Column(Integer, default=cpu_count())
     save_statistics = Column(Boolean, default=True)
     output_stream_title = Column(Boolean, default=True)
 

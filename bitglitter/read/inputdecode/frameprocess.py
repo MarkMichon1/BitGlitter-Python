@@ -1,5 +1,6 @@
 import logging
 
+from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.read.inputdecode.headerdecode import custom_palette_header_validate_decode, frame_header_decode, \
     initializer_header_decode, metadata_header_validate_decode, stream_header_decode
@@ -44,15 +45,23 @@ def frame_process(dict_object):
         logging.info(f'Scanning frame {current_frame_position}/{total_video_frames}') #todo- put outside if out of order w/ mp, add %
 
         if current_frame_position != 1:
-            pass
 
-            #todo- check bool in streamread
-            if '123' in 'placeholder':  # Continued initializer frames
-                pass
+            if not 'multiprocess' in dict_object:  # Continued initializer frames grabbing setup headers
+                stream_read = dict_object['stream_read']
 
-            else:  #  Standard sequence (pure payload frames, including termination)
-                pass
-                #  Multiprocessing setup
+                if not stream_read.stream_header_complete:
+                    carry_over_bits = dict_object['dict_object']
+
+                if not stream_read.metadata_header_complete:
+                    carry_over_bits = dict_object['dict_object']
+
+                if not stream_read.palette_header_complete:
+                    carry_over_bits = dict_object['dict_object']
+
+                # Continuing on to begin processing payload on this frame
+
+            else:  # Standard sequence (pure payload frames, including termination)
+                pass #  Multiprocessing setup
 
         else:  #  First frame
 
@@ -104,6 +113,43 @@ def frame_process(dict_object):
             else:
                 logging.info(f'New stream: {stream_sha256}')
                 stream_read = StreamRead.create(stream_sha256=stream_sha256, stream_is_video=True)
+
+            # Frame header read and decode
+            results = scan_handler.return_frame_header_bits(is_initializer_palette=True)
+            frame_header_bits = results['bits']
+            blocks_read += results['blocks_read']
+            data_read_bits += results['blocks_read']
+            results = frame_header_decode(frame_header_bits)
+            frame_sha256 = results['frame_sha256']
+            frame_number = results['frame_number']
+            bits_to_read = results['bits_to_read']
+
+            # Checking if frame exists
+            stream_frame = StreamFrame.query.filter(StreamFrame.stream_id == stream_read.id)\
+                .filter(StreamFrame.frame_number == frame_number).first()
+            if stream_frame:  # Frame already loaded, skipping
+                if stream_frame.is_complete:  # Current frame is fully validated and saved
+                    logging.debug(f'Complete frame: {frame_number}')
+                else:  # Current frame is being actively processed by another process
+                    logging.debug(f'Pending active frame in another process: {frame_number}')
+                return {}
+            else:  # New frame
+                logging.debug(f'New frame: {frame_number}')
+                stream_frame = StreamFrame.create(stream_id=stream_read.id, payload_bits=bits_to_read,
+                                           frame_number=frame_number)
+
+            # Stream header process and decode
+            results = scan_handler.return_stream_header_bits(is_initializer_palette=True)
+            if not results['complete_header']:  # Couldn't fit in this frame, moving to the next
+                return #todo return carry over bits
+            else:
+                stream_read.stream_header_complete = True
+                stream_read.save()
+            stream_header_bits = results['bits']
+            blocks_read += results['blocks_read']
+            data_read_bits += results['blocks_read']
+
+
 
 
 

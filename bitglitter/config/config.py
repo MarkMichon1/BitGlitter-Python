@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 from pathlib import Path
 
-engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}')
+engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}?check_same_thread=False')
 engine.connect()
 Session = scoped_session(sessionmaker(bind=engine))
 session = Session()

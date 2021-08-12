@@ -9,13 +9,11 @@ class StreamFrame(SqlBaseClass):
     __abstract__ = False
 
     # note- sha256 not included as its only verification prior to addition
-
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead', back_populates='frames')
     payload_bits = Column(Integer)  # Length of payload bits within this frame, tracked to ensure padding removed
     frame_number = Column(Integer)
-
-    is_scanned = Column(Boolean, default=False)
+    is_complete = Column(Boolean, default=False)
 
     def __str__(self):
         return f'Frame {self.frame_number}/{self.stream.number_of_frames} for {self.stream.stream_name}'

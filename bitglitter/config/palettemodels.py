@@ -12,7 +12,6 @@ import time
 class Palette(SqlBaseClass):
     __tablename__ = 'palettes'
     __abstract__ = False
-    is_valid = Column(Boolean, default=False)
     is_24_bit = Column(Boolean, default=False)
     is_custom = Column(Boolean, default=True)
     is_included_with_repo = Column(Boolean, default=False)  # for differentiating other people's colors & our fancy ones
@@ -44,19 +43,14 @@ class Palette(SqlBaseClass):
     def _calculate_palette_math(self, color_set, save=True):
         """Runs during model creation and when color set is updated."""
 
-        if not self.is_24_bit:
-            self.color_distance = get_color_distance(color_set)
-            self.number_of_colors = len(color_set)
-            is_valid = math.log2(self.number_of_colors).is_integer()
-            if is_valid:
-                self.bit_length = int(math.log(self.number_of_colors, 2))
-            else:
-                self.bit_length = 0
-            self.is_valid = is_valid
+        self.color_distance = get_color_distance(color_set)
+        self.number_of_colors = len(color_set)
+        is_valid = math.log2(self.number_of_colors).is_integer()
+        if is_valid:
+            self.bit_length = int(math.log(self.number_of_colors, 2))
         else:
-            self.bit_length = 24
-            self.color_distance = 0
-            self.number_of_colors = 16777216
+            self.bit_length = 0
+        self.is_valid = is_valid
 
         if save:  # Added to prevent repetitive saves if used in other methods
             self.save()
@@ -92,6 +86,10 @@ class Palette(SqlBaseClass):
                 string_list.append(','.join(to_string))
 
             self.color_set = '|'.join(string_list)
+        else:
+            self.bit_length = 24
+            self.color_distance = 0
+            self.number_of_colors = 16777216
 
 
 
