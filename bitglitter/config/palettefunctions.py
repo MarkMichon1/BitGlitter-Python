@@ -133,7 +133,8 @@ def import_palette_base64(base64_string):
     palette = session.query(Palette).filter(Palette.palette_id == palette_id).first()
     if palette:
         raise ValueError('Palette already exists locally!')
-    if palette.name == palette_name:
+    palette = session.query(Palette).filter(Palette.name == palette_name).first()
+    if palette:
         raise ValueError('Palette with this name already exists.')
 
     color_set_list = ast.literal_eval(color_set_str)
@@ -150,6 +151,4 @@ def export_palette_base64(palette_id=None, palette_nickname=None):
     if not palette.is_valid:
         raise ValueError('Cannot export invalid palettes')
 
-    assembled_string = '\\\\'.join([palette.palette_id, palette.name, palette.description, str(palette.time_created),
-                                    str(palette.convert_colors_to_tuple())])
-    return base64.b64encode(assembled_string.encode()).decode()
+    return palette.base64_string

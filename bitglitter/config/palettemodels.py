@@ -5,6 +5,7 @@ from bitglitter.config.config import engine, session, SqlBaseClass
 from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
     get_palette_id_from_hash
 
+import base64
 import math
 import time
 
@@ -30,6 +31,12 @@ class Palette(SqlBaseClass):
     def create(cls, color_set, **kwargs):
         object_ = super().create(**kwargs)
         object_._initialize_colors(color_set)
+        if object_.is_custom:
+            assembled_string = '\\\\'.join(
+                [object_.palette_id, object_.name, object_.description, str(object_.time_created),
+                 str(object_.convert_colors_to_tuple())])
+            object_.base64_string = base64.b64encode(assembled_string.encode()).decode()
+        object_.save()
         return object_
 
     __table_args__ = (
@@ -91,13 +98,9 @@ class Palette(SqlBaseClass):
             self.color_distance = 0
             self.number_of_colors = 16777216
 
-
-
         if self.is_custom:
             self.palette_id = get_palette_id_from_hash(self.name, self.description, self.time_created,
                                                        color_set_cleaned)
-
-        self.save()
 
     def return_encoder(self):
         color_set_tupled = self.convert_colors_to_tuple()

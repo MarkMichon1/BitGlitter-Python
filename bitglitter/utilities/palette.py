@@ -120,11 +120,11 @@ def get_color_distance(color_set):
     for pair in itertools.combinations(color_set, 2):
         first_color, second_color = pair
 
-        r_distance = (second_color[0] - first_color[0]) ** 2
-        g_distance = (second_color[1] - first_color[1]) ** 2
-        b_distance = (second_color[2] - first_color[2]) ** 2
+        red_distance = (second_color[0] - first_color[0]) ** 2
+        green_distance = (second_color[1] - first_color[1]) ** 2
+        blue_distance = (second_color[2] - first_color[2]) ** 2
 
-        sum_of_distances = math.sqrt(r_distance + g_distance + b_distance)
+        sum_of_distances = math.sqrt(red_distance + green_distance + blue_distance)
 
         if min_distance is not None:
             if sum_of_distances < min_distance:
