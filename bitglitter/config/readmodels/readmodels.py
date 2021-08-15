@@ -23,6 +23,7 @@ class StreamFile(SqlBaseClass):
     __tablename__ = 'stream_files'
     __abstract__ = False
 
+    depth = Column(Integer)
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead')
     payload_bit_start_position = Column(Integer)
@@ -45,6 +46,7 @@ class StreamDirectory(SqlBaseClass):
     __tablename__ = 'stream_directories'
     __abstract__ = False
 
+    depth = Column(Integer)
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead', back_populates='directories')
     parent_directory_id = Column(Integer, ForeignKey('stream_directories.id'))

@@ -104,7 +104,7 @@ def load_default_db_data():
             'name': '24 Bit Default',
             'description': '~16.7 million colors, the best performing palette possible by a factor of three (with a '
                            'very big if).  This only works in lossless environments, any sort of distortion to the'
-                           'rendered file WILL corrupt the data!  There is zero margin for error.\n\nOnly currently'
+                           ' rendered file WILL corrupt the data!  There is zero margin for error.\n\nOnly currently'
                            ' works in rendering images as its a semi-experimental palette.',
             'color_set': None,
             'is_24_bit': True,
