@@ -486,7 +486,6 @@ def load_default_db_data():
     palettes_types_pending = default_palette_data + custom_palette_data
 
     for palette in palettes_types_pending:
-        Palette.create(palette_id=palette['palette_id'], is_valid=True, is_24_bit=palette['is_24_bit'],
-                       is_custom=palette['is_custom'], name=palette['name'], description=palette['description'],
-                       nickname=palette['nickname'], is_included_with_repo=True,
-                       time_created=946706400, color_set=palette['color_set'])
+        Palette.create(palette_id=palette['palette_id'], is_24_bit=palette['is_24_bit'], is_custom=palette['is_custom'],
+                       name=palette['name'], description=palette['description'], nickname=palette['nickname'],
+                       is_included_with_repo=True, time_created=946706400, color_set=palette['color_set'])

@@ -5,7 +5,7 @@ import logging
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Constants
 from bitglitter.config.palettemodels import Palette
-from read.inputdecode.headerutilities import crc_verify
+from read.decode.headerutilities import crc_verify
 from bitglitter.utilities.compression import decompress_bytes
 from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
 
@@ -61,7 +61,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
         palette = session.query(Palette).filter(Palette.palette_id == stream_palette_id).first()
         if palette is None:
             logging.debug('Unknown custom palette detected, will receive palette data in several headers from now.')
-            return {}
+            return {'protocol_version': protocol_version}
         else:
             logging.info(f'Known custom palette \'{palette.name}\' detected.')
 
@@ -79,7 +79,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
     # Get Stream SHA-256
     stream_sha256 = bit_stream.read('hex : 256')
 
-    return {'palette': palette, 'stream_sha256': stream_sha256}
+    return {'palette': palette, 'stream_sha256': stream_sha256, 'protocol_version': protocol_version}
 
 
 def frame_header_decode(bit_stream):

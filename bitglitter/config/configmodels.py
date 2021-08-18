@@ -19,7 +19,7 @@ class Config(SqlBaseClass):
     maximum_cpu_cores = Column(Integer, default=cpu_count())
     MAX_SUPPORTED_CPU_CORES = Column(Integer, default=cpu_count())
     save_statistics = Column(Boolean, default=True)
-    output_stream_title = Column(Boolean, default=True)
+    output_stream_title = Column(Boolean, default=True) # App version
 
 
 class Constants(SqlBaseClass):

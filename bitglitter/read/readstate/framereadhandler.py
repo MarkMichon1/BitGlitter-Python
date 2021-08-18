@@ -1,17 +1,16 @@
 import logging
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count
 
 from cv2 import imread
 
-from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.config.palettemodels import Palette
-from bitglitter.read.inputdecode.videoframegenerator import video_frame_generator
-from bitglitter.read.inputdecode.frameprocess import frame_process
+from read.readstate.videoframegenerator import video_frame_generator
+from read.readstate.frameprocess import frame_process
 
 
-def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, max_cpu_cores,
+def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                        block_height_override, block_width_override, encryption_key,
-                       scrypt_n, scrypt_r, scrypt_p, temp_save_path, live_payload_unpackaging):
+                       scrypt_n, scrypt_r, scrypt_p, temp_save_path, stop_at_metadata_load): #todo <-
 
     unique_frames_read = None
     blocks_read = None
@@ -27,17 +26,15 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
     initializer_palette_b_color_set = initializer_palette_b.convert_colors_to_tuple()
     initializer_palette_a_dict = initializer_palette_a.return_decoder()
     initializer_palette_b_dict = initializer_palette_b.return_decoder()
-    dict_object = {'output_path': output_path, 'block_height_override': block_height_override, 'block_width_override':
+    dict_object = {'output_directory': output_directory, 'block_height_override': block_height_override, 'block_width_override':
                    block_width_override, 'encryption_key': encryption_key, 'scrypt_n': scrypt_n, 'scrypt_r': scrypt_r,
-                   'scrypt_p': scrypt_p, 'temp_save_path': temp_save_path, 'live_payload_unpackaging':
-                   live_payload_unpackaging, 'initializer_palette_a': initializer_palette_a,
-                   'initializer_palette_a_color_set': initializer_palette_a_color_set,
+                   'scrypt_p': scrypt_p, 'temp_save_path': temp_save_path, 'initializer_palette_a':
+                   initializer_palette_a, 'initializer_palette_a_color_set': initializer_palette_a_color_set,
                    'initializer_palette_b_color_set': initializer_palette_b_color_set,'initializer_palette_b':
                    initializer_palette_b, 'initializer_palette_a_dict': initializer_palette_a_dict,
                    'initializer_palette_b_dict': initializer_palette_b_dict}
 
     if input_type == 'video':
-
 
         # Processing frames in a single process until all metadata has been received, then we'll switch to multicore
         frame_generator = video_frame_generator(input_path)
@@ -106,8 +103,9 @@ def frame_read_handler(input_path, output_path, input_type, bad_frame_strikes, m
         else:
             return {'abort': True}
 
-    if not live_payload_unpackaging:
-        logging.info('Post-scan unpackaging starting...')
+    logging.info('Post-scan unpackaging starting...')
+    #blob calculate
+    #file assess ^
 
     logging.info('Frame decoding complete.')
 

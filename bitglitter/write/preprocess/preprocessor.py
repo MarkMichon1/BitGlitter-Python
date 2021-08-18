@@ -29,7 +29,7 @@ class PreProcessor:
                                          scrypt_p, compression_enabled)
         else:
             self.manifest = directory_crawler(input_path, working_directory, compression_enabled, crypto_key,
-                                              scrypt_n, scrypt_r, scrypt_p, stream_name=stream_name, recursive=False)
+                                              scrypt_n, scrypt_r, scrypt_p)
 
         self.processed_binary_path = working_directory / 'processed.bin'
         self.stream_sha256 = get_hash_from_file(self.processed_binary_path)

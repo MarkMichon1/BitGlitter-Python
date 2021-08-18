@@ -1,11 +1,12 @@
 #  This class has its own module because of its large size
 
-from sqlalchemy import BLOB, Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
+from pathlib import Path
 import time
 
-from bitglitter.config.config import engine, session, SqlBaseClass
+from bitglitter.config.config import engine, SqlBaseClass
 
 
 class StreamRead(SqlBaseClass):
@@ -18,16 +19,22 @@ class StreamRead(SqlBaseClass):
     time_started = Column(Integer, default=time.time)
     bg_version = Column(String)
     protocol_version = Column(Integer)
-    stream_sha256 = Column(String, unique=True, nullable=False)  # req
-    stream_is_video = Column(Boolean, nullable=False)  # req
-    stream_palette = None  # todo
-    stream_palette_id = None  # todo
+    stream_sha256 = Column(String, unique=True, nullable=False)
+    stream_is_video = Column(Boolean, nullable=False)
+    stream_palette_id = Column(String)
     custom_palette_used = Column(Boolean)
-    number_of_frames = Column(Integer)
+    custom_palette_loaded = Column(Boolean)
+    total_frames = Column(Integer)
     compression_enabled = Column(Boolean)
     encryption_enabled = Column(Boolean)
-    file_mask_enabled = Column(Boolean)
-    manifest = Column(String)  # temporary todo
+    file_masking_enabled = Column(Boolean)
+    stream_name = Column(String)
+    stream_description = Column(String)
+    time_created = Column(Integer)
+    size_in_bytes = Column(Integer)
+    output_directory = Column(String)  # path/stream-name/
+    temp_path = Column(String)  # path/stream-sha256/
+
 
     # Read State
     remaining_pre_payload_bits = Column(Integer)
@@ -36,24 +43,20 @@ class StreamRead(SqlBaseClass):
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)
-    palette_header_size_bits = Column(Integer)
-    metadata_header_size_bits = Column(Integer)
-    stream_header_complete = Column(Boolean)
-    palette_header_complete = Column(Boolean)
-    metadata_header_complete = Column(Boolean)
+    palette_header_size_bytes = Column(Integer)
+    palette_header_hash = Column(String)
+    metadata_header_size_bytes = Column(Integer)
+    metadata_header_hash = Column(String)
+    stream_header_complete = Column(Boolean, default=False)
+    palette_header_complete = Column(Boolean, default=False)
+    metadata_header_complete = Column(Boolean, default=False)
     completed_frames = Column(Integer, default=0)
-    aborted = Column(Boolean, default=False)  # For desktop app
+    aborted = Column(Boolean, default=False)  # For desktop app to break out at beginning of each multiprocess frame
 
     # Geometry
     pixel_width = Column(Integer)
     block_height = Column(Integer)
     block_width = Column(Integer)
-
-    # Metadata
-    stream_name = Column(String)
-    stream_description = Column(String)
-    time_created = Column(Integer)
-    size_in_bytes = Column(Integer)
 
     # Crypto
     scrypt_n = Column(Integer)
@@ -63,18 +66,61 @@ class StreamRead(SqlBaseClass):
 
     # Relationships
     frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True)
-    directories = relationship('StreamDirectory', back_populates='stream', cascade='all, delete', passive_deletes=True)
     files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True)
     progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
+
+    @classmethod
+    def create(cls, temp_save_path, **kwargs):
+        object_ = super().create(**kwargs)
+
+        temp_path = Path()
+
+        object_.output_directory = 3
+        object_.temp_path = 3
+        object_.save()
+        return object_
 
     def __str__(self):
         return f'{self.stream_name} - {self.stream_sha256}'
 
-    def manifest_load(self):
-        pass
+    def geometry_load(self, block_height, block_width, pixel_width):
+        self.block_height = block_height
+        self.block_width = block_width
+        self.pixel_width = pixel_width
+        self.save()
 
-    def geometry_load(self):
-        pass
+    def stream_palette_id_load(self, stream_palette_id):
+        self.stream_palette_id = stream_palette_id
+        self.save()
+
+    def stream_header_load(self, size_in_bytes, total_frames, compression_enabled, encryption_enabled,
+                           file_masking_enabled, metadata_header_length, metadata_header_hash,
+                           custom_palette_header_length, custom_palette_header_hash):
+        self.size_in_bytes = size_in_bytes
+        self.total_frames = total_frames
+        self.compression_enabled = compression_enabled
+        self.encryption_enabled = encryption_enabled
+        self.file_masking_enabled = file_masking_enabled
+        self.metadata_header_size_bytes = metadata_header_length
+        self.metadata_header_hash = metadata_header_hash
+        self.palette_header_size_bytes = custom_palette_header_length
+        if not custom_palette_header_length:
+            self.palette_header_complete = True
+        self.palette_header_hash = custom_palette_header_hash
+        self.stream_header_complete = True
+        self.save()
+
+    def metadata_header_load(self, bg_version, stream_name, stream_description, time_created, manifest_string):
+        self.bg_version = bg_version
+        self.stream_name = stream_name
+        self.stream_description = stream_description
+        self.time_created = time_created
+        self.metadata_header_complete = True
+
+        # Manifest process
+        #do_something(manifest_string)
+
+        self.save()
 
     def accept_frame(self, payload_bits, frame_number):
         pass

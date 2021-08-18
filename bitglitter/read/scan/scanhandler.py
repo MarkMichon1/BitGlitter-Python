@@ -2,7 +2,7 @@ import logging
 
 from bitstring import BitStream, ConstBitStream
 
-from bitglitter.read.inputdecode.scanutilities import color_snap, scan_block
+from bitglitter.read.scan.scanutilities import color_snap, scan_block
 
 
 class ScanHandler:
@@ -30,6 +30,8 @@ class ScanHandler:
         self.stream_palette_color_set = stream_palette_color_set
 
         #  Scan state
+        self.x_range = 0
+        self.y_range = 0
         self.next_block = None
         self.block_position = 0
         self.remaining_blocks = 0
@@ -38,21 +40,24 @@ class ScanHandler:
 
         #  Additional setup if we have more starting data
         if self.block_height and self.block_width and self.pixel_width:
-            self.next_block = self._setup_frame_grid()
+            self._geometry_setup()
+            self.next_block = self._frame_coordinate_generator()
 
-    def _setup_frame_grid(self):
+    def _geometry_setup(self):
+        self.x_range = self.block_width - int(self.has_initializer)
+        self.y_range = self.block_height - int(self.has_initializer)
+        self.remaining_blocks = self.x_range * self.y_range
+
+    def _frame_coordinate_generator(self):
         """Creates a generator that outputs the correct block coordinates for scan_block to utilize.  This depends on
          whether an initializer is used in this frame or not.
         """
-        x_range = self.block_width - int(self.has_initializer)
-        y_range = self.block_height - int(self.has_initializer)
-        self.remaining_blocks = x_range * y_range
 
-        for y_block in range(y_range):
-            for x_block in range(x_range):
+        for y_block in range(self.y_range):
+            for x_block in range(self.x_range):
                 yield x_block + int(self.has_initializer), y_block + int(self.has_initializer)
 
-    def _return_bits(self, number_of_bits, is_initializer_palette):
+    def return_bits(self, number_of_bits, is_initializer_palette):
         if is_initializer_palette:
             active_color_set = self.initializer_color_set
             active_color_dict = self.initializer_palette_dict
@@ -62,12 +67,12 @@ class ScanHandler:
             active_color_dict = self.stream_palette_dict
             active_bit_length = self.stream_palette.bit_length
 
-        complete_header = True
+        complete_request = True
         if number_of_bits:  # Set amount of bits to scan
             number_of_blocks = (number_of_bits - self.leftover_bits.len) // active_bit_length
             if number_of_blocks > self.remaining_blocks:
                 number_of_blocks = self.remaining_blocks
-                complete_header = False
+                complete_request = False
         else:  # If 0, scans the rest of the frame
             number_of_blocks = self.remaining_blocks
 
@@ -81,7 +86,7 @@ class ScanHandler:
                 bits.append(active_color_dict.get_value(color_snap(average_rgb, active_color_set)))
             else:  # 24 bit palette
                 bits.append(active_color_dict.get_value(average_rgb))
-        self.remaining_blocks =- number_of_blocks
+        self.remaining_blocks -= number_of_blocks
 
         bits = ConstBitStream(bits)
         if bits.len > number_of_bits:
@@ -89,16 +94,17 @@ class ScanHandler:
             self.leftover_bits = bits.read(bits.len - number_of_bits)
             bits.pos = 0
             bits = bits.read(number_of_bits)
-        if complete_header:
-            logging.debug(f'{bits.len=} {number_of_bits=}')
+        logging.debug(f'{bits.len=} {number_of_bits=}')
+        if complete_request:
             assert bits.len == number_of_bits
-        return {'blocks_read': number_of_blocks, 'bits': bits, 'complete_header': complete_header}
+        return {'blocks_read': number_of_blocks, 'bits': bits, 'complete_request': complete_request}
 
     def set_scan_geometry(self, block_height, block_width, pixel_width):
         self.block_height = block_height
         self.block_width = block_width
         self.pixel_width = pixel_width
-        self.next_block = self._setup_frame_grid()
+        self._geometry_setup()
+        self.next_block = self._frame_coordinate_generator()
 
     def set_stream_palette(self, stream_palette, stream_palette_dict, stream_palette_color_set):
         self.stream_palette = stream_palette
@@ -110,13 +116,15 @@ class ScanHandler:
 
     def return_initializer_bits(self):
         """returns the initializer bitstring for the frame."""
-        return self._return_bits(580, True)
+        return self.return_bits(580, True)
 
     def return_frame_header_bits(self, is_initializer_palette):
-        return self._return_bits(352, is_initializer_palette)
+        return self.return_bits(352, is_initializer_palette)
 
     def return_stream_header_bits(self, is_initializer_palette):
-        return self._return_bits(685, is_initializer_palette)
+        return self.return_bits(685, is_initializer_palette)
+
+
 
     def return_payload_bits(self):
         pass

@@ -123,7 +123,15 @@ def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_pale
 
 def import_palette_base64(base64_string):
     decoded_string = base64.b64decode(base64_string.encode()).decode()
-    palette_id, palette_name, palette_description, time_created, color_set_str = decoded_string.split('\\\\')
+    returned_list = decoded_string.split('\\\\')
+    palette_id = returned_list[0]
+    palette_name = returned_list[1]
+    palette_description = returned_list[2]
+    time_created = returned_list[3]
+    color_set_str = returned_list[4]
+    invalid_characters = returned_list[5]
+    if invalid_characters != '':
+        raise ValueError('Corrupted string.  Please ensure you have the full b64 string and try again.')
 
     # Validating data to ensure no funny business
     calculated_hash = get_palette_id_from_hash(palette_name, palette_description, time_created, color_set_str)

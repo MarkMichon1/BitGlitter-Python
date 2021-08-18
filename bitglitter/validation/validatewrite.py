@@ -11,10 +11,6 @@ from bitglitter.validation.validatepalette import palette_geometry_verify
 def verify_write_params_render_values(stream_palette_id, stream_palette_nickname, pixel_width, block_height,
                                       block_width, frames_per_second, output_mode, preset_validation):
     palette = _return_palette(palette_id=stream_palette_id, palette_nickname=stream_palette_nickname)
-    if not palette.is_valid:
-        raise Exception('Custom palette provided cannot currently be used.  This can be from a color distance of 0, or '
-                        'if the number of colors in the palette is not 2^n (2, 4, 8, etc).  Please edit the palette\'s '
-                        'color set or use a different palette.')
 
     is_int_over_zero('pixel_width', pixel_width)
     is_int_over_zero('block_height', block_height)
@@ -73,7 +69,7 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
         is_bool('compression_enabled', compression_enabled)
         verify_write_params_scrypt(scrypt_n, scrypt_r, scrypt_p)
 
-    proper_string_syntax(stream_name, 'stream_name')
+    proper_string_syntax(stream_name, 'stream_name', posix=True)
     proper_string_syntax(stream_description, 'stream_description')
     is_bool('output_name', stream_name_file_output)
     is_bool('file_mask_enabled', file_mask_enabled)

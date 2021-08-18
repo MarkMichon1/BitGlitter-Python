@@ -26,6 +26,7 @@ class Palette(SqlBaseClass):
     number_of_colors = Column(Integer, default=0, nullable=False)
     bit_length = Column(Integer, default=0, nullable=False)
     time_created = Column(Integer, default=time.time)
+    base64_string = Column(String)
 
     @classmethod
     def create(cls, color_set, **kwargs):
@@ -34,7 +35,7 @@ class Palette(SqlBaseClass):
         if object_.is_custom:
             assembled_string = '\\\\'.join(
                 [object_.palette_id, object_.name, object_.description, str(object_.time_created),
-                 str(object_.convert_colors_to_tuple())])
+                 str(object_.convert_colors_to_tuple())]) + '\\\\'
             object_.base64_string = base64.b64encode(assembled_string.encode()).decode()
         object_.save()
         return object_

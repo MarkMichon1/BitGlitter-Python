@@ -15,16 +15,27 @@ def is_int_over_zero(argument, some_variable):
         raise ValueError(f"Argument {argument} must be an integer greater than zero, {some_variable} was provided")
 
 
-def proper_string_syntax(argument, inputted_string=""):
+def proper_string_syntax(argument, inputted_string="", posix=False):
     """This exists to verify various inputs are using allowed characters.  One such character that isn't allowed is
     '\\', as that character is what the ASCII part of the stream header uses to divide attributes.
     """
 
-    acceptable_chars = string.ascii_letters + string.digits + string.punctuation.replace("\\", "") + " "
+    if posix:
+        acceptable_chars = string.ascii_letters + string.digits + string.punctuation.replace("\\", "") + " "
+    else:
+        acceptable_chars = string.ascii_letters + string.digits + '._-'
+
+    if posix:
+        if inputted_string[0] == ' ' or inputted_string[-1] == ' ':
+            raise ValueError('Cannot start or end string with space')
+
     if inputted_string:
         for letter in inputted_string:
             if letter not in acceptable_chars:
-                raise ValueError(f"Only ASCII characters excluding '\\' are allowed in {argument}.")
+                if posix:
+                    raise ValueError(f'Can only use these characters for {argument}: {acceptable_chars}')
+                else:
+                    raise ValueError(f"Only ASCII characters excluding '\\' are allowed in {argument}.")
 
 
 def is_bool(argument, variable):

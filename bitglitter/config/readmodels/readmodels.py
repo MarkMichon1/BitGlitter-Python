@@ -16,7 +16,7 @@ class StreamFrame(SqlBaseClass):
     is_complete = Column(Boolean, default=False)
 
     def __str__(self):
-        return f'Frame {self.frame_number}/{self.stream.number_of_frames} for {self.stream.stream_name}'
+        return f'Frame {self.frame_number}/{self.stream.total_frames} for {self.stream.stream_name}'
 
 
 class StreamFile(SqlBaseClass):
@@ -28,37 +28,17 @@ class StreamFile(SqlBaseClass):
     stream = relationship('StreamRead')
     payload_bit_start_position = Column(Integer)
     payload_bit_end_position = Column(Integer)
-    parent_directory_id = Column(Integer, ForeignKey('stream_directories.id'))
-    parent_directory = relationship('StreamDirectory', back_populates='files')
     is_processed = Column(Boolean, default=False)
+    save_path = Column(String)
 
     name = Column(String)
     raw_file_size = Column(Integer)
     raw_file_hash = Column(String)
     processed_file_size = Column(Integer)
-    processed_file_hash = Column(String)  # only if compression or crypto
+    processed_file_hash = Column(String)
 
     def __str__(self):
         return f'File {self.name} in {self.stream.stream_name}'
-
-
-class StreamDirectory(SqlBaseClass):
-    __tablename__ = 'stream_directories'
-    __abstract__ = False
-
-    depth = Column(Integer)
-    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead', back_populates='directories')
-    parent_directory_id = Column(Integer, ForeignKey('stream_directories.id'))
-    parent_directory = relationship('StreamDirectory')
-    name = Column(String)
-    files = relationship('StreamFile', back_populates='parent_directory', cascade='all, delete', passive_deletes=True)
-
-    def __str__(self):
-        return f'Directory {self.name} in {self.stream.stream_name}'
-
-    # def delete(self):
-    #     super() todo- both for recursive
 
 
 class StreamDataProgress(SqlBaseClass):

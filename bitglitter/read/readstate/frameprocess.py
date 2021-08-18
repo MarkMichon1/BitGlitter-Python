@@ -2,10 +2,10 @@ import logging
 
 from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.config.readmodels.streamread import StreamRead
-from bitglitter.read.inputdecode.headerdecode import custom_palette_header_validate_decode, frame_header_decode, \
+from read.decode.headerdecode import frame_header_decode, \
     initializer_header_decode, metadata_header_validate_decode, stream_header_decode
-from bitglitter.read.inputdecode.scanvalidate import frame_lock_on, minimum_block_checkpoint
-from bitglitter.read.inputdecode.scanhandler import ScanHandler
+from bitglitter.read.scan.scanvalidate import frame_lock_on, minimum_block_checkpoint
+from bitglitter.read.scan.scanhandler import ScanHandler
 
 
 def frame_process(dict_object):
@@ -17,7 +17,7 @@ def frame_process(dict_object):
     #  Unpackaging generic variables from dict_object, these are consistent across conditions this function is used
     frame = dict_object['frame']
     mode = dict_object['mode']
-    output_path = dict_object['output_path']
+    output_directory = dict_object['output_directory']
     block_height_override = dict_object['block_height_override']
     block_width_override = dict_object['block_width_override']
     encryption_key = dict_object['encryption_key']
@@ -25,7 +25,6 @@ def frame_process(dict_object):
     scrypt_r = dict_object['scrypt_r']
     scrypt_p = dict_object['scrypt_p']
     temp_save_path = dict_object['temp_save_path']
-    live_payload_unpackaging = dict_object['live_payload_unpackaging']
     initializer_palette_a = dict_object['initializer_palette_a']
     initializer_palette_b = dict_object['initializer_palette_b']
     initializer_palette_a_color_set = dict_object['initializer_palette_a_color_set']
@@ -57,6 +56,7 @@ def frame_process(dict_object):
 
                 if not stream_read.palette_header_complete:
                     carry_over_bits = dict_object['dict_object']
+                    #todo palette ID load if applicable
 
                 # Continuing on to begin processing payload on this frame
 
@@ -95,6 +95,7 @@ def frame_process(dict_object):
             results = initializer_header_decode(initializer_bits, block_height, block_width)
             if 'abort' in results:
                 return {'abort': True}
+            protocol_version = results['protocol_version']
             stream_palette = None
             if 'palette' in results:  # We already have palette stored in db, and not pending in future palette header
                 stream_palette = results['palette']
@@ -112,7 +113,11 @@ def frame_process(dict_object):
                     logging.info(f'Existing stream read found: {stream_sha256}')
             else:
                 logging.info(f'New stream: {stream_sha256}')
-                stream_read = StreamRead.create(stream_sha256=stream_sha256, stream_is_video=True)
+                stream_read = StreamRead.create(temp_save_path=temp_save_path, stream_sha256=stream_sha256,
+                                                stream_is_video=True, protocol_version=protocol_version)
+                stream_read.geometry_load(block_height, block_width, pixel_width)
+                if stream_palette:
+                    stream_read.stream_palette_id_load(stream_palette.palette_id)
 
             # Frame header read and decode
             results = scan_handler.return_frame_header_bits(is_initializer_palette=True)
@@ -140,14 +145,49 @@ def frame_process(dict_object):
 
             # Stream header process and decode
             results = scan_handler.return_stream_header_bits(is_initializer_palette=True)
-            if not results['complete_header']:  # Couldn't fit in this frame, moving to the next
+            if not results['complete_request']:  # Couldn't fit in this frame, moving to the next
                 return #todo return carry over bits
-            else:
-                stream_read.stream_header_complete = True
-                stream_read.save()
             stream_header_bits = results['bits']
             blocks_read += results['blocks_read']
             data_read_bits += results['blocks_read']
+
+            results = stream_header_decode(stream_header_bits)
+            if 'abort' in results:
+                return #todo stream failure somehow
+            size_in_bytes = results['size_in_bytes']
+            total_frames = results['total_frames']
+            compression_enabled = results['compression_enabled']
+            encryption_enabled = results['encryption_enabled']
+            file_masking_enabled = results['file_masking_enabled']
+            metadata_header_length = results['metadata_header_length']
+            metadata_header_hash = results['metadata_header_hash']
+            custom_palette_header_length = results['custom_palette_header_length']
+            custom_palette_header_hash = results['custom_palette_header_hash']
+            stream_read.stream_header_load(size_in_bytes, total_frames, compression_enabled, encryption_enabled,
+                                           file_masking_enabled, metadata_header_length, metadata_header_hash,
+                                           custom_palette_header_length, custom_palette_header_hash)
+
+            # Palette header read if need be
+            if not stream_read.palette_header_complete:
+                pass # todo palette ID load if applicable
+
+            # Metadata header process and decode
+            results = scan_handler.return_bits(metadata_header_length * 8, is_initializer_palette=True)
+            if not results['complete_request']:  # Couldn't fit in this frame, moving to the next
+                return #todo return carry over bits
+            metadata_header_bytes = results['bits'].bytes
+            blocks_read += results['blocks_read']
+            data_read_bits += results['blocks_read']
+            results = metadata_header_validate_decode(metadata_header_bytes, metadata_header_hash, encryption_key,
+                                                      encryption_enabled, scrypt_n, scrypt_r, scrypt_p)
+            if 'abort' in results:
+                if 'complete' in results:
+                    return #todo- fatal failure
+            else:
+                stream_read.metadata_header_load(results['bg_version'], results['stream_name'],
+                                                 results['stream_description'], results['time_created'],
+                                                 results['manifest_string'])
+
 
 
 
@@ -170,8 +210,6 @@ def frame_process(dict_object):
     # if block_height and block_width and pixel_width:
     #     scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
 
-    if live_payload_unpackaging:
-        pass  # call streamread and check progress
 
     # todo- return state data, failures, and carry over bits
 

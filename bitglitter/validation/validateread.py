@@ -10,7 +10,7 @@ from bitglitter.validation.utilities import is_valid_directory, is_int_over_zero
 
 def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
                            block_height_override, block_width_override, max_cpu_cores, save_statistics,
-                           live_payload_unpackaging, bad_frame_strikes):
+                           bad_frame_strikes):
     """This function verifies the arguments going into read() to ensure they comform with the required format for
     processing.
     """
@@ -54,6 +54,5 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
         raise ValueError('max_cpu_cores must be an integer greater than or equal to 0.')
 
     is_bool('save_statistics', save_statistics)
-    is_bool('live_payload_unpackaging', live_payload_unpackaging)
     logging.info("Read parameters validated.")
     return input_type
