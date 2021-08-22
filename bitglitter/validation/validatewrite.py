@@ -71,6 +71,8 @@ def write_parameter_validate(input_path, stream_name, stream_description, stream
 
     proper_string_syntax(stream_name, 'stream_name', posix=True)
     proper_string_syntax(stream_description, 'stream_description')
+    if len(stream_name) > 150:
+        raise ValueError('Stream names cannot exceed 150 characters')
     is_bool('output_name', stream_name_file_output)
     is_bool('file_mask_enabled', file_mask_enabled)
     if not encryption_key and file_mask_enabled:

@@ -9,11 +9,11 @@ from bitglitter.config.config import engine, session, SqlBaseClass
 class Config(SqlBaseClass):
     __abstract__ = False
     __tablename__ = 'config'
-    decoded_files_output_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
+    decoded_files_output_dir = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
     read_bad_frame_strikes = Column(Integer, default=10)
     disable_bad_frame_strikes = Column(Boolean, default=False)
     write_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'))
-    log_txt_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Logs'))
+    log_txt_dir = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Logs'))
     log_output = Column(Boolean, default=False)
     logging_level = Column(Integer, default=1)
     maximum_cpu_cores = Column(Integer, default=cpu_count())
@@ -30,9 +30,9 @@ class Constants(SqlBaseClass):
     PROTOCOL_VERSION = Column(Integer, default=1, nullable=False)
     SUPPORTED_PROTOCOLS = Column(String, default='1', nullable=False)
     WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
-    DEFAULT_OUTPUT_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'),
-                                 nullable=False)
-    DEFAULT_TEMP_SAVE_DATA_PATH = Column(String, default=str(Path(__file__).resolve().parent.parent /
+    DEFAULT_OUTPUT_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'),
+                                nullable=False)
+    DEFAULT_TEMP_SAVE_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent /
                                                                 'Partial Stream Data'), nullable=False)
     VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
     VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)

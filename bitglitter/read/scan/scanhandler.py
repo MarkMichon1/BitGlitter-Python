@@ -35,7 +35,8 @@ class ScanHandler:
         self.next_block = None
         self.block_position = 0
         self.remaining_blocks = 0
-        self.payload_bits_this_frame = 0
+        self.bits_to_read = 0
+        self.bits_read = 0
         self.leftover_bits = BitStream()
 
         #  Additional setup if we have more starting data
@@ -57,7 +58,10 @@ class ScanHandler:
             for x_block in range(self.x_range):
                 yield x_block + int(self.has_initializer), y_block + int(self.has_initializer)
 
-    def return_bits(self, number_of_bits, is_initializer_palette):
+    def return_bits(self, number_of_bits, is_initializer_palette, is_payload):
+        if is_payload:
+            self.bits_read += number_of_bits
+
         if is_initializer_palette:
             active_color_set = self.initializer_color_set
             active_color_dict = self.initializer_palette_dict
@@ -112,34 +116,20 @@ class ScanHandler:
         self.stream_palette_color_set = stream_palette_color_set
 
     def set_bits_to_read(self, number_of_bits):
-        pass
+        self.bits_to_read = number_of_bits
 
     def return_initializer_bits(self):
         """returns the initializer bitstring for the frame."""
-        return self.return_bits(580, True)
+        return self.return_bits(580, True, is_payload=False)
 
     def return_frame_header_bits(self, is_initializer_palette):
-        return self.return_bits(352, is_initializer_palette)
+        return self.return_bits(352, is_initializer_palette, is_payload=False)
 
     def return_stream_header_bits(self, is_initializer_palette):
-        return self.return_bits(685, is_initializer_palette)
-
-
+        return self.return_bits(685, is_initializer_palette, is_payload=True)
 
     def return_payload_bits(self):
-        pass
-
-
-#     def update_blocks_to_read(self, blocks_to_read):
-#         '''After the frame header bit string is successfully read by read_frame_header(), this updates how many total
-#         blocks must be read on this frame.  Until that is known, FrameHandler will simply 'blindly' read the full frame,
-#         as it is instructed to in pieces.
-#         '''
-#
-#
-#         if blocks_to_read < self.non_calibrator_blocks:
-#             logging.debug(f'Last frame detected, {blocks_to_read} to scan.')
-#         else:
-#             logging.debug('Full frame detected.')
-#
-#         self.non_calibrator_blocks = blocks_to_read
+        # Returns the remainder payload bits on the frame.
+        remainder_bits = self.bits_to_read - self.bits_read
+        # logging.debug(f'{self.bits_read=} {self.bits_to_read=}')
+        return self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)

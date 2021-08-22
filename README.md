@@ -1,36 +1,40 @@
 ![BitGlitter Logo](https://i.imgur.com/pX8b4Dy.png)
 
-# BitGlitter-Python [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
+# Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
-**(8/1/21) v2.0 Overhaul in progress!**
+## Store and transfer files using high-performance animated barcodes ⚡
 
-In this staging branch, work is currently being done to move BitGlitter to v2.0 from v1.0.3.  Major components are being overhauled and optimized, and many many new features are being added.  Plus, BitGlitter is being prepared to integrate into the future Electronjs desktop app.  The previous stable version 1.0.3 is still available via `pip` as well as the master branch.
+![BitGlitter Sample GIF](https://i.imgur.com/lPFR5kA.gif) 
 
-**[Discord Server](https://discord.gg/t9uv2pZ)**
+**[Discord Server](https://discord.gg/t9uv2pZ)** 
+[![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
-![BitGlitter Sample GIF](https://i.imgur.com/n7E7lnd.gif)
+**[Youtube video of a real stream transferring ~75KB/s of data](https://www.youtube.com/watch?v=KI1lSVkSO-c)**
 
-**[Click here](https://www.youtube.com/watch?v=KI1lSVkSO-c) for a demo video of a real stream.**
+BitGlitter is an easy to use Python library that lets you embed data inside ordinary pictures or video.  Store and host
+files wherever images or videos can be hosted.  The carrier for data is the 'blocks' within the frames and not
+the file itself, and there are various measures to read imperfect distorted frames.  What this means for you is streams
+are resistant to compression and distortion, and aren't broken by things such as format changes, metadata changes, etc.
+BitGlitter gives you a unique way to make your data more portable.
 
-BitGlitter is an easy to use library that allows you to embed data inside of ordinary pictures or video.  Store and host
-files wherever images or videos can be hosted.
+### Using ordinary barcodes as a launchpad
 
-### From physical barcodes to digital data transfer
+Barcodes and QR codes are everywhere.  They embed binary data (0's and 1's) in them, symbolized as black and white.  While
+they are pretty constrained in the real world, using them for digital transfer removes many of those limits.  What if you
+could have multiple barcodes (frames), that if read sequentially could have the capacity of many thousands of individual
+ones?  What if we added colors to the barcodes, so a given barcode could have 2x, 6x, 24x the capacity?  What if we greatly
+increased the size of the frames to lets say the size of a standard 1080p video, so the frames once again increase their
+capacity by a couple orders of magnitude.  Combine all of these together, and you're able to move serious amounts of 
+data.  This is BitGlitter.
 
-Whether it's barcodes at the store or QR codes you can scan with your phone- they both work on the same principle.  Data
-is encoded into the black and white.  You can think of each color as an abstraction for a binary value, so then when
-those colors are read in sequence, you can pull meaningful data from the image.  I wondered how this concept could be
-improved upon, and I wanted a cool first project as an introduction to programming.  BitGlitter was born.
+![BitGlitter Default Palettes](https://i.imgur.com/T6CiFOf.png)
 
-Conventional barcodes are severely limited in application, in terms of their data density.  When you maximize the 
-concept and configure it for digital-digital transmission, a lot of capability is gained.  
-BitGlitter is in a class of it's own in several ways:
-
-![BitGlitter Default Palettes](https://i.imgur.com/dSYmq7V.png)
++ **Fully configurable stream creation:** `tba`
++ **Built in file integrity:**
 
 + **Multiple Color Palettes:**  By removing the constraint of only using black and white, the amount of data you can 
 hold in a given "block" (each square) on the frame skyrockets.  The regular two color setup holds one bit per block.  
-Four colors holds two  bits (2x), sixty four colors holds six bits (6x), and lossless ~16.7M color palette holds 24 bits 
+Four colors holds two  bits (2x), sixty-four colors holds six bits (6x), and lossless ~16.7M color palette holds 24 bits 
 (24x improvement over black & white).  You choose what color palette you'd like to use according to your application.  
 Smaller sets are far resistant to compression and corruption, while larger sets have higher data densities.  You can
 create your own custom palettes as well with whatever colors you'd like to use.  More about that below.
@@ -84,7 +88,7 @@ You can choose between either outputting all of your frames as a series of image
 8K.
 + **Customizable framerate:** Currently supports 30 and 60 FPS, custom values are coming soon.
 
-![Custom Color Showcase](https://i.imgur.com/4uQTxwT.png)
+![Custom Color Showcase](https://i.imgur.com/YGfHhKE.png)
 
 + **Custom Color Palettes:** The included default palettes are just a starting point.  Make any color palette that you
 want to match the aesthetic where it's being used.  Anyone reading the stream will have the palette automatically saved
@@ -108,8 +112,8 @@ reader determines this from an initial frame header
 
 ### Design
 
-+ **No metadata saved in the file:**  Compress the stream, change formats, upload it somewhere.  All data is encoded in
-the blocks, so you don't have to worry (as much) about rendering the stream unreadable.
++ **No metadata saved in the rendered file:**  Compress the stream, change formats, upload it wherever.  All data is 
+encoded in the frames itself unlike most steganography, giving your files much more protection against corruption.
 
 + **Easy to understand:** Whether you're learning about Python and want to understand how it works, or you're looking to
 contribute, docstrings and notes are throughout the library.
@@ -125,25 +129,6 @@ contribute, docstrings and notes are throughout the library.
   I've built BitGlitter to be easy to modify and expand upon.  Rather than worrying about the lower-level functionality,
   achieve your goal with the modular components I've created.
 
-### CLI
-
-**Temporary warning-** Due to issues uploading to PyPI, these features are only available on Github for now.  The PyPI 
-version of BitGlitter still performs everything else fine.  This will be removed when the problem is fixed.
-
-Write from command line:
-
-+ `python3 -m bitglitter write`
-
-      `-file` - The absolute path to the file
-      `-mode` - Either 'image' or 'video'. Default: video
-      `-o` - Output path
-
- Read from command line:
-
-+ `python3 -m bitglitter read`
-    
-      `-file` - The absolute path to the file
-      `-o` - Output path
 
 ### Applications
 To be determined by you, the end user!  This will be updated as the library becomes more popular.
@@ -160,28 +145,15 @@ In addition to downloading the code from Github, you can also grab it directly f
 
 `pip install bitglitter`
 
-<span style="color:red">**IMPORTANT:**</span> FFmpeg, a free small library must be installed on your machine in order to
-properly render video.
+##**The 2 Core Functions of BitGlitter**
 
-Installing on Ubuntu is fast and easy:
+Ignoring the bells and whistles for now, all you need to use BitGlitter is `write()` and `read()` 
 
-`sudo apt update`
++ `write()` takes your files and directories, and creates the BitGlitter stream (either as a video of a collection of 
+images).
++ `read()` scans your BitGlitter encoded files and outputs the files/directories embedded in it.
 
-`sudo apt install ffmpeg`
-
-Windows takes a few more steps, but its still quite fast.  This will show you how:
-
-[https://www.wikihow.com/Install-FFmpeg-on-Windows](https://www.wikihow.com/Install-FFmpeg-on-Windows)
-
-##**BitGlitter in 20 seconds**
-
-While theres a lot of functionality, all you *need* to use it is `write()` (creates the streams) and 
-`read()` (which reads them and extracts the data encoded in it).  The only required argument for both is the file you
-wish to input in string format.
-
-#Creating streams, and reading from them
-
-## write(), converting files into BitGlitter streams
+## write() -- converting files and directories into BitGlitter streams
 
 We'll go a bit more in depth now.
 
@@ -194,7 +166,7 @@ to customize the stream, but there is only one required argument.  Everything el
 between preferred configs.  Learn more below in the **Preset Configuration** section.
 
 `stream_name=''` **Required** argument to name your stream, which will be printed out on the screen of whoever
-reads the file, along with other stream data.
+reads the file, along with other stream data. TODO: 150 char max
 
 `stream_description=''` serves as a text field to optionally put a description for the stream.
 
@@ -212,18 +184,6 @@ maximum.
 
 `compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  
 This is enabled by default.
-
-[comment]: <> (`error_correction=False` toggles Reed Solomon error-correcting from being applied on the stream payload.  This will)
-
-[comment]: <> (further protect against frame corruption and distortion, at the tradeoff of a greater stream size and increased)
-
-[comment]: <> (encoding and decoding time.  This is set to disabled by default because the default configuration for `write&#40;&#41;` has been)
-
-[comment]: <> (extensively tested and tweaked to get 100% readability on many popular video hosts without any error correcting code)
-
-[comment]: <> (whatsoever.  But if your application could benefit from this, or you'd simply want the peace of mind, by all means)
-
-[comment]: <> (enable this. TODO: uncomment when implemented)
 
 `file_mask_enabled=False` is where you can omit the listing of files/folders from the stream header.  This effectively
 hides the contents of the stream, unless it is fully read.  By default, this is disabled.  What this means is when
@@ -282,7 +242,7 @@ to interact with this data are below.
 These default values have an 81KB/s transmission rate.  This is a safe starting point that should be pretty resistant to
 corruption.
 
-## read(), converting streams back into data
+## read() -- converting BitGlitter streams back into directories and files
 
 `read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.  While this 
 is the basic function to decode streams, there are several other functions included to interact with these streams 
@@ -323,91 +283,117 @@ arguments as well.  Scroll a little bit up to see them explained in `write()`
 
 ## Configuration Functions
 
-### Color Palettes
+### Custom Color Palette Functions
 
-If you wish to make your own custom color palettes, BitGlitter gives you the ability to do that with these functions.
+If you aren't happy with the 8 'official' palettes included with the library, you also have the freedom to create and 
+use your own, to have them match with whatever aesthetic/style or performance you want.  The entire process is very simple.
+There is nothing you have to do for other people to read streams using your custom palettes; the software automagically
+'learns' and adds them through a special header on the stream, which then gives the ability for others to use your palette
+as well.  If you want to share your palette with others without them needing to read a BitGlitter stream, we got you 
+covered.  Custom palettes can also be imported and exported with [Base64](https://en.wikipedia.org/wiki/Base64) encoded 
+share strings.
 
-`add_custom_palette(palette_name, palette_description, color_set, optional_nickname = "")`  This function adds custom 
-palettes to use.  
+`add_custom_palette(palette_name, color_set, nickname='', palette_description='')` Creates a custom palette.  Once it has
+been created, a string of its unique ID is returned to you (a SHA-256 of its values as well as a timestamp, making it more
+or less entirely unique to that palette).
 
-`palette_name` takes a string and is the name of the palette that gets displayed and transmitted. 
++ `palette_name` is the its name which will it will be saved as.  It has a max length of 50 characters.
 
-`palette_description` takes a string as well, and is the description of the palette, if you wish to add it.  
++ `palette_description` is an optional field to include a brief description that will be attached with it.  It has a max
+length of 100 characters.
 
-`color_set` takes a tuple of RGB tuples, these will be the actual colors used in the BitGlitter stream.  Here's 
-a simple example of what it would look like using two colors: `color_set=((0, 255, 0), (0, 0, 255))`.  There are a few
-requirements to these tuples:
-+ No two identical values can be added.  For instance, the color black with the same RGB values twice.  Each color used
-must be unique!  The more 'different' the colors are, the better.
-+ You must have a minimum of two colors.
-+ It must be 2^n colors used, so 2, 4, 8, 16, etc.
++ `color_set` Is the actual colors that will be used in it.  It can be a list of lists, or a tuple of tuples (no 
+difference) of [RGB24](https://en.wikipedia.org/wiki/RGB_color_model) values.  Heres an example to give you a better 
+idea: `color_set=((0, 255, 0), (0, 0, 255))`.  There are a few constraints you must follow:
+  + No two identical values can be added.  For instance, the color black with the same RGB values twice.  Each color used
+must be unique!  The more 'different' the colors are in terms of their values, the better.
+  + A minimum of two colors must be used.
+  + You must have 2^n total colors (2, 4, 8, 16, 32, etc), with up to 256 currently supported.
 
-`optional_nickname=""` allows you to use an easy to input nickname for your custom palette.  This nickname is 
-  how you select this palette to specifically run on your stream.  Internally, custom palettes have a 64 character ID 
-  code which you can use (more on this below).  This allows you to give it a string of your choosing to designate it as 
-  well.  This field is optional.  If you do decide to use it though, both the internal ID AND the nickname will work.
++ `nickname` is an optional field that is a shorter, simple way to remember and use the palette, rather than its long
+generated ID.  Both serve as a unique way to identify the palette.
 
-`edit_nickname_to_custom_palette(id_or_nick, new_name)` This function allows you to edit the nickname of your custom 
-palette to something else.  Both arguments require strings.  You can use it's nickname you assigned it, or it's internal
-ID.
+`return_palette(palette_id=None, palette_nickname=None)` Returns a dictionary object of all of the palettes values.
 
-`return_default_palettes()` Returns a list of dictionary objects, each of which outlines data for each of the default
-(included) palettes.  It shows information such as their name, description, date created, color set, nickname,
-and more.
+`edit_nickname_to_custom_palette(palette_id, existing_nickname, new_nickname)` Allows you to change the nickname of the 
+palette.  Please note that the nickname must be unique, and no other palettes may already be using it.
 
-`return_custom_palettes()` Behaves exactly like the above function, except returning custom palettes, that were either
-created by you, or "learned" from other streams using their own custom palettes.
+`export_palette_base64(palette_id=None, palette_nickname=None)` Export any of your custom palettes using this.  It returns
+a share code which anyone can use to import your palette.
 
-`remove_all_custom_palettes()` This removes all custom palettes from your config.  Please note that the default palettes 
-will not be removed.
+`import_palette_base64(base64_string)` Import palettes from a unique share code (see directly above).
 
-`remove_custom_palette(id_or_nick)` This function removes the custom palette from your config.  It takes a string 
-argument of either it's internal ID, or a nickname you've previously given it.
+`generate_sample_frame(directory_path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False)` 
+Generates a small 'thumbprint' frame of a palette, giving you an idea of how it would appear in a normal rendering.  
+`directory_path` is an existing directory in which it will be saved. `all_palettes` toggles whether you want to get a 
+sample from a specific palette (using `palette_id` or `palette_nickname`) or all palettes saved.  `include_default` toggles
+whether you want to include all default palettes in the generated output, or if you only want to generate custom palettes.
 
-`remove_custom_palette_nickname(id_or_nick)` This function strips any nickname associated with a custom palette.  It 
-takes a string argument of either the internal ID or a previous nickname.
+`return_all_palettes()` Returns a list of dictionary objects of all palettes in your database.
 
-`remove_all_custom_palette_nicknames()`  This removes all nicknames from all custom palettes.  Please note this doesn't
-remove the palette, and it can still be accessible via its ID.
+`return_default_palettes()` Returns a list of dictionary objects of all default palettes in your database.
+
+`return_custom_palettes()` Returns a list of dictionary objects of all custom palettes in your database.
+
+`remove_custom_palette(palette_id, nickname)` Deletes a custom palette.
+
+`remove_custom_palette_nickname(palette_id, existing_nickname)` Removes the nickname from a given palette.  This doesn't
+remove the palettes themselves, and they can still be accessible through their palette ID.
+
+`remove_all_custom_palette_nicknames()` Removes all nicknames from all custom palettes.  As said directly above, this only
+removes the nickname, not the actual palette.
+
+`remove_all_custom_palettes()` Deletes all custom palettes, leaving only the default (hardwired) palettes.
 
 ### Read Functions
 
-# This entire section will be redone!
+During the read process, persistent data is stored in a sqlite database tracking its state.  These functions give you a
+look inside, as well as some greater control of the reads themselves.  BitGlitter automatically deletes temporary byte
+data for frames as soon as it can (ie, files can begin to be unpackaged).  What remains of finished streams is a small,
+minimal view of their internal state, as well as stream metadata.  Be aware that the `read()` argument 
+`auto_delete_finished_stream=True` (default) will automatically delete these when the stream is fully decoded (ie, all frames
+are accounted for).  For more information read about `auto_delete_finished_stream` above.
 
-Once the first frame of a stream is read, a PartialSave object is created.  This is essentially what manages the binary
-strings, and holds various information on it's state.  These functions help better interface with them.
+Final note before proceeding- many of these functions you'll see `stream_sha256`; this is a string of the stream's 
+SHA-256 hash.
 
-`update_partial_save(stream_sha, reattempt_assembly = True, password_update = None, scrypt_n =  None, scrypt_r = None, 
-scrypt_p = None, change_output_directory = None)` This function allows you to update various parameters of the save.  
-Requires a string input for `streamSHA` which is the ID number of the string.  
+`unpackage(stream_sha256)` If `unpackage_files=False` was an argument in read(), this will unpackage the stream (or as
+much as it can from what has been scanned).
 
-Argument `reattempt_assembly` makes the assembler
-attempt to reassemble the frames, as well as output the embedded files and folders.  This would be used in the case of
-an incorrect password or scrypt parameters, and you'd like to try again.
+`return_single_read(stream_sha256)` Returns a dictionary object of the full state of the read.
 
-Argument `password_update` takes a string argument, and will add (or replace) the encryption key tied to this stream.
+`return_all_read_information()` Returns a list of dictionary objects of the full state of all stream reads.
 
-Arguments `scrypt_n, scrypt_r and scrypt_p` change the scrypt parameters used to derive the key used for decryption.  If
-the scrypt parameters were left at default during `write()` of the stream, these can be left as is.  Otherwise, the 
-custom values will need to be inputted whether here or in the optional arguments of `read()`.
+`attempt_password(stream_sha256, encryption_key, attempt_unpackaging, scrypt_n=None, scrypt_r=None, scrypt_p=None)` Will
+attempt to decrypt a locked password protected stream with your encryption key.  Will return `True` or `False` indicating
+its success (or failure).  Optional `scrypt_n` `scrypt_r` `scrypt_p` parameters shouldn't be changed unless you know what
+you're doing.  See `write()` for more information on these.
 
-`begin_assembly(stream_sha)` This function exists to initiate assembly of a package at a later time, rather than doing 
-so immediately for whatever reason.
+`return_stream_manifest(stream_sha256)` Returns a raw unformatted JSON string as received by BitGlitter in a stream's
+metadata header.  Nested directory structures (if applicable) and file data are described in the string.  Keys are quite
+short to minimize manifest size when being transmitted.
 
-`print_full_save_list(path, debug_data=False)` This function outputs a text file to the folder path outlining all (if 
-any) partial saves you have on your system.  You can check their status, as well as the state of the PartialSave object 
-itself.  Argument `debugData` is `False` by default, but enabling it to `True` outputs various debug information 
-pertaining to the object as well, which wouldn't serve much utility seeing for someone such as a casual end user.
++ For directories:  `n` directory name, `f` files in that directory (not including subdirectories), `s` subdirectories for
+that given directory.
 
-`remove_partial_save(stream_sha)`  Using a string argument for the stream's ID (or stream SHA, as commonly used), this 
-will remove the object from your config, as well as remove all temporary data associated with it.
++ For files: `fn` file name, `rs` raw file size (its true size), `rh` raw file hash (its true SHA-256 hash), `ps` processed
+file size (its packaged size when being transmitted), `ph` processed file hash (its packaged SHA-256 hash when being transmitted).
+Files are compressed in transit (unless you explicitly disable it in `write()` settings), hence the alternate size and hash for them.
 
-`remove_all_partial_saves()` All saves are removed from the config object, clearing all temporary data.
+`remove_partial_save(stream_sha256)` Completely removes the stream read from the database.  Be aware that read argument
+`auto_delete_finished_stream` automatically does this if enabled for the stream.
 
-### Preset Configuration
+`remove_all_partial_save_data()` Removes all stream reads from the database.
 
-Presets allow you to define `write()` behavior (geometry, palettes, etc) and save them with a nickname, so you can 
-quickly and easily use your favorite configurations without needing to explictly state all parameters in the arguments.
+`update_stream_read(stream_sha256, auto_delete_finished_stream=None, unpackage_files=None)` Is where you can configure 
+other values for stream reads.
+
+
+### Preset Functions
+
+Presets allow you to define `write()` behavior (geometry, palettes, etc) and save it with a nickname, so you can 
+quickly and easily use your favorite configurations with a single string, without needing to explictly state all 
+parameters every time.
 
 `add_new_preset(nickname, output_mode='video', compression_enabled=True, scrypt_n=14, scrypt_r=8, scrypt_p=1,
 stream_palette_id='6', header_palette_id='6', pixel_width=24, block_height=45, block_width=80, frames_per_second=30)`
@@ -422,19 +408,28 @@ more information on each of these arguments, check out the `write()` section for
 
 `remove_all_presets()` removes all saved presets.
 
-### Statistics Configuration
+### Statistics Functions
 
 `output_stats()` Returns a dictionary object displaying the following data for both reads and writes: blocks processed,
 frames processed, data processed.
 
 `clear_stats()` All statistics reset back to zero.
 
-### General Configuration
+### General Functions
 
 `remove_session()` Resets the entire state of the library.  Removes statistics data, all saved streams, saved presets,
-and saved palettes.  This can't be undone when ran, so exercise caution!
+and saved palettes.  All settings get reverted to default, and default/included palettes are re-added.  This can't be undone.
 
-# Contributing
+`return_settings()` Returns a dictionary object of all settings.
+
+`update_settings(decoded_files_output_path=None, read_bad_frame_strikes=None, disable_bad_frame_strikes=None, 
+                    write_path=None, log_txt_path=None, log_output=None, logging_level=None, maximum_cpu_cores=None,
+                    save_statistics=None, output_stream_title=None)` Allows you to update any of the settings.  Use caution
+when changing these, as it could potentially result in crashes for invalid values.
+
+![Splitter](https://i.imgur.com/qIygifj.png)
+
+### Contributing
 
 Whether you're a seasoned programmer or brand new, there's plenty of things you can do to help this project succeed.
 Join our discord server, and check out all of the information I posted in the "Information" category.  Thank you for
@@ -443,12 +438,6 @@ your interest!
 **Discord Link**
 
 **https://discord.gg/t9uv2pZ**
-
-Also, be sure to check out the 
-[contributing master page](https://github.com/MarkMichon1/BitGlitter/wiki/Contributing-Master-Page).  It contains a lot
-of information.
-
-![Splitter](https://i.imgur.com/qIygifj.png)
 
 ### Practical Limits
 
@@ -470,17 +459,18 @@ that, and neither do the people you're sharing with.
 In closing, know the environment the video will be used in to ensure success in reading it.  And fortunately, the
 ability to finely control the stream to accomodate the environment is not just possible, but simple.  :)
 
-# Acknowledgements
-Thank you to Tanmay Mishra for giving me guidance during planning of the library, as well as its initial development.
-A big thank you to Jack Robison as well for his continued wisdom.
+### Acknowledgements
+Thank you to [Tanmay Mishra](https://github.com/tmishra3) for giving me guidance during planning of the library, as well
+as its initial development. A big thank you to [Jack Robison](https://github.com/jackrobison) as well for his continued
+wisdom.
 
 **The third party libraries that make BitGlitter possible:**
 
 + `bitstring` - Bit manipulation
 + `cryptography` - Cryptographic functions
-+ `ffmpeg-python` - Video rendering and output
-+ `opencv-python` - Video loading and frame manipulation
-+ `Pillow` - Frame creation and output, as well as loading images and reading pixel values
++ `numpy` - Formatting frames as high performance array during read()
++ `opencv-python` - Video loading, frame rendering, scanning and frame manipulation.
++ `SQLAlchemy` - Managing all persistent data
 
 # MIT License
 © 2021 - ∞ Mark Michon

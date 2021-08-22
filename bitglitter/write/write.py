@@ -61,7 +61,7 @@ def write(
     constants = session.query(Constants).first()
 
     # Initializing logging, must be up front for logging to work properly.
-    logging_setter(logging_level, logging_stdout_output, logging_txt_output, Path(config.log_txt_path))
+    logging_setter(logging_level, logging_stdout_output, logging_txt_output, Path(config.log_txt_dir))
 
     # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
     if preset_nickname:
@@ -87,7 +87,7 @@ def write(
 
     # This sets the name of the temporary folder while the file is being written, as well as the default output path.
     working_dir = Path(constants.WRITE_WORKING_DIR)
-    default_output_path = Path(constants.DEFAULT_OUTPUT_PATH)
+    default_output_path = Path(constants.DEFAULT_OUTPUT_DIR)
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     pre_processor = PreProcessor(working_dir, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,

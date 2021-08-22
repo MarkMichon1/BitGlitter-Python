@@ -9,7 +9,19 @@ from bitglitter.validation.utilities import proper_string_syntax
 from bitglitter.validation.validatepalette import custom_palette_values_validate
 
 
+def _convert_palette_to_dict(palette):
+    """Minimizing duplicate code"""
+    return {'is_24_bit': palette.is_24_bit, 'is_custom': palette.is_custom, 'is_included_with_repo':
+            palette.is_included_with_repo, 'palette_id': palette.palette_id, 'name': palette.name, 'description':
+            palette.description, 'nickname': palette.nickname, 'color_set': palette.convert_colors_to_tuple(),
+            'color_distance': palette.color_distance, 'number_of_colors': palette.number_of_colors, 'bit_length':
+            palette.bit_length, 'time_created': palette.time_created, 'base64_string': palette.base64_string}
+
+
 def _return_palette(palette_id=None, palette_nickname=None):
+    """Internal method for returning the actual palette model.  The function below is to return an end-user friendly
+    dictionary model.
+    """
     if not palette_id and not palette_nickname:
         raise ValueError('Must include palette_id or palette_nickname to return Palette object.')
     if palette_id:
@@ -22,7 +34,15 @@ def _return_palette(palette_id=None, palette_nickname=None):
         raise ValueError('No existing palettes with this palette_id or palette_nickname.')
 
 
-def add_custom_palette(palette_name, color_set, nickname=None, palette_description=''):
+def return_palette(palette_id=None, palette_nickname=None):
+    palette = _return_palette(palette_id, palette_nickname)
+    if palette:
+        return _convert_palette_to_dict(palette)
+    else:
+        return None
+
+
+def add_custom_palette(palette_name, color_set, nickname='', palette_description=''):
     custom_palette_values_validate(palette_name, palette_description, color_set)
 
     proper_string_syntax(palette_name)
@@ -74,7 +94,17 @@ def remove_custom_palette_nickname(palette_id, existing_nickname):
 
 def remove_all_custom_palette_nicknames():
     """Removes all custom palette nicknames, including those included with default data.  This does not delete the
-    palettes themselves.
+    palettes themselves.((0, 0, 0), (0, 0, 85), (0, 0, 170), (0, 0, 255), (0, 85, 0), (0, 85, 85), (0, 85, 170),
+                          (0, 85, 255), (0, 170, 0), (0, 170, 85), (0, 170, 170), (0, 170, 255), (0, 255, 0),
+                          (0, 255, 85), (0, 255, 170), (0, 255, 255), (85, 0, 0), (85, 0, 85), (85, 0, 170),
+                          (85, 0, 255), (85, 85, 0), (85, 85, 85), (85, 85, 170), (85, 85, 255), (85, 170, 0),
+                          (85, 170, 85), (85, 170, 170), (85, 170, 255), (85, 255, 0), (85, 255, 85), (85, 255, 170),
+                          (85, 255, 255), (170, 0, 0), (170, 0, 85), (170, 0, 170), (170, 0, 255), (170, 85, 0),
+                          (170, 85, 85), (170, 85, 170), (170, 85, 255), (170, 170, 0), (170, 170, 85), (170, 170, 170),
+                          (170, 170, 255), (170, 255, 0), (170, 255, 85), (170, 255, 170), (170, 255, 255), (255, 0, 0),
+                          (255, 0, 85), (255, 0, 170), (255, 0, 255), (255, 85, 0), (255, 85, 85), (255, 85, 170),
+                          (255, 85, 255), (255, 170, 0), (255, 170, 85), (255, 170, 170), (255, 170, 255),
+                          (255, 255, 0), (255, 255, 85), (255, 255, 170), (255, 255, 255))
     """
 
     palettes = session.query(Palette).filter(Palette.is_custom)
@@ -84,26 +114,38 @@ def remove_all_custom_palette_nicknames():
 
 
 def return_all_palettes():
-    returned_list = session.query(Palette).all()
+    palettes = session.query(Palette).all()
+    returned_list = []
+    for palette in palettes:
+        returned_list.append(_convert_palette_to_dict(palette))
     return returned_list
 
 
 def return_default_palettes():
-    returned_list = session.query(Palette).filter(Palette.is_custom)
+    palettes = session.query(Palette).filter(Palette.is_custom)
+    returned_list = []
+    for palette in palettes:
+        returned_list.append(_convert_palette_to_dict(palette))
     return returned_list
 
 
 def return_custom_palettes():
-    returned_list = session.query(Palette).filter(Palette.is_custom)
+    palettes = session.query(Palette).filter(Palette.is_custom)
+    returned_list = []
+    for palette in palettes:
+        returned_list.append(_convert_palette_to_dict(palette))
+
     return returned_list
 
 
 def remove_all_custom_palettes():
     """Removes all custom palettes from the database."""
     session.query(Palette).filter(Palette.is_custom).delete()
+    return True
 
 
-def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False):
+def generate_sample_frame(directory_path, palette_id=None, palette_nickname=None, all_palettes=False,
+                          include_default=False):
     """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering, selecting
     random colors from the palette for each of the blocks.  Alternatively, if all_palettes=True, all palettes in the
     database will be generated.  Argument include_default toggles whether default palettes are included as well.
@@ -111,14 +153,14 @@ def generate_sample_frame(path, palette_id=None, palette_nickname=None, all_pale
 
     if not all_palettes:
         palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
-        render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, path)
+        render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path)
     else:
         if include_default:
             palettes = session.query(Palette).all()
         else:
             palettes = session.query(Palette).filter(Palette.is_custom)
         for palette in palettes:
-            render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, path)
+            render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path)
 
 
 def import_palette_base64(base64_string):

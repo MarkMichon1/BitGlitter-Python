@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from bitglitter.config.config import engine, session, SqlBaseClass
@@ -8,12 +8,18 @@ class StreamFrame(SqlBaseClass):
     __tablename__ = 'stream_frames'
     __abstract__ = False
 
-    # note- sha256 not included as its only verification prior to addition
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead', back_populates='frames')
-    payload_bits = Column(Integer)  # Length of payload bits within this frame, tracked to ensure padding removed
+    payload_bits = Column(Integer)  # Length of stream payload bits within this frame, tracked to ensure padding removed
+    payload = Column(BLOB)
     frame_number = Column(Integer)
     is_complete = Column(Boolean, default=False)
+
+    def finalize_frame(self, payload_bits):
+        self.payload_bits = payload_bits.len
+        self.payload = payload_bits.tobytes()
+        self.is_complete = True
+        self.save()
 
     def __str__(self):
         return f'Frame {self.frame_number}/{self.stream.total_frames} for {self.stream.stream_name}'
@@ -23,18 +29,18 @@ class StreamFile(SqlBaseClass):
     __tablename__ = 'stream_files'
     __abstract__ = False
 
-    depth = Column(Integer)
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead')
-    payload_bit_start_position = Column(Integer)
-    payload_bit_end_position = Column(Integer)
+    sequence = Column(Integer)
+    start_bit_position = Column(Integer)
+    end_bit_position = Column(Integer)
     is_processed = Column(Boolean, default=False)
     save_path = Column(String)
 
     name = Column(String)
-    raw_file_size = Column(Integer)
+    raw_file_size_bytes = Column(Integer)
     raw_file_hash = Column(String)
-    processed_file_size = Column(Integer)
+    processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
 
     def __str__(self):

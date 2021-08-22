@@ -10,7 +10,8 @@ from read.readstate.frameprocess import frame_process
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                        block_height_override, block_width_override, encryption_key,
-                       scrypt_n, scrypt_r, scrypt_p, temp_save_path, stop_at_metadata_load): #todo <-
+                       scrypt_n, scrypt_r, scrypt_p, temp_save_directory, stop_at_metadata_load,
+                       auto_delete_finished_stream): #todo <-
 
     unique_frames_read = None
     blocks_read = None
@@ -28,11 +29,12 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     initializer_palette_b_dict = initializer_palette_b.return_decoder()
     dict_object = {'output_directory': output_directory, 'block_height_override': block_height_override, 'block_width_override':
                    block_width_override, 'encryption_key': encryption_key, 'scrypt_n': scrypt_n, 'scrypt_r': scrypt_r,
-                   'scrypt_p': scrypt_p, 'temp_save_path': temp_save_path, 'initializer_palette_a':
+                   'scrypt_p': scrypt_p, 'temp_save_directory': temp_save_directory, 'initializer_palette_a':
                    initializer_palette_a, 'initializer_palette_a_color_set': initializer_palette_a_color_set,
                    'initializer_palette_b_color_set': initializer_palette_b_color_set,'initializer_palette_b':
                    initializer_palette_b, 'initializer_palette_a_dict': initializer_palette_a_dict,
-                   'initializer_palette_b_dict': initializer_palette_b_dict}
+                   'initializer_palette_b_dict': initializer_palette_b_dict, 'auto_delete_finished_stream':
+                   auto_delete_finished_stream}
 
     if input_type == 'video':
 

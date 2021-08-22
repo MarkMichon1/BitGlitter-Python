@@ -11,7 +11,10 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 
 def read(file_path,
-         stop_at_metadata_load=True,
+         stop_at_metadata_load=False,
+         continue_read=True,
+         unpackage_files=True,
+         auto_delete_finished_stream=True, #todo
          output_directory=None,
          bad_frame_strikes=25,
          max_cpu_cores=0,
@@ -43,7 +46,7 @@ def read(file_path,
     constants = session.query(Constants).first()
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
-    temp_save_path = Path(constants.DEFAULT_TEMP_SAVE_DATA_PATH)
+    temp_save_directory = Path(constants.DEFAULT_TEMP_SAVE_DIR)
 
     # Setting save path for stream
     if output_directory:
@@ -52,7 +55,7 @@ def read(file_path,
         output_directory = config.write_path
 
     # Logging initializing.
-    logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_path))
+    logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_dir))
     logging.info('Beginning read...')
 
     # Are all parameters acceptable?
@@ -63,7 +66,7 @@ def read(file_path,
     # Pull valid frame data from the inputted file.
     returned = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                                   block_height_override, block_width_override, encryption_key, scrypt_n, scrypt_r,
-                                  scrypt_p, temp_save_path, stop_at_metadata_load)
+                                  scrypt_p, temp_save_directory, stop_at_metadata_load)
 
     #  Remove incomplete frames from db
     session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()

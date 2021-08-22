@@ -17,27 +17,38 @@ def remove_session():
 
 def return_settings():
     config = session.query(Config).first()
-    return {'decoded_files_output_path': config.decoded_files_output_path, 'read_bad_frame_strikes':
+    return {'decoded_files_output_path': config.decoded_files_output_dir, 'read_bad_frame_strikes':
             config.read_bad_frame_strikes, 'disable_bad_frame_strikes': config.disable_bad_frame_strikes, 'write_path':
-            config.write_path, 'log_txt_path': config.log_txt_path, 'log_output': config.log_output,
+            config.write_path, 'log_txt_path': config.log_txt_dir, 'log_output': config.log_output,
             'maximum_cpu_cores': config.maximum_cpu_cores, 'save_statistics': config.save_statistics,
             'output_stream_title': config.output_stream_title, 'MAX_SUPPORTED_CPU_CORES':
             config.MAX_SUPPORTED_CPU_CORES, 'logging_level': config.logging_level}
 
 
-def update_settings(decoded_files_output_path, read_bad_frame_strikes, disable_bad_frame_strikes, write_path,
-                    log_txt_path, log_output, logging_level, maximum_cpu_cores, save_statistics, output_stream_title):
+def update_settings(decoded_files_output_path=None, read_bad_frame_strikes=None, disable_bad_frame_strikes=None,
+                    write_path=None, log_txt_path=None, log_output=None, logging_level=None, maximum_cpu_cores=None,
+                    save_statistics=None, output_stream_title=None):
     config = session.query(Config).first()
-    config.decoded_files_output_path = decoded_files_output_path
-    config.read_bad_frame_strikes = read_bad_frame_strikes
-    config.disable_bad_frame_strikes = disable_bad_frame_strikes
-    config.write_path = write_path
-    config.log_txt_path = log_txt_path
-    config.log_output = log_output
-    config.logging_level = logging_level
-    config.maximum_cpu_cores = maximum_cpu_cores
-    config.save_statistics = save_statistics
-    config.output_stream_title = output_stream_title
+    if decoded_files_output_path:
+        config.decoded_files_output_dir = decoded_files_output_path
+    if read_bad_frame_strikes:
+        config.read_bad_frame_strikes = read_bad_frame_strikes
+    if disable_bad_frame_strikes:
+        config.disable_bad_frame_strikes = disable_bad_frame_strikes
+    if write_path:
+        config.write_path = write_path
+    if log_txt_path:
+        config.log_txt_dir = log_txt_path
+    if log_output:
+        config.log_output = log_output
+    if config.logging_level:
+        config.logging_level = logging_level
+    if maximum_cpu_cores:
+        config.maximum_cpu_cores = maximum_cpu_cores
+    if save_statistics:
+        config.save_statistics = save_statistics
+    if output_stream_title:
+        config.output_stream_title = output_stream_title
     config.save()
 
 

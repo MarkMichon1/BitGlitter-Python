@@ -1,3 +1,5 @@
+from bitstring import ConstBitStream
+
 import logging
 
 from bitglitter.config.readmodels.readmodels import StreamFrame
@@ -6,6 +8,7 @@ from read.decode.headerdecode import frame_header_decode, \
     initializer_header_decode, metadata_header_validate_decode, stream_header_decode
 from bitglitter.read.scan.scanvalidate import frame_lock_on, minimum_block_checkpoint
 from bitglitter.read.scan.scanhandler import ScanHandler
+from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
 
 
 def frame_process(dict_object):
@@ -24,17 +27,17 @@ def frame_process(dict_object):
     scrypt_n = dict_object['scrypt_n']
     scrypt_r = dict_object['scrypt_r']
     scrypt_p = dict_object['scrypt_p']
-    temp_save_path = dict_object['temp_save_path']
+    temp_save_directory = dict_object['temp_save_directory']
     initializer_palette_a = dict_object['initializer_palette_a']
     initializer_palette_b = dict_object['initializer_palette_b']
     initializer_palette_a_color_set = dict_object['initializer_palette_a_color_set']
     initializer_palette_b_color_set = dict_object['initializer_palette_b_color_set']
     initializer_palette_a_dict = dict_object['initializer_palette_a_dict']
     initializer_palette_b_dict = dict_object['initializer_palette_b_dict']
+    auto_delete_finished_stream = dict_object['auto_delete_finished_stream']
 
     frame_pixel_height = frame.shape[0]
     frame_pixel_width = frame.shape[1]
-
     blocks_read = 0
     data_read_bits = 0
 
@@ -113,8 +116,12 @@ def frame_process(dict_object):
                     logging.info(f'Existing stream read found: {stream_sha256}')
             else:
                 logging.info(f'New stream: {stream_sha256}')
-                stream_read = StreamRead.create(temp_save_path=temp_save_path, stream_sha256=stream_sha256,
-                                                stream_is_video=True, protocol_version=protocol_version)
+                stream_read = StreamRead.create(temp_directory=str(temp_save_directory / stream_sha256),
+                                                stream_sha256=stream_sha256, stream_is_video=True,
+                                                protocol_version=protocol_version, output_directory=output_directory,
+                                                encryption_key=encryption_key, scrypt_n=scrypt_n, scrypt_r=scrypt_r,
+                                                scrypt_p=scrypt_p, auto_delete_finished_stream=
+                                                auto_delete_finished_stream)
                 stream_read.geometry_load(block_height, block_width, pixel_width)
                 if stream_palette:
                     stream_read.stream_palette_id_load(stream_palette.palette_id)
@@ -128,6 +135,7 @@ def frame_process(dict_object):
             frame_sha256 = results['frame_sha256']
             frame_number = results['frame_number']
             bits_to_read = results['bits_to_read']
+            scan_handler.set_bits_to_read(bits_to_read)
 
             # Checking if frame exists
             stream_frame = StreamFrame.query.filter(StreamFrame.stream_id == stream_read.id)\
@@ -137,17 +145,17 @@ def frame_process(dict_object):
                     logging.debug(f'Complete frame: {frame_number}')
                 else:  # Current frame is being actively processed by another process
                     logging.debug(f'Pending active frame in another process: {frame_number}')
-                return {}
+                return {} #todo
             else:  # New frame
                 logging.debug(f'New frame: {frame_number}')
-                stream_frame = StreamFrame.create(stream_id=stream_read.id, payload_bits=bits_to_read,
-                                           frame_number=frame_number)
+                stream_frame = StreamFrame.create(stream_id=stream_read.id, frame_number=frame_number)
 
             # Stream header process and decode
             results = scan_handler.return_stream_header_bits(is_initializer_palette=True)
             if not results['complete_request']:  # Couldn't fit in this frame, moving to the next
                 return #todo return carry over bits
             stream_header_bits = results['bits']
+            hashable_bits = stream_header_bits
             blocks_read += results['blocks_read']
             data_read_bits += results['blocks_read']
 
@@ -170,12 +178,17 @@ def frame_process(dict_object):
             # Palette header read if need be
             if not stream_read.palette_header_complete:
                 pass # todo palette ID load if applicable
+                # results = scan_handler.return_bits(metadata_header_length * 8, is_initializer_palette=True, is_payload=True)
+                # hashable_bits += palette_header_bits
+                # + hashable bits
 
             # Metadata header process and decode
-            results = scan_handler.return_bits(metadata_header_length * 8, is_initializer_palette=True)
+            results = scan_handler.return_bits(metadata_header_length * 8, is_initializer_palette=True, is_payload=True)
             if not results['complete_request']:  # Couldn't fit in this frame, moving to the next
                 return #todo return carry over bits
             metadata_header_bytes = results['bits'].bytes
+            hashable_bits +=  metadata_header_bytes
+
             blocks_read += results['blocks_read']
             data_read_bits += results['blocks_read']
             results = metadata_header_validate_decode(metadata_header_bytes, metadata_header_hash, encryption_key,
@@ -188,10 +201,20 @@ def frame_process(dict_object):
                                                  results['stream_description'], results['time_created'],
                                                  results['manifest_string'])
 
+            # Payload process and decode
+            results = scan_handler.return_payload_bits()
+            stream_payload_bits = results['bits']
+            hashable_bytes = (hashable_bits + stream_payload_bits).tobytes()
+            blocks_read += results['blocks_read']
+            data_read_bits += results['blocks_read']
+            # Validating frame as a whole
+            if frame_sha256 != get_sha256_hash_from_bytes(hashable_bytes):
+                logging.debug('Frame payload corrupted.  Aborting frame...')
+                return {}  # bad frame strike todo
 
-
-
-
+            # Marking frame as complete, moving on to the next frame
+            stream_frame.finalize_frame(stream_payload_bits)
+            return {'mode': mode, 'encryption_key': 3}
 
 
     elif mode == 'image':
@@ -200,27 +223,6 @@ def frame_process(dict_object):
     else:
         raise ValueError('Invalid mode for frame_process()')
 
-
-
-    # # Setting ScanHandler state #todo- load from generator or not
-    # if mode == 'image' or frame_number == 1:
-    #     scan_handler = ScanHandler(frame, is_calibrator_frame=True)
-    # else:
-    #     scan_handler = ScanHandler(frame, is_calibrator_frame=False)
-    # if block_height and block_width and pixel_width:
-    #     scan_handler.set_scan_geometry(block_height, block_width, pixel_width)
-
-
     # todo- return state data, failures, and carry over bits
-
-    # if mode == 'image':
-    #     pass #todo last
-    #     """
-    #     first frame setup
-    #     image frame setup
-    #     frame validation
-    #     payload process
-
     # todo: return stream read, stream palette, bW, bH
-
     return {'final_meta_frame': bool, 'total_blocks': 0, 'is_unique_frame': bool} #todo

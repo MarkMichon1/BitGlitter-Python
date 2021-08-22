@@ -1,22 +1,25 @@
 from bitglitter.config.defaultdbdata import load_default_db_data
 load_default_db_data()
 
-# CORE USES
+# Core Uses
 from bitglitter.write.write import write
 from bitglitter.read.read import read
 
-# GENERAL CONFIGURATION
-from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session
+# General Config
+from bitglitter.config.configfunctions import clear_stats, output_stats, remove_session, return_settings, \
+    update_settings
 
-# READ CONFIGURATION
-from bitglitter.config.readfunctions import * #todo
+# Read Config
+from bitglitter.config.readfunctions import attempt_password, remove_all_partial_save_data, remove_partial_save, \
+    return_all_read_information, return_single_read, return_stream_manifest, unpackage, update_stream_read
 
-# PALETTE CONFIGURATION
+# Palette Config
 from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \
-    remove_all_custom_palettes, remove_all_custom_palette_nicknames, remove_custom_palette, \
-    remove_custom_palette_nickname, return_custom_palettes, return_default_palettes
+    export_palette_base64, generate_sample_frame, import_palette_base64, remove_all_custom_palettes, \
+    remove_all_custom_palette_nicknames, remove_custom_palette, remove_custom_palette_nickname, return_all_palettes,\
+    return_custom_palettes, return_default_palettes, return_palette
 
-# PRESET CONFIGURATION
+# Preset Config
 from bitglitter.config.presetfunctions import add_new_preset, remove_all_presets, remove_preset, \
     return_all_preset_data, return_preset
 
