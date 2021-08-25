@@ -17,9 +17,6 @@ def verify_write_params_render_values(stream_palette_id, stream_palette_nickname
     is_int_over_zero('block_width', block_width)
     is_int_over_zero('frames_per_second', frames_per_second)
 
-    if frames_per_second != 30 and frames_per_second != 60:
-        raise ValueError("frames_per_second must either be 30 or 60 at this time (we're working on this!)")
-
     if block_width < 5 or block_height < 5:
         raise ValueError('Frames cannot be less than 5 blocks tall or wide.')
 
