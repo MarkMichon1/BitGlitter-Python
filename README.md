@@ -9,7 +9,7 @@
 **[Discord Server](https://discord.gg/t9uv2pZ)** 
 [![Downloads](https://pepy.tech/badge/bitglitter)](https://pepy.tech/project/bitglitter)
 
-**[Youtube video of a real stream transferring ~75KB/s of data](https://www.youtube.com/watch?v=KI1lSVkSO-c)**
+**[Youtube video of a real stream transferring ~80KB/s of data](https://youtu.be/TIKEEA2mXrI)**
 
 BitGlitter is an easy to use Python library that lets you embed data inside ordinary pictures or video.  Store and host
 files wherever images or videos can be hosted.  The carrier for data is the 'blocks' within the frames and not
@@ -42,34 +42,40 @@ several major sites, and were tweaked until there was 100% readability across te
 + **Fully configurable stream creation:** While the default values cover most uses, you have full control of the write parameters:
   + **Color set:** 8 default palettes to choose from that provide higher performance or greater file integrity.  You can
   even make your own custom palettes (more on that below)
+  + **Block size:** These are the colorful squares that hold data.  They can be as small as one pixel, or as large as
+  you'd like.  Larger block sizes gives you greater data integrity, and smaller block sizes increase data capacity per
+  frame.
   + **Frame dimensions:** Whether you want to output 144p compatible videos or 8K, it does it all.
-  + **Frame rate:** 30 and 60 FPS currently supported.
+  + **Frame rate:** If its an integer, yes
   + **Output mode:**  Choose from either an MP4 video output, or a series of PNG images (BitGlitter accepts and reads both),
   giving you greater flexibility on where you can host your data.
 + **Built in file integrity:** Metadata, files, and the stream and frames themselves are protected with SHA-256 hashes.
 Only valid data is accepted.
 + **Built in encryption and file masking:** Encrypt your files with AES-256, and optionally the file manifest as well, 
 masking its contents until the correct key is used.
-+ **Built in compression:** All payloads are compressed using max zlib settings prior to rendering, to minimize stream 
++ **Built in compression:** Payloads are compressed using max zlib settings prior to rendering, to minimize stream 
 size.  No need to zip or rar your files prior.
-+ **Supports streams up to ~1 [exabyte](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units) in size, or ~4.3B rendered frames:**  Put
-simply, there's no practical limit to the stream's size.
++ **Supports very large streams:** Current protocol can handle up to one [exabyte](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units)
+in size, or ~4.3 billion rendered frames.  Put simply, there's no practical limit to your stream's size.
 
 ![Custom Color Showcase](https://i.imgur.com/o4xa0Fq.png)
 
-### Some performance statistics
+### What is possible with various configurations?
 
-Number of Colors | Bits Per Block | Screen Resolution | Block Size in Pixels | Block Dimensions | Framerate | Throughput | Lossless Application
---- | --- | --- | --- | --- | --- | --- | ---
-2 | 1 | 640 x 480 (480p) | 20 | 32 x 24 | 30 | 2.88 KB/s | No
-4 | 2 | 1280 × 720 (720p) | 20 | 64 x 36 | 30 | 17.28 KB/s | No
-8 | 3 | 1280 × 720 (720p) | 20 | 64 x 36 | 30 | 25.92 KB/s | No
-16 | 4 | 1920 x 1080 (1080p) | 20 | 96 x 54 | 30 | 77.76 KB/s | No
-64 | 6 | 1920 x 1080 (1080p) | 20 | 96 x 54 | 30 | 116.64 KB/s | No
-64 | 6 | 1920 x 1080 (1080p) | 20 | 96 x 54 | 60 | 233.28 KB/s | No
-16,777,216 | 24 | 1920 x 1080 (1080p) | 5 | 384 x 216 | 30 | 7.47 MB/s | Yes
-16,777,216 | 24 | 3840 x 2160 (4k) | 5 | 768 x 432 | 60 | 59.7 MB/s | Yes
+Because everything can be customized, you can have completely different outputs with vastly different performance
+characteristics (data integrity vs performance).  In **bold** is the default parameters used which have been 
+consistently readable on major social media sites.  This is all new territory, what is readable can likely be tweaked and increased even more.
 
+| Number of Colors in Palette 	| Bits of Data Per Block 	| Frame Resolution        	| Block Size in Pixels 	| Frame Dimensions (w * h in blocks) 	| Frames Rate 	| Data Throughput 	| Lossless? 	|
+|:---------------------------:	|------------------------	|-------------------------	|----------------------	|------------------------------------	|-------------	|-----------------	|-----------	|
+| 2                           	| 1                      	| 640 x 480 (480p)        	| 20                   	| 32 x 24                            	| 30 FPS      	| 1.56 KB/s       	| No        	|
+| 4                           	| 2                      	| 1280 x 720 (720p)       	| 20                   	| 64 x 36                            	| 30 FPS      	| 15.96 KB/s      	| No        	|
+| 8                           	| 3                      	| 1280 x 720 (720p)       	| 20                   	| 64 x 36                            	| 30 FPS      	| 24.6 KB/s       	| No        	|
+| 16                          	| 4                      	| 1920 x 1080 (1080p)     	| 24                   	| 80 x 45                            	| 30 FPS      	| 52.68 KB/s      	| No        	|
+| **64**                      	| **6**                  	| **1920 x 1080 (1080p)** 	| **24**               	| **80 x 45**                        	| **30 FPS**  	| **79.68 KB/s**  	| **No**    	|
+| 64                          	| 6                      	| 1920 x 1080 (1080p)     	| 24                   	| 80 x 45                            	| 60 FPS      	| 159.36 KB/s     	| No        	|
+| 16,777,216                  	| 24                     	| 1920 x 1080 (1080p)     	| 5                    	| 384 x 216                          	| 30 FPS      	| 7.46 MB/s       	| Yes       	|
+| 16,777,216                  	| 24                     	| 3840 x 2160 (4K)        	| 5                    	| 768 x 432                          	| 60 FPS      	| 59.71 MB/s      	| Yes       	|
 
 ### Installation
 
@@ -93,24 +99,24 @@ We'll go a bit more in depth now.
 `write()` is the function that inputs files and turns them into a BitGlitter stream.  There are quite a few arguments
 to customize the stream, but there is only one required argument.  Everything else has defaults.
 
-`input_path` defines what file or folder you wish to embed in the stream.  It must be an absolute path.
+`input_path` is an absolute path pointing to the file or directory you'd like convert into a stream.
 
-`preset_nickname` allows you to use a saved assortment of `write` arguments with a `str` nickname for easy switching 
-between preferred configs.  Learn more below in the **Preset Configuration** section.
+`preset_nickname=None` takes in a string name for a preset.  Learn more below in **Preset Functions**.
 
-`stream_name=''` **Required** argument to name your stream, which will be printed out on the screen of whoever
-reads the file, along with other stream data. TODO: 150 char max
+`stream_name=''` **required** argument to name your stream, which will be encoded into the metadata of the stream when
+read.  150 character limit.
 
-`stream_description=''` serves as a text field to optionally put a description for the stream.
+`stream_description=''` serves as a text field to optionally put a description for the stream.  No character limit.
 
-`output_directory=False` is where you can optionally define the path of where the created media is outputted.  By
-default, media is saved where the python file is ran.  The folder path must already exist if used.
+`output_directory=None` is a string for the absolute path of an existing directory you'd like the stream to output to.is where you can optionally define the path of where the created media is outputted.  By default, the stream outputs in a "Render Output"
+ folder within the library's directory.
 
-`output_mode='video'` is where you define how you wish the stream to output, whether as an .mp4 video, or a series of
-.png images.  The only two valid arguments are `'image'` and `'video'`.
+`output_mode='video'` controls the type of output you will have created.  Your two choices are `'video'`,
+or `'image'`.  Video outputs a single .mp4 file, whereas image output returns all of the frames.
 
-`stream_name_file_output=False` Contols if outputted files will use the stream's SHA-256 as a name, or the provided name
-for the stream.  By default, it uses the SHA-256, a 64 character hex 'thumbprint' of the stream.
+`stream_name_file_output=False` controls if outputted files will use the stream's SHA-256 hash as a name, or the 
+provided name (`stream_name`) for the stream.  By default, it uses the SHA-256, a 64 character hexadecimal 'fingerprint'
+of the stream.
 
 `max_cpu_cores=0` determines how many CPU cores you'd like to use when rendering frames.  0 is default, which is
 maximum.
@@ -118,101 +124,110 @@ maximum.
 `compression_enabled=True` enables or disables compression of your data, prior to rendering into frames.  
 This is enabled by default.
 
-`file_mask_enabled=False` is where you can omit the listing of files/folders from the stream header.  This effectively
-hides the contents of the stream, unless it is fully read.  By default, this is disabled.  What this means is when
-someone reads your stream, in the first several frames it will automatically display the contents of the stream (files
-as well as their size) on the screen.
-
 `encryption_key=''` optionally encrypts your data with AES-256.  By default, this is disabled.  The stream will not be
 able to be read unless the reader successfully inputs this.
 
-Arguments `scrypt_N=14`, `scrypt_R=8` and `scrypt_P=1` allow you to customize the parameters of the `scrypt` key 
-derivation function.  If you're a casual user, you'll never need to touch these (and shouldn't).  Only change these 
-settings if you're comfortable with cryptography and you know what you're doing!  It's worth noting `scrypt_N` uses its
-argument as 2^n.  Finally, if you're changing these numbers, they MUST be manually inputted during `read()` otherwise 
-decryption will fail!  Custom values are deliberately not transmitted in the stream for security reasons.  Your end 
-users of the stream must know these custom parameters.
+`file_mask_enabled=False` toggles whether you want the stream manifest to be encrypted or not when your stream itself is
+encrypted.  What this means is simpler terms is the contents of the stream will be hidden until or unless the correct
+encryption key is inputted.  If set to False, the full contents of the stream will be visible.  This only does anything
+when an encryption key is used.
 
-`stream_palette_id='6'` sets the palette used for the payload after the initialization headers,  By default, the 4 bit
-default color set is used.  I'll 
-explain all about palettes below.
+`scrypt_N=14`, `scrypt_R=8` and `scrypt_P=1` allow you to customize the parameters of the `scrypt` key 
+derivation function.  You shouldn't touch this if you don't know what is.  Only change these settings if you're 
+comfortable with cryptography, and you know what you're doing!  It's worth noting `scrypt_N` uses its argument as 2^n.
+Finally, if you're changing these numbers, they MUST be manually added when using read functionality, otherwise 
+decryption will fail.  Custom values are deliberately not transmitted in the stream for security reasons. Your end users
+of the stream must know these parameters if they are changed, otherwise BitGlitter will use the default parameters when
+decrypting.
 
-`pixel_width=24` sets how many pixels wide each block is when rendered.  By default it's 20 pixels.  This is a very
-important value regarding readability.  Having them overly large will make reading them easier, but will result in less
-efficient frames and require substantially longer streams.  Making them very small will greatly increase their
-efficiency, but at the same time a lot more susceptible to read failures if the files are shrunk, or otherwise
-distorted.
+`stream_palette_id='6'` sets the palette used in the stream, after initialization headers are ran.  Takes a string of
+the palette's palette_id.
+
+`pixel_width=24` sets how many pixels wide each 'block' is when rendered on screen.  24 pixels is default.  This is one 
+of those values that have a large impact on readability.  Having them overly large will make reading it easier, but will
+result in less efficient frames and require substantially longer streams.  Making them very small will greatly increase 
+their efficiency, but at the same time a lot more susceptible to read failures if the files are shrunk, or otherwise
+distorted.  This default value offers a nice middleground.
 
 `block_height=45` sets how many blocks tall the frame will be, by default this is set to 45 (which along with 
 `block_width`, creates a perfect 1080p sized frame).
 
-`block_width=80` sets how many blocks wide the frame will be.  By default this is set to 96.
+`block_width=80` sets how many blocks wide the frame will be.  By default this is set to 80.
 
-`frames_per_second=30` sets how many frames per second the video will play at, assuming argument 
-`output_mode = "video"`. Currently, 30fps and 60fps are accepted.
+`frames_per_second=30` sets how many frames per second the video will play at, assuming `output_mode = "video"` is used.
 
 Finally we have several arguments to control logging.
 
 `logging_level='info'` determines what level logging messages get outputted.  It accepts three arguments- `info` is
-default and only shows core status data during `read()` and `write()`.  `'debug'`  shows INFO level messages as well as
-lower level messages from the various processes.  Boolean `False` disables logging altogether.
+default and only shows core status data during `read()` and `write()`.  `'debug'`  shows info level messages as well as
+debug messages from the various processes.  Boolean `False` disables logging altogether.
 
-`logging_stdout_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts type 
-`bool`. Enabled by default.
+`logging_stdout_output=True` sets whether logging messages are displayed on the screen or not.  Only accepts booleans.
+Enabled by default.
 
 `logging_txt_output=False` determines whether logging messages are saved as text files or not.  Only accepts type 
 `bool`. Disabled by default.  If set to `True`, a log folder will be created, and text files will be automatically saved
 there.
 
-`save_session_overview=False` saves an overview of the write session as an object, storing some key information about
-it such as files rendered, stream size, configuration settings, etc.  Its main use will be for the desktop app coming
-soon, but you can still call it with `tba`.  Function for both an ID, and all of them.
-
 `save_statistics=False` saves some fun statistics about your usage of the program- total number of blocks rendered,
 total frames rendered, and total payload data rendered.  This updates after each successful write session.  Functions
 to interact with this data are below.
 
-These default values have an 81KB/s transmission rate.  This is a safe starting point that should be pretty resistant to
+**These default values transmit data at about 80 KB/s.**  This is a safe starting point that should be pretty resistant to
 corruption.
 
 ### read() -- converting BitGlitter streams back into directories and files
 
-`read()` is what you use to input BitGlitter streams (whether images or video), and will output the files.  While this 
-is the basic function to decode streams, there are several other functions included to interact with these streams 
-(inputting the password, removing one or all streams, changing its save path, etc).  Please check **Read Functions** 
-below.
+`read()` is how we input BitGlitter streams (whether images or video), and output the files and directories encoded in
+them.  There are several other functions included to interact with these streams (changing the encryption key to decrypt
+the stream, removing one or all streams, changing its save path, etc).  Check out **Read Functions** below to learn more.
 
-Like with `write()`, the only argument required is the input path (`file_path`), except in this case it accepts files
-only, not directories.  Files can either be a supported video format (.avi, .flv, .mov, .mp4, .wmv) or a support image
-format (.bmp, .jpg, .png).
+Like with `write()`, the only argument required is the input path (`file_path`), except in this case it only accepts 
+files.  Supported video formats are `.avi, .flv, .mov, .mp4, .wmv` and supported image formats are `.bmp, .jpg, .png`.
 
-`output_directory=False` Is where you can set where files will be written as they become available through decoding.
-  It's 'set and forget', so if you are loading images this argument only has to be used once, and the folder path will
-  stick with that stream.  This argument requires a string of a folder path that already exists.
+`stop_at_metadata_load=False` This will break out of the function *if* metadata for the stream is read.  This allows you
+to view the metadata and manifest (file/directory contents) of the stream itself, to verify the values for yourself.  From
+there, you can choose to either re-read the file and continue getting the files, or delete it.  This is a security feature
+to double check what the contents are, before you extract the files onto your computer.  Please note that this will only
+run **once** per stream.  When re-ran, the stream will continue to read and decode the files (if enabled in the arguments).
 
-`bad_frame_strikes=25` This sets how many corrupted frames the reader is to detect before it aborts out of a video.  
+`unpackage_files=True` controls whether files embedded in the stream should be extracted during read as the frame data
+becomes available to do so.  This lets you extract all files that are available each time read concludes if enabled.  If
+disabled, you can unpackage files using the function `unpackage(stream_sha256)`.  For more information, go to **Read Functions**
+
+`auto_delete_finished_stream=True` deletes all stream metadata and temporary files from your system once the read is
+complete, leaving you only with the decoded files pulled from the stream.  In most cases you probably wouldn't change this,
+but in the event you want to view the data, you can do so here.
+
+`output_directory=None` sets where files will be written as they become available through decoding.  Takes in a string
+of an absolute path of an existing file directory.  This is "set and forget", in the sense the first time a stream is
+recognized/created during read, the output path will be bound to the stream.  Subsequent read() calls for other frames 
+will continue to have the outputted files going to the right place.
+
+`bad_frame_strikes=25` Sets how many corrupted frames the reader is to detect before it aborts out of a video.  
 This allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
- iterate over each frame.  If this is set to 0, it will disable strikes altogether, and attempt to read each frame 
+ iterate over each frame.  If this is set to 0, it will disable strikes altogether and attempt to read each frame 
  regardless of the level of corruption.
 
-`max_cpu_cores=0` determines the amount of CPU cores to utilize during decoding, like `write()`.  The default value of 0
-sets it to maximum.
-
-`live_payload_unpackaging=False` gives you the option to receive files in realtime as frame payloads get processed, rather than them getting processed all at once at the end of the frame processing.  The tradeoff is a small amount of overhead at the end of each frame to do the necessarily calculations/checks.  Enable this if you're reading a large stream with a large amount of files, and you'd like to start receiving them ASAP.
+`max_cpu_cores=0` determines the amount of CPU cores to use, like `write()`.  The default value of 0
+sets it to maximum available.
 
 `block_height_override=False` and `block_width_override=False` allow you to manually input the stream's block height and 
 block width.  Normally you'll never need to use this, as these values are automatically obtained as the frame is locked
 onto.  But for a badly corrupted or compressed frame, this may not be the case.  By using the override, the reader will
 attempt to lock onto the screen given these parameters.  Both must be filled in order for the override to work.
 
-`stream_palette_id_override=False` is something you'd only touch if reading from
-a folder of images (of BitGlitter frames)
-
 `encryption_key=None` is where you add the encryption key to decrypt the stream.  Like argument `output_directory`, you only
 need this argument once, and it will bind to that save.
 
+`scrypt_n=14`, `scrypt_r=8`, and `scrypt_p=1` are values that control scrypt password hashing if your stream is encrypted.
+These only need to be touched if the stream creator changed the default values during `write()`.  IF that is the case,
+these values must be identical to the values used during write; decryption won't work even with the correct encryption
+key.  Please note that you can change these values even after `read()` `with attempt_password()`.  See **Read Functions**
+below for more information.
+
 `logging_level='info'`, `logging_stdout_output=True`, `logging_txt_output=False`, and `save_statistics=False` are 
-arguments as well.  Scroll a little bit up to see them explained in `write()`
+arguments as well.  These are seen in `write()` as well; read their descriptions above to see what these do.
 
 ### Custom Color Palette Functions
 
@@ -362,7 +377,10 @@ when changing these, as it could potentially result in crashes for invalid value
 
 ### Contributing
 
-Join my Discord server and say hi:
+**Let me know of your ideas and suggestions!**  There are many directions this technology can go in, and with enough interest
+your ideas can be future additions to this core library (as well as the desktop app).
+
+Heres my Discord server, feel free to drop in and say hi:
 
 **https://discord.gg/t9uv2pZ**
 
@@ -378,7 +396,8 @@ For now until we get a better feel for how people are using it and how things ca
 BitGlitter is best suited for payloads less than 50-100MB.
 + **This library is completely experimental:** In its current state, BitGlitter is merely a proof of concept to see if
 doing this was possible and if there is interest.  It started as one of my first projects learning Python and programming
-as a whole.  Please use the issues page or let me know on Discord if there is something not working.
+as a whole.  I am one person doing my best to create a well-rounded product that accomplishes what it is designed to do.
+Please use the issues page or let me know on Discord if there is something not working.
 
 ### Acknowledgements
 Thank you to [Tanmay Mishra](https://github.com/tmishra3) for giving me guidance during planning of the library, as well

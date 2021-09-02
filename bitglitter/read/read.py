@@ -12,8 +12,7 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 def read(file_path,
          stop_at_metadata_load=False,
-         continue_read=True,
-         unpackage_files=True,
+         unpackage_files=True, #todo- dont autodelete if False
          auto_delete_finished_stream=True, #todo
          output_directory=None,
          bad_frame_strikes=25,
@@ -36,7 +35,6 @@ def read(file_path,
 
          # Session Data
          save_statistics=False,
-         _app_mode=False  # overrides some configs if ran from Electron app
          ):
     """This is the high level function that decodes BitGlitter encoded images and video back into the files/folders
     contained within them.  This along with write() are the two primary functions of this library.

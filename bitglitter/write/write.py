@@ -25,11 +25,11 @@ def write(
 
         # Stream configuration
         compression_enabled=True,
-        # error_correction=False, -> to be implemented
-        file_mask_enabled=False,
+        # error_correction=False, -> Pending further research for viability
 
         # Encryption
         encryption_key="",
+        file_mask_enabled=False,
         scrypt_n=14,
         scrypt_r=8,
         scrypt_p=1,
@@ -51,11 +51,8 @@ def write(
 
         # Session Data
         save_statistics=False,
-        _app_mode=False  # overrides some configs if ran from Electron app
 ):
-    """This is the primary function in creating BitGlitter streams from files.  Please see Wiki page or project README
-    for more information.
-    """
+    """Creates BitGlitter streams from files/directories.  See repo readme for more information."""
 
     config = session.query(Config).first()
     constants = session.query(Constants).first()
