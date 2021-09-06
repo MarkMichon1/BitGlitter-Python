@@ -9,9 +9,9 @@ from bitglitter.config.config import engine, session, SqlBaseClass
 class Config(SqlBaseClass):
     __abstract__ = False
     __tablename__ = 'config'
-    decoded_files_output_dir = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
+    read_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
     read_bad_frame_strikes = Column(Integer, default=10)
-    disable_bad_frame_strikes = Column(Boolean, default=False)
+    enable_bad_frame_strikes = Column(Boolean, default=True)
     write_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'))
     log_txt_dir = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Logs'))
     log_output = Column(Boolean, default=False)

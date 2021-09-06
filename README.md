@@ -368,7 +368,7 @@ and saved palettes.  All settings get reverted to default, and default/included 
 
 `return_settings()` Returns a dictionary object of all settings.
 
-`update_settings(decoded_files_output_path=None, read_bad_frame_strikes=None, disable_bad_frame_strikes=None, 
+`update_settings(read_path=None, read_bad_frame_strikes=None, enable_bad_frame_strikes=None, 
                     write_path=None, log_txt_path=None, log_output=None, logging_level=None, maximum_cpu_cores=None,
                     save_statistics=None, output_stream_title=None)` Allows you to update any of the settings.  Use caution
 when changing these, as it could potentially result in crashes for invalid values.
