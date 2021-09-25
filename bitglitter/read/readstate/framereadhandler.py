@@ -4,8 +4,8 @@ from multiprocessing import cpu_count
 from cv2 import imread
 
 from bitglitter.config.palettemodels import Palette
-from read.readstate.videoframegenerator import video_frame_generator
-from read.readstate.frameprocess import frame_process
+from bitglitter.read.readstate.videoframegenerator import video_frame_generator
+from bitglitter.read.readstate.frameprocess import frame_process
 
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,

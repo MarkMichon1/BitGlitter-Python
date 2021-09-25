@@ -4,8 +4,8 @@ import logging
 
 from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.config.readmodels.streamread import StreamRead
-from read.decode.headerdecode import frame_header_decode, \
-    initializer_header_decode, metadata_header_validate_decode, stream_header_decode
+from bitglitter.read.decode.headerdecode import frame_header_decode, initializer_header_decode, \
+    metadata_header_validate_decode, stream_header_decode
 from bitglitter.read.scan.scanvalidate import frame_lock_on, minimum_block_checkpoint
 from bitglitter.read.scan.scanhandler import ScanHandler
 from bitglitter.utilities.encryption import get_sha256_hash_from_bytes

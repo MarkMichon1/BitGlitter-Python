@@ -5,7 +5,7 @@ import logging
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Constants
 from bitglitter.config.palettemodels import Palette
-from read.decode.headerutilities import crc_verify
+from bitglitter.read.decode.headerutilities import crc_verify
 from bitglitter.utilities.compression import decompress_bytes
 from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
 

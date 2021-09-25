@@ -5,7 +5,7 @@ from bitglitter.config.config import session
 from bitglitter.config.configfunctions import _read_update
 from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.readmodels.readmodels import StreamFrame
-from read.readstate.framereadhandler import frame_read_handler
+from bitglitter.read.readstate.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validateread import verify_read_parameters
 

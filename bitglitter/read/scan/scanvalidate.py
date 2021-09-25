@@ -4,7 +4,7 @@ from numpy import flip
 import hashlib
 import logging
 
-from read.scan.scanutilities import color_snap, return_distance, scan_block
+from bitglitter.read.scan.scanutilities import color_snap, return_distance, scan_block
 from bitglitter.utilities.palette import ColorsToBits
 
 
