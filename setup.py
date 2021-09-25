@@ -14,12 +14,12 @@ setup(
     url="https://github.com/MarkMichon1/BitGlitter-Python",
     packages=find_namespace_packages(),
     install_requires=[
-        "bitstring",
-        "cryptography",
-        "ffmpeg-python",
-        "opencv-python",
-        "Pillow",
-        "SQLAlchemy"
+        "bitstring==3.1.9",
+        "cryptography==3.4.8",
+        "ffmpeg-python==0.2.0",
+        "opencv-python==4.5.3.56",
+        "Pillow==8.3.2",
+        "SQLAlchemy==1.4.25"
     ],
     extra_require={"dev": "pytest"},
     classifiers=[
