@@ -4,7 +4,7 @@ with open("README.md", "r") as openReadMe:
     long_description = openReadMe.read()
 
 setup(
-    name="BitGlitter",
+    name="BitGlitter Python",
     version="2.0.0",
     author="Mark Michon",
     author_email="markkmichon@gmail.com",
