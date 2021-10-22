@@ -9,9 +9,8 @@ from bitglitter.read.readstate.frameprocess import frame_process
 
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
-                       block_height_override, block_width_override, encryption_key,
-                       scrypt_n, scrypt_r, scrypt_p, temp_save_directory, stop_at_metadata_load,
-                       auto_delete_finished_stream): #todo <-
+                       block_height_override, block_width_override, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+                       temp_save_directory, stop_at_metadata_load, unpackage_files, auto_delete_finished_stream):
 
     unique_frames_read = None
     blocks_read = None
@@ -38,7 +37,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
     if input_type == 'video':
 
-        # Processing frames in a single process until all metadata has been received, then we'll switch to multicore
+        # Processing frames in a single process until all metadata has been received, then switch to multicore
         frame_generator = video_frame_generator(input_path)
         frame_strike_count = 0
 
@@ -57,6 +56,11 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             dict_object['total_video_frames'] = next_frame_data['total_video_frames']
 
             frame_results = frame_process(dict_object)
+
+            # Stopping at metadata load if right conditions
+            if 'returned_metadata' in frame_results and frame_results[''] and stop_at_metadata_load: #needs more logic
+                pass
+
             if 'abort' in frame_results: #  Errors in these frames are always total aborts, as they have key stream data
                 logging.warning('Critical error, cannot continue.')
                 return {'abort': True}

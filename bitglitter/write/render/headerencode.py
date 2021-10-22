@@ -116,7 +116,7 @@ def stream_header_encode(size_in_bytes, total_frames, compression_enabled, encry
     adding_bits.append(BitArray(uint=size_in_bytes, length=64))
     adding_bits.append(BitArray(uint=total_frames, length=32))
     adding_bits.append(BitArray([int(compression_enabled), int(encryption_enabled),
-                                 int(file_mask_enabled)]))
+                                 int(file_mask_enabled if encryption_enabled else False)]))
 
     adding_bits.append(BitArray(uint=metadata_header_length, length=32))
     adding_bits.append(BitArray(bytes=metadata_header_hash, length=256))

@@ -89,7 +89,6 @@ def draw_frame(dict_obj):
     image = numpy.zeros((pixel_width * block_height, pixel_width * block_width, 3), dtype='uint8')
 
     if initializer_enabled:
-        pass
         image = calibrator_header_render(image, block_height, block_width, pixel_width, initializer_palette_dict,
                                          initializer_palette_dict_b)
 

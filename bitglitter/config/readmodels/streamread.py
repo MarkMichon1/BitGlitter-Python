@@ -56,6 +56,9 @@ class StreamRead(SqlBaseClass):
     completed_frames = Column(Integer, default=0)
     aborted = Column(Boolean, default=False)  # For desktop app to break out at beginning of each multiprocess frame
 
+    # Operation State
+    passed_metadata_checkpoint = Column(Boolean, default=False)
+
     # Unpackage State
     auto_delete_finished_stream = Column(Boolean)
     unpackage_files = Column(Boolean)
@@ -109,8 +112,8 @@ class StreamRead(SqlBaseClass):
 
     def metadata_header_load(self, bg_version, stream_name, stream_description, time_created, manifest_string):
         logging.debug('Metadata header load')
-        self.bg_version = bg_version
-        self.stream_name = stream_name
+        self.bg_version = bg_version #
+        self.stream_name = stream_name #
         self.stream_description = stream_description
         self.time_created = time_created
         self.manifest_string = manifest_string
@@ -125,6 +128,24 @@ class StreamRead(SqlBaseClass):
         # Manifest process
         manifest_dict = json.loads(manifest_string)
         manifest_unpack(manifest_dict, self.id, new_output_directory)
+
+    def metadata_checkpoint_return(self):
+        """If stop_at_metadata_load is enabled at read() and this hasn't ran previously, this returns a dictionary of
+        all stream header and metadata attributes, as well as stream header data if its a learned palette.
+        """
+
+        #todo- return palette data if not grabbed yet
+        #todo- return metadata as dict
+        returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
+                         self.bg_version, 'stream_description': self.stream_description, 'time_created':
+                         self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
+                         self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
+                         self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled, 'protocol_version':
+                         self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height}
+
+
+
+        return returned_dict
 
 
     def accept_frame(self, payload_bits, frame_number):

@@ -11,9 +11,9 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 
 def read(file_path,
-         stop_at_metadata_load=False,
-         unpackage_files=True, #todo- dont autodelete if False
-         auto_delete_finished_stream=True, #todo
+         stop_at_metadata_load=True, ###
+         unpackage_files=True,  #todo- dont autodelete if False ###
+         auto_delete_finished_stream=True, ###
          output_directory=None,
          bad_frame_strikes=25,
          max_cpu_cores=0,
@@ -23,7 +23,7 @@ def read(file_path,
          block_width_override=False,
 
          # Crypto Input
-         encryption_key=None,
+         decryption_key=None,
          scrypt_n=14,
          scrypt_r=8,
          scrypt_p=1,
@@ -54,24 +54,29 @@ def read(file_path,
 
     # Logging initializing.
     logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_dir))
-    logging.info('Beginning read...')
+    logging.info('Starting read...')
 
     # Are all parameters acceptable?
-    input_type = verify_read_parameters(file_path, output_directory, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+    input_type = verify_read_parameters(file_path, output_directory, decryption_key, scrypt_n, scrypt_r, scrypt_p,
                                         block_height_override, block_width_override, max_cpu_cores, save_statistics,
                                         bad_frame_strikes)
 
     # Pull valid frame data from the inputted file.
-    returned = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
-                                  block_height_override, block_width_override, encryption_key, scrypt_n, scrypt_r,
-                                  scrypt_p, temp_save_directory, stop_at_metadata_load)
+    results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
+                                  block_height_override, block_width_override, decryption_key, scrypt_n, scrypt_r,
+                                  scrypt_p, temp_save_directory, stop_at_metadata_load, unpackage_files,
+                                  auto_delete_finished_stream)
+
+    # Return metadata if conditions are met
+    if 'returned_metadata' in results:
+        return results['returned_metadata']
 
     #  Remove incomplete frames from db
     session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()
     session.commit()
 
     # Save statistics if enabled.
-    if save_statistics and 'abort' not in returned:
-        _read_update(returned['blocks_read'], returned['unique_frames_read'], returned['data_read'])
+    if save_statistics and 'abort' not in results:
+        _read_update(results['blocks_read'], results['unique_frames_read'], results['data_read'])
 
-    return returned['stream_sha256'] if 'stream_sha256' in returned else None
+    return results['stream_sha256'] if 'stream_sha256' in results else None

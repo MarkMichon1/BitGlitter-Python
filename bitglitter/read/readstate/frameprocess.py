@@ -36,6 +36,8 @@ def frame_process(dict_object):
     initializer_palette_b_dict = dict_object['initializer_palette_b_dict']
     auto_delete_finished_stream = dict_object['auto_delete_finished_stream']
 
+    TEMP = dict_object['asd'] if dict_object['asd'] else None #todo <-  template for non-essential pieces each frame
+
     frame_pixel_height = frame.shape[0]
     frame_pixel_width = frame.shape[1]
     blocks_read = 0
