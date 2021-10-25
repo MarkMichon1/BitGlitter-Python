@@ -14,7 +14,7 @@ def refresh_working_folder(active_path):
         shutil.rmtree(active_path)
         logging.debug(f"active_path folder '{active_path}' already exists.  Deleting...")
 
-    os.mkdir(active_path)
+    os.makedirs(active_path)
     logging.debug(f"Temp folder '{active_path}' created.")
     return active_folder
 
