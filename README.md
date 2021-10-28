@@ -1,6 +1,6 @@
 ![BitGlitter Logo](https://i.imgur.com/pX8b4Dy.png)
 
-# Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
+### Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
 ## ⚡ Store and transfer files using high-performance animated barcodes
 

@@ -32,7 +32,7 @@ class RenderHandler:
                  ):
 
         self.blocks_wrote = 0
-        self.frames_wrote = 0
+        self.total_frames = 0
 
         # Pre render
         logging.info('Beginning pre-render processes...')
@@ -55,11 +55,11 @@ class RenderHandler:
         if stream_palette.is_custom:
             palette_header_bytes, palette_header_hash_bytes = custom_palette_header_encode(stream_palette)
 
-        self.frames_wrote = total_frames_estimator(block_height, block_width, len(metadata_header_bytes),
+        self.total_frames = total_frames_estimator(block_height, block_width, len(metadata_header_bytes),
                                                    len(palette_header_bytes), size_in_bytes, stream_palette,
                                                    output_mode)
 
-        stream_header = stream_header_encode(size_in_bytes, self.frames_wrote, compression_enabled,
+        stream_header = stream_header_encode(size_in_bytes, self.total_frames, compression_enabled,
                                              encryption_enabled, file_mask_enabled, len(metadata_header_bytes),
                                              metadata_header_hash_bytes, len(palette_header_bytes),
                                              palette_header_hash_bytes)
@@ -77,25 +77,25 @@ class RenderHandler:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
             count = 1
             for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
-                                                 pixel_width, protocol_version, initializer_palette, stream_palette,
-                                                 output_mode, output_path, stream_name_file_output, working_dir,
-                                                 self.frames_wrote, stream_header, metadata_header_bytes,
-                                                 palette_header_bytes, stream_sha256, initializer_palette_dict,
-                                                 initializer_palette_dict_b, stream_palette_dict, default_output_path,
-                                                 stream_name), chunksize=1):
-                if frame_encode['frame_number'] == self.frames_wrote:
+                                                                                   pixel_width, protocol_version, initializer_palette, stream_palette,
+                                                                                   output_mode, output_path, stream_name_file_output, working_dir,
+                                                                                   self.total_frames, stream_header, metadata_header_bytes,
+                                                                                   palette_header_bytes, stream_sha256, initializer_palette_dict,
+                                                                                   initializer_palette_dict_b, stream_palette_dict, default_output_path,
+                                                                                   stream_name), chunksize=1):
+                if frame_encode['frame_number'] == self.total_frames:
                     block_position = frame_encode['block_position']
-                logging.info(f'Generating frame {count} of {self.frames_wrote}... '
-                             f'({round(((count / self.frames_wrote) * 100), 2):.2f} %)')
+                logging.info(f'Generating frame {count} of {self.total_frames}... '
+                             f'({round(((count / self.total_frames) * 100), 2):.2f} %)')
 
                 count += 1
         logging.info('Rendering frames complete.')
 
         # Video Render
         if output_mode == 'video':
-            render_video(output_path, default_output_path, stream_name_file_output, working_dir, self.frames_wrote,
+            render_video(output_path, default_output_path, stream_name_file_output, working_dir, self.total_frames,
                          frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name)
 
         # Wrap-up
-        self.blocks_wrote = (block_width * block_height) * self.frames_wrote + block_position
+        self.blocks_wrote = (block_width * block_height) * self.total_frames + block_position
         CurrentJobState.end_task()

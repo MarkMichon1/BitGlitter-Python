@@ -103,6 +103,6 @@ def write(
     remove_working_folder(working_dir)
 
     if save_statistics:
-        _write_update(render_handler.blocks_wrote, render_handler.frames_wrote, pre_processor.size_in_bytes)
+        _write_update(render_handler.blocks_wrote, render_handler.total_frames, pre_processor.size_in_bytes)
 
     return pre_processor.stream_sha256
