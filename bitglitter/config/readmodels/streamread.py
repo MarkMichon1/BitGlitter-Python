@@ -8,10 +8,10 @@ import json
 from pathlib import Path
 import time
 
-from bitglitter.config.config import engine, SqlBaseClass
+from bitglitter.config.config import engine, SQLBaseClass
 
 
-class StreamRead(SqlBaseClass):
+class StreamRead(SQLBaseClass):
     """This serves as the central data container and API for interacting with saved read data."""
 
     __tablename__ = 'stream_reads'
@@ -141,7 +141,8 @@ class StreamRead(SqlBaseClass):
                          self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
                          self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
                          self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled, 'protocol_version':
-                         self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height}
+                         self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
+                         'manifest_decrypt_success': None} # <- todo
 
 
 
@@ -163,7 +164,7 @@ class StreamRead(SqlBaseClass):
 import bitglitter.config.readmodels.readmodels
 from bitglitter.read.decode.manifest import manifest_unpack
 
-SqlBaseClass.metadata.create_all(engine)
+SQLBaseClass.metadata.create_all(engine)
 
 #todo: MULTIPLE CLASSES: merge with above model and integrate applicable stuff into readfunctions
 

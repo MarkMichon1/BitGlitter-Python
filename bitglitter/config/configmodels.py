@@ -3,10 +3,10 @@ from sqlalchemy import Boolean, Column, Integer, String
 from multiprocessing import cpu_count
 from pathlib import Path
 
-from bitglitter.config.config import engine, session, SqlBaseClass
+from bitglitter.config.config import engine, session, SQLBaseClass
 
 
-class Config(SqlBaseClass):
+class Config(SQLBaseClass):
     __abstract__ = False
     __tablename__ = 'config'
     read_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
@@ -22,7 +22,7 @@ class Config(SqlBaseClass):
     output_stream_title = Column(Boolean, default=True) # App version
 
 
-class Constants(SqlBaseClass):
+class Constants(SQLBaseClass):
 
     __abstract__ = False
     __tablename__ = 'constants'
@@ -47,7 +47,7 @@ class Constants(SqlBaseClass):
         return self.VALID_IMAGE_FORMATS.split('|')
 
 
-class Statistics(SqlBaseClass):
+class Statistics(SQLBaseClass):
     __abstract__ = False
     __tablename__ = 'statistics'
     blocks_wrote = Column(Integer, default=0)
@@ -85,7 +85,7 @@ class Statistics(SqlBaseClass):
         self.save()
 
 
-class CurrentJobState(SqlBaseClass):
+class CurrentJobState(SQLBaseClass):
     """Lightweight singleton object that is queried for every frame read or written when ran with Electron app, to
     indicate if the current job has been cancelled.  This runs at the beginning of each frame.
     """
@@ -122,4 +122,4 @@ class CurrentJobState(SqlBaseClass):
         singleton.save()
 
 
-SqlBaseClass.metadata.create_all(engine)
+SQLBaseClass.metadata.create_all(engine)

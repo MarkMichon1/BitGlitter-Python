@@ -334,6 +334,15 @@ Files are compressed in transit (unless you explicitly disable it in `write()` s
 `update_stream_read(stream_sha256, auto_delete_finished_stream=None, unpackage_files=None)` Is where you can configure 
 other values for stream reads.
 
+`blacklist_stream_sha256(stream_sha256)` Disallow a specific SHA-256 hash of a stream to be read on your client.  Will
+also remove the Stream Read containing that hash as well, if it exists.
+
+`return_all_blacklist_sha256()` Returns a list of all blacklisted SHA-256 hashes as strings.
+
+`remove_blacklist_sha256(stream_sha256)` Removes a specific SHA-256 hash.  Returns `True` or `False` depending on whether
+it existed.
+
+`remove_all_blacklist_sha256()` Removes all SHA-256 hashes from the blacklist.
 
 ### Preset Functions
 

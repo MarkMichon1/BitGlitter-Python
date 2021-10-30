@@ -1,13 +1,14 @@
 from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from bitglitter.config.config import engine, session, SqlBaseClass
+from bitglitter.config.config import engine, session, SQLBaseClass
 
 
-class StreamFrame(SqlBaseClass):
+class StreamFrame(SQLBaseClass):
     __tablename__ = 'stream_frames'
     __abstract__ = False
 
+    # note- sha256 not included as its only verification prior to addition
     stream_id = Column(Integer, ForeignKey('stream_reads.id'))
     stream = relationship('StreamRead', back_populates='frames')
     payload_bits = Column(Integer)  # Length of stream payload bits within this frame, tracked to ensure padding removed
@@ -25,7 +26,7 @@ class StreamFrame(SqlBaseClass):
         return f'Frame {self.frame_number}/{self.stream.total_frames} for {self.stream.stream_name}'
 
 
-class StreamFile(SqlBaseClass):
+class StreamFile(SQLBaseClass):
     __tablename__ = 'stream_files'
     __abstract__ = False
 
@@ -47,7 +48,7 @@ class StreamFile(SqlBaseClass):
         return f'File {self.name} in {self.stream.stream_name}'
 
 
-class StreamDataProgress(SqlBaseClass):
+class StreamDataProgress(SQLBaseClass):
     """Aside from tracking progress of frames, we also need to account for what index slices of the overall payload we
     have saved/processed.  This is because files can be extracted from incomplete streams; this is the mechanism to
     track and calculate that, by seeing if file start:end falls within the current coverage.
@@ -97,4 +98,15 @@ class StreamDataProgress(SqlBaseClass):
         super().create(**kwargs)
 
 
-SqlBaseClass.metadata.create_all(engine)
+class StreamSha256Blacklist(SQLBaseClass):
+    """When metadata is loaded and you """
+    __tablename__ = 'stream_sha256_blacklists'
+    __abstract__ = False
+
+    stream_sha256 = Column(String, unique=True)
+
+    def __str__(self):
+        return self.stream_sha256
+
+
+SQLBaseClass.metadata.create_all(engine)

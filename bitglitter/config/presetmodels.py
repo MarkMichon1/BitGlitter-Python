@@ -2,10 +2,10 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 from datetime import datetime
 
-from bitglitter.config.config import engine, SqlBaseClass
+from bitglitter.config.config import engine, SQLBaseClass
 
 
-class Preset(SqlBaseClass):
+class Preset(SQLBaseClass):
     __tablename__ = 'presets'
     __abstract__ = False
 
@@ -25,4 +25,4 @@ class Preset(SqlBaseClass):
     frames_per_second = Column(Integer, nullable=False)
 
 
-SqlBaseClass.metadata.create_all(engine)
+SQLBaseClass.metadata.create_all(engine)
