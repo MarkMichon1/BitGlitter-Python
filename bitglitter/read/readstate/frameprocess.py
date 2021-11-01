@@ -11,56 +11,88 @@ from bitglitter.read.scan.scanhandler import ScanHandler
 from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
 
 
-def frame_process(dict_object):
+def frame_process(dict_obj):
     """This is ran each time an individual frame is processed, orchestrating scanning, decoding, validation, and finally
     passing the data to StreamRead for saving and file extraction.  Multiprocessing supports only passing one argument,
     hence all arguments being packaged inside dict_object.
     """
 
-    #  Unpackaging generic variables from dict_object, these are consistent across conditions this function is used
-    frame = dict_object['frame']
-    mode = dict_object['mode']
-    output_directory = dict_object['output_directory']
-    block_height_override = dict_object['block_height_override']
-    block_width_override = dict_object['block_width_override']
-    encryption_key = dict_object['encryption_key']
-    scrypt_n = dict_object['scrypt_n']
-    scrypt_r = dict_object['scrypt_r']
-    scrypt_p = dict_object['scrypt_p']
-    temp_save_directory = dict_object['temp_save_directory']
-    initializer_palette_a = dict_object['initializer_palette_a']
-    initializer_palette_b = dict_object['initializer_palette_b']
-    initializer_palette_a_color_set = dict_object['initializer_palette_a_color_set']
-    initializer_palette_b_color_set = dict_object['initializer_palette_b_color_set']
-    initializer_palette_a_dict = dict_object['initializer_palette_a_dict']
-    initializer_palette_b_dict = dict_object['initializer_palette_b_dict']
-    auto_delete_finished_stream = dict_object['auto_delete_finished_stream']
+    #  Unpacking variables used across modes
+    frame = dict_obj['frame']
 
-    TEMP = dict_object['asd'] if dict_object['asd'] else None #todo <-  template for non-essential pieces each frame
-
+    # Frame Base Geometry
     frame_pixel_height = frame.shape[0]
     frame_pixel_width = frame.shape[1]
+
+    # Statistics
     blocks_read = 0
     data_read_bits = 0
 
-    if mode == 'video':
-        current_frame_position = dict_object['current_frame_position']
-        total_video_frames = dict_object['total_video_frames']
-        logging.info(f'Scanning frame {current_frame_position}/{total_video_frames}') #todo- put outside if out of order w/ mp, add %
+    #todo: stop_at_metadata_load, auto_delete_finished_stream
+
+    output_directory = dict_obj['output_directory']
+    block_height_override = dict_obj['block_height_override']
+    block_width_override = dict_obj['block_width_override']
+    encryption_key = dict_obj['encryption_key']
+    scrypt_n = dict_obj['scrypt_n']
+    scrypt_r = dict_obj['scrypt_r']
+    scrypt_p = dict_obj['scrypt_p']
+    temp_save_directory = dict_obj['temp_save_directory']
+    initializer_palette_a = dict_obj['initializer_palette_a']
+    initializer_palette_a_color_set = dict_obj['initializer_palette_a_color_set']
+    initializer_palette_b_color_set = dict_obj['initializer_palette_b_color_set']
+    initializer_palette_a_dict = dict_obj['initializer_palette_a_dict']
+    initializer_palette_b_dict = dict_obj['initializer_palette_b_dict']
+
+    stop_at_metadata_load = dict_obj['stop_at_metadata_load']
+    auto_delete_finished_stream = dict_obj['auto_delete_finished_stream'] #todo load in sr+^
+
+    #TEMP = dict_obj['asd'] if 'asd' in dict_obj else None #todo <-  template for non-essential pieces each frame
+
+    if not 'stream_read' in dict_obj: # First frame or image
+        # Unpackaging variables to store in Stream Read
+        output_directory = dict_obj['output_directory']
+        block_height_override = dict_obj['block_height_override']
+        block_width_override = dict_obj['block_width_override']
+        encryption_key = dict_obj['encryption_key']
+        scrypt_n = dict_obj['scrypt_n']
+        scrypt_r = dict_obj['scrypt_r']
+        scrypt_p = dict_obj['scrypt_p']
+        temp_save_directory = dict_obj['temp_save_directory']
+        initializer_palette_a = dict_obj['initializer_palette_a']
+        initializer_palette_a_color_set = dict_obj['initializer_palette_a_color_set']
+        initializer_palette_b_color_set = dict_obj['initializer_palette_b_color_set']
+        initializer_palette_a_dict = dict_obj['initializer_palette_a_dict']
+        initializer_palette_b_dict = dict_obj['initializer_palette_b_dict']
+
+        stop_at_metadata_load = dict_obj['stop_at_metadata_load']
+        auto_delete_finished_stream = dict_obj['auto_delete_finished_stream']  # todo load in sr+^
+
+        if dict_obj['mode'] == 'video': # First video frame
+            pass
+        elif dict_obj['mode'] == 'image': # Image scan
+            pass
+    elif 'stream_read' in dict_obj: # Frames 2+ for video
+        pass
+
+    if dict_obj['mode'] == 'video':
+        current_frame_position = dict_obj['current_frame_position']
+        total_video_frames = dict_obj['total_video_frames']
 
         if current_frame_position != 1:
 
-            if not 'multiprocess' in dict_object:  # Continued initializer frames grabbing setup headers
-                stream_read = dict_object['stream_read']
+            if not 'multiprocess' in dict_obj:  # Continued initializer frames grabbing setup headers
+                stream_read = dict_obj['stream_read']
 
                 if not stream_read.stream_header_complete:
-                    carry_over_bits = dict_object['dict_object']
+                    carry_over_bits = dict_obj['dict_object']
+                    #todo: purge carry over bits upon completion
 
                 if not stream_read.metadata_header_complete:
-                    carry_over_bits = dict_object['dict_object']
+                    carry_over_bits = dict_obj['dict_object']
 
                 if not stream_read.palette_header_complete:
-                    carry_over_bits = dict_object['dict_object']
+                    carry_over_bits = dict_obj['dict_object']
                     #todo palette ID load if applicable
 
                 # Continuing on to begin processing payload on this frame
@@ -216,15 +248,12 @@ def frame_process(dict_object):
 
             # Marking frame as complete, moving on to the next frame
             stream_frame.finalize_frame(stream_payload_bits)
-            return {'mode': mode, 'encryption_key': 3}
+            return {} #todo- return anything if fine?
 
 
-    elif mode == 'image':
+    elif dict_obj['mode'] == 'image':
         pass
-
-    else:
-        raise ValueError('Invalid mode for frame_process()')
 
     # todo- return state data, failures, and carry over bits
     # todo: return stream read, stream palette, bW, bH
-    return {'final_meta_frame': bool, 'total_blocks': 0, 'is_unique_frame': bool} #todo
+    # return {'final_meta_frame': bool, 'total_blocks': 0, 'is_unique_frame': bool} #todo

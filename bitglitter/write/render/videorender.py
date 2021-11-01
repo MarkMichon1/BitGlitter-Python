@@ -5,7 +5,8 @@ from pathlib import Path
 
 
 def render_video(stream_output_path, default_output_path, stream_name_file_output, working_directory, total_frames,
-                 frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name):
+                 frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name,
+                 total_operations):
     """Taking in whichever arguments, it takes all of the rendered frames, and merges them into an .mp4 ."""
 
     logging.info('Rendering video...')
@@ -23,8 +24,8 @@ def render_video(stream_output_path, default_output_path, stream_name_file_outpu
     output = cv2.VideoWriter(str(save_path), cv2.VideoWriter.fourcc(*'mp4v'), frames_per_second, frame_size)
 
     for frame in range(total_frames):
-        logging.info(f'Rendering video frame {frame + 1} of {total_frames}... '
-                     f'({round((((frame + 1) / total_frames) * 100), 2):.2f} %)')
+        percentage_string = f'{round((((frame + 1) / total_operations) * 100) + 50, 2):.2f}'
+        logging.info(f'Rendering video frame {frame + 1} of {total_frames}... ({percentage_string} %)')
         image = cv2.imread(str(Path(working_directory / f'{frame + 1}.png')))
         output.write(image)
 

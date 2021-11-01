@@ -184,6 +184,8 @@ the stream, removing one or all streams, changing its save path, etc).  Check ou
 
 Like with `write()`, the only argument required is the input path (`file_path`), except in this case it only accepts 
 files.  Supported video formats are `.avi, .flv, .mov, .mp4, .wmv` and supported image formats are `.bmp, .jpg, .png`.
+Can accept a string with a single absolute file path (image or video), or a list of strings of absolute file paths.
+Lists can only 
 
 `stop_at_metadata_load=False` This will break out of the function *if* metadata for the stream is read.  This allows you
 to view the metadata and manifest (file/directory contents) of the stream itself, to verify the values for yourself.  From

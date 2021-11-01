@@ -72,6 +72,7 @@ class RenderHandler:
             pool_size = max_cpu_cores
 
         block_position = 0
+        total_operations = self.total_frames * (1 + int(output_mode != 'image'))
 
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
@@ -85,8 +86,9 @@ class RenderHandler:
                                                                                    stream_name), chunksize=1):
                 if frame_encode['frame_number'] == self.total_frames:
                     block_position = frame_encode['block_position']
-                logging.info(f'Generating frame {count} of {self.total_frames}... '
-                             f'({round(((count / self.total_frames) * 100), 2):.2f} %)')
+
+                percentage_string = f'{round(((count / total_operations) * 100), 2):.2f}'
+                logging.info(f'Generating frame {count} of {self.total_frames}... ({percentage_string} %)')
 
                 count += 1
         logging.info('Rendering frames complete.')
@@ -94,7 +96,8 @@ class RenderHandler:
         # Video Render
         if output_mode == 'video':
             render_video(output_path, default_output_path, stream_name_file_output, working_dir, self.total_frames,
-                         frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name)
+                         frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name,
+                         total_operations)
 
         # Wrap-up
         self.blocks_wrote = (block_width * block_height) * self.total_frames + block_position

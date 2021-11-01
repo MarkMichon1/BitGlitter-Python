@@ -1,7 +1,8 @@
-#  This class has its own module because of its large size
+#  This model has its own module because of its large size
+
 import logging
 
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import BLOB, Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 import json
@@ -41,8 +42,8 @@ class StreamRead(SQLBaseClass):
 
     # Read State
     remaining_pre_payload_bits = Column(Integer)
-    # carry_over_header_bytes = Column(BLOB)
-    # carry_over_padding_bits = Column(Integer) #todo
+    carry_over_header_bytes = Column(BLOB)
+    carry_over_padding_bits = Column(Integer) #todo
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)
@@ -54,10 +55,10 @@ class StreamRead(SQLBaseClass):
     palette_header_complete = Column(Boolean, default=False)
     metadata_header_complete = Column(Boolean, default=False)
     completed_frames = Column(Integer, default=0)
-    aborted = Column(Boolean, default=False)  # For desktop app to break out at beginning of each multiprocess frame
+    highest_consecutive_frame_one_read = Column(Integer, default=0)  # Important for initial metadata grab
 
     # Operation State
-    passed_metadata_checkpoint = Column(Boolean, default=False)
+    active_this_session = Column(Boolean, default=False)
 
     # Unpackage State
     auto_delete_finished_stream = Column(Boolean)
@@ -81,6 +82,10 @@ class StreamRead(SQLBaseClass):
 
     def __str__(self):
         return f'{self.stream_name} - {self.stream_sha256}'
+
+    def session_activity(self, bool_set: bool): #todo implement
+        self.active_this_session = bool_set
+        self.save()
 
     def geometry_load(self, block_height, block_width, pixel_width):
         self.block_height = block_height
@@ -152,6 +157,15 @@ class StreamRead(SQLBaseClass):
     def accept_frame(self, payload_bits, frame_number):
         logging.debug(f'Frame {frame_number} accepted')
 
+    def attempt_unpackage(self):
+        """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
+        summary of the results.
+        """
+
+        # blob calculate
+        # file assess ^
+        return {}
+
     # User control
     def _delete_data_folder(self):
         pass
@@ -160,7 +174,7 @@ class StreamRead(SQLBaseClass):
         self.delete()
 
 
-# v These need to be at bottom to resolve import/DB relationship issues.  It works but maybe a better way exists.
+# v These need to be at bottom to resolve import/DB relationship issues.  It works but perhaps a better way exists.
 import bitglitter.config.readmodels.readmodels
 from bitglitter.read.decode.manifest import manifest_unpack
 
@@ -170,8 +184,6 @@ SQLBaseClass.metadata.create_all(engine)
 
 
 #
-#         self.next_stream_header_sequential_frame = 1
-#         self.payload_begins_this_frame = None
 #         self.active_this_session = True
 #         self.is_assembled = False # Did the frames successfully merge into a single binary?
 #         self.post_processor_decrypted = False # Was the stream successfully decrypted?

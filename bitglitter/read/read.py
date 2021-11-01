@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 from bitglitter.config.config import session
-from bitglitter.config.configfunctions import _read_update
 from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.read.readstate.framereadhandler import frame_read_handler
@@ -11,9 +10,9 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 
 def read(file_path,
-         stop_at_metadata_load=True, ###
-         unpackage_files=True,  #todo- dont autodelete if False ###
-         auto_delete_finished_stream=True, ###
+         stop_at_metadata_load=True,
+         unpackage_files=True,  #todo- dont autodelete if False ### not fp
+         auto_delete_finished_stream=True,
          output_directory=None,
          bad_frame_strikes=25,
          max_cpu_cores=0,
@@ -62,21 +61,17 @@ def read(file_path,
                                         bad_frame_strikes)
 
     # Pull valid frame data from the inputted file.
-    results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
+    frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                                   block_height_override, block_width_override, decryption_key, scrypt_n, scrypt_r,
                                   scrypt_p, temp_save_directory, stop_at_metadata_load, unpackage_files,
-                                  auto_delete_finished_stream)
+                                  auto_delete_finished_stream, save_statistics)
 
     # Return metadata if conditions are met
-    if 'returned_metadata' in results:
-        return results['returned_metadata']
+    if 'metadata' in frame_read_results:
+        return frame_read_results['metadata']
 
     #  Remove incomplete frames from db
     session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()
     session.commit()
 
-    # Save statistics if enabled.
-    if save_statistics and 'abort' not in results:
-        _read_update(results['blocks_read'], results['unique_frames_read'], results['data_read'])
-
-    return results['stream_sha256'] if 'stream_sha256' in results else None
+    return frame_read_results['stream_sha256'] if 'stream_sha256' in frame_read_results else None
