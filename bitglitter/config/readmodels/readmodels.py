@@ -98,7 +98,7 @@ class StreamDataProgress(SQLBaseClass):
         super().create(**kwargs)
 
 
-class StreamSha256Blacklist(SQLBaseClass):
+class StreamSHA256Blacklist(SQLBaseClass):
     """When metadata is loaded and you """
     __tablename__ = 'stream_sha256_blacklists'
     __abstract__ = False

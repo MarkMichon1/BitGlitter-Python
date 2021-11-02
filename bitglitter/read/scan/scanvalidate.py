@@ -8,8 +8,8 @@ from bitglitter.read.scan.scanutilities import color_snap, return_distance, scan
 from bitglitter.utilities.palette import ColorsToBits
 
 
-def minimum_block_checkpoint(block_height_override, block_width_override, active_frame_size_height,
-                             active_frame_size_width):
+def geometry_override_checkpoint(block_height_override, block_width_override, active_frame_size_height,
+                                 active_frame_size_width):
     """If block_height_override and block_width_override have been entered, this checks those values against the height
     and width (in pixels) of the image loaded).  Since the smallest blocks that can be read are one pixels (since that
     is finest detail you can have with an image), any values beyond that are invalid, and stopped here.
@@ -42,12 +42,12 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
         checkpoint = verify_blocks_x(frame, pixel_width, block_width_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if not checkpoint:
-            return {'abort': True}
+            return False
 
         checkpoint = verify_blocks_y(frame, pixel_width, block_height_override, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict, override=True)
         if not checkpoint:
-            return {'abort': True}
+            return False
 
         block_width, block_height = block_width_override, block_height_override
 
@@ -56,7 +56,7 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
         if return_distance(frame[0, 0], (0, 0, 0)) > 100:
             logging.warning('Frame lock fail!  Initial pixel value exceeds maximum color distance allowed for a '
                             'reliable lock.')
-            return {'abort': True}
+            return False
 
         pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
                                                          combined_colors, initializer_palette_a_dict,
@@ -65,7 +65,7 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
         checkpoint = verify_blocks_x(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
         if not checkpoint:
-            return {'abort': True}
+            return False
 
         block_width = block_dimension_guess
         pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
@@ -76,7 +76,7 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
                                      initializer_palette_a_dict, initializer_palette_b_dict)
 
         if not checkpoint:
-            return {'abort': True}
+            return False
         block_height = block_dimension_guess
 
     logging.debug(f'Lockon successful.\npixel_width: {pixel_width}\nblock_height: {block_height}\nblock_width: '

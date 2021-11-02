@@ -54,6 +54,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             frame_results = frame_process(initial_state_dict)
             stream_read = frame_results['stream_read']
 
+            #todo: frames 2+ dict_obj changes
+
             # Errors
             if 'error' in frame_results:
                 if 'fatal' in frame_results:  # Session-ending error, such as a metadata frame being corrupted
@@ -70,6 +72,10 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             # Metadata Return
             if 'metadata' in frame_results and stream_read.stop_at_metadata_load:
                 pass
+
+            # Headers are decoded, can switch to multiprocessing
+            if stream_read.palette_header_complete and stream_read.metadata_header_complete:
+                break
 
         # Adding Stream SHA-256 to dict to return
         frame_read_results['active_sessions_this_stream'] = [stream_read.stream_sha256]
@@ -119,13 +125,13 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         #Errors todo mp return
         return {'abort': True}
 
-
-    if unpackage_files:
-        active_reads_this_session = [] #todo query unpackage_files = True, active_session = True
-        if active_reads_this_session:
-            logging.info(f'{len(active_reads_this_session)} active stream(s) this session.')
-            frame_read_results['unpackage_results'] = {}
-            for stream_read in active_reads_this_session:
+    active_reads_this_session = []  # todo query unpackage_files = True, active_session = True
+    if active_reads_this_session:
+        logging.info(f'{len(active_reads_this_session)} active stream(s) this session.')
+        frame_read_results['unpackage_results'] = {}
+        for stream_read in active_reads_this_session:
+            stream_read.completed_frame_count_update()
+            if unpackage_files:
                 logging.info(f'Unpackaging {stream_read.stream_name}...')
                 unpackage_results = stream_read.attempt_unpackage()
                 frame_read_results['unpackage_results'][stream_read.stream_sha256] = unpackage_results

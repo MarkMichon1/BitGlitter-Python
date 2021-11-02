@@ -58,7 +58,8 @@ class StreamRead(SQLBaseClass):
     highest_consecutive_frame_one_read = Column(Integer, default=0)  # Important for initial metadata grab
 
     # Operation State
-    active_this_session = Column(Boolean, default=False)
+    active_this_session = Column(Boolean, default=True)
+    is_complete = Column(Boolean, default=False)
 
     # Unpackage State
     auto_delete_finished_stream = Column(Boolean)
@@ -82,6 +83,9 @@ class StreamRead(SQLBaseClass):
 
     def __str__(self):
         return f'{self.stream_name} - {self.stream_sha256}'
+
+    def return_state(self):
+        return {} #todo:
 
     def session_activity(self, bool_set: bool): #todo implement
         self.active_this_session = bool_set
@@ -157,14 +161,22 @@ class StreamRead(SQLBaseClass):
     def accept_frame(self, payload_bits, frame_number):
         logging.debug(f'Frame {frame_number} accepted')
 
+    def completed_frame_count_update(self):
+        self.completed_frames = self.frames.filter.count() #todo...
+        self.save()
+
     def attempt_unpackage(self):
         """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
         summary of the results.
         """
 
         # blob calculate
-        # file assess ^
+        # assess existing files (from previous sessions)
         return {}
+
+    def update_config(self):
+        pass #todo rename
+
 
     # User control
     def _delete_data_folder(self):
@@ -179,79 +191,3 @@ import bitglitter.config.readmodels.readmodels
 from bitglitter.read.decode.manifest import manifest_unpack
 
 SQLBaseClass.metadata.create_all(engine)
-
-#todo: MULTIPLE CLASSES: merge with above model and integrate applicable stuff into readfunctions
-
-
-#
-#         self.active_this_session = True
-#         self.is_assembled = False # Did the frames successfully merge into a single binary?
-#         self.post_processor_decrypted = False # Was the stream successfully decrypted?
-#         self.frame_reference_table = None
-#         self.frames_prior_to_binary_preamble = []
-#         self.stream_palette_read = False
-#         self.assemble_hold = assemble_hold
-
-#
-
-#
-#     #todo: add frame block byte file to signify processing on given frame
-
-#   #todo attempt assembly- try to decrypt manifest, if success, begin unpackaging
-#   #todo def return_status- dict object of stream status
-
-#     def review_active_sessions(self):
-#         '''This method will go over all stream_sha's that were read in this read session, and will check to see if
-#         check if frames_ingested == total_frames AND the frame reference table is displaying all frames are present.  This
-#         only runs if there is at least one active session.
-#         '''
-#
-#         if self.active_session_hashes:
-#             logging.info('Reviewing active sessions and attempting assembly...')
-#             for partial_save in self.active_session_hashes:
-#
-#                 # Not ready to be assembled this session.
-#                 if self.save_dict[partial_save]._attempt_assembly() == False \
-#                         and self.save_dict[partial_save].assemble_hold == False:
-#                     self.save_dict[partial_save]._close_session()
-#
-#                 # Assembled, temporary files pending deletion.
-#                 else:
-#                     logging.info(f'{partial_save} fully read!  Deleting temporary files...')
-#                     self.remove_partial_save(partial_save)
-#
-#             self.active_session_hashes = []
-#
-
-
-
-#                     logging.info("Password incorrect, cannot continue.")
-#                     os.remove(self.pass_through)
-#
-#             else:
-#
-#                 logging.warning(f'Decryption key missing from input argument, cannot continue.')
-#
-#         else:
-#
-#             logging.info('Encryption was not enabled on this stream.  Skipping step...')
-#             self.is_satisfied = True
-#
-#
-# class Decompressor:
-#     '''If compression was enabled on this stream, this object will decompress it.'''
-#
-#     def __init__(self, working_folder, pass_through, compression_enabled):
-#
-#         self.pass_through = pass_through
-#
-#         if compression_enabled:
-#             new_path = working_folder + "\\decompressed.dat"
-#             logging.info('Decompressing file...')
-#             decompress_file(self.pass_through, new_path)
-#             self.pass_through = new_path
-#             logging.info('Successfully decompressed.')
-#
-#         else:
-#             logging.info('Compression was not enabled on this stream.  Skipping step...')
-#

@@ -1,5 +1,5 @@
 from bitglitter.config.config import session
-from bitglitter.config.readmodels.readmodels import StreamSha256Blacklist
+from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
 
 
@@ -77,20 +77,20 @@ def blacklist_stream_sha256(stream_sha256):
     stream_read = session.query(StreamRead).filter(StreamRead.stream_sha256 == stream_sha256).all()
     if stream_read:
         stream_read.delete()
-    StreamSha256Blacklist.create(stream_sha256=stream_sha256)
+    StreamSHA256Blacklist.create(stream_sha256=stream_sha256)
     return True
 
 
 def return_all_blacklist_sha256():
     returned_list = []
-    blacklisted_streams = session.query(StreamSha256Blacklist).all()
+    blacklisted_streams = session.query(StreamSHA256Blacklist).all()
     for blacklisted_item in blacklisted_streams:
         returned_list.append(blacklisted_item.stream_sha256)
     return returned_list
 
 
 def remove_blacklist_sha256(stream_sha256):
-    blacklist =  session.query(StreamSha256Blacklist).filter(StreamSha256Blacklist.stream_sha256 == stream_sha256)\
+    blacklist =  session.query(StreamSHA256Blacklist).filter(StreamSHA256Blacklist.stream_sha256 == stream_sha256)\
         .first()
     if not blacklist:
         return False
@@ -99,6 +99,6 @@ def remove_blacklist_sha256(stream_sha256):
 
 
 def remove_all_blacklist_sha256():
-    session.query(StreamSha256Blacklist).delete()
+    session.query(StreamSHA256Blacklist).delete()
     session.commit()
     return True

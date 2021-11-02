@@ -10,9 +10,9 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 
 def read(file_path,
-         stop_at_metadata_load=True,
+         stop_at_metadata_load=True, #fp
          unpackage_files=True,  #todo- dont autodelete if False ### not fp
-         auto_delete_finished_stream=True,
+         auto_delete_finished_stream=True, #fp
          output_directory=None,
          bad_frame_strikes=25,
          max_cpu_cores=0,
