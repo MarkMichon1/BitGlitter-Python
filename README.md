@@ -1,5 +1,12 @@
 ![BitGlitter Logo](https://i.imgur.com/pX8b4Dy.png)
 
+Latest: `v1.0.3`
+
+**11/1/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
+using the library until that point... countless bugs are fixed, as well as major additions, optimizations, and 
+improvements across the board.  2.0 is a complete rebuild of the original 1.0 library.  I think you will like it. Stay
+tuned... :)
+
 ### Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
 ## ⚡ Store and transfer files using high-performance animated barcodes
@@ -16,6 +23,10 @@ files wherever images or videos can be hosted.  The carrier for data is the 'blo
 the file itself, and there are various measures to read imperfect distorted frames.  What this means for you is streams
 are resistant to compression and distortion, and aren't broken by things such as format changes, metadata changes, etc.
 BitGlitter gives you a unique way to make your data more portable.
+
+![Frame Demo](https://i.imgur.com/Pgq4h1o.png)
+
+Sample frame taken from video using default settings, holding 2.7 KB of data
 
 ### Using ordinary barcodes as a launchpad
 
@@ -185,7 +196,11 @@ the stream, removing one or all streams, changing its save path, etc).  Check ou
 Like with `write()`, the only argument required is the input path (`file_path`), except in this case it only accepts 
 files.  Supported video formats are `.avi, .flv, .mov, .mp4, .wmv` and supported image formats are `.bmp, .jpg, .png`.
 Can accept a string with a single absolute file path (image or video), or a list of strings of absolute file paths.
-Lists can only 
+Lists can only contain image files, videos must be one at a time.  **Important:**  When inputting image
+files, it is important to add the first few frames containing metadata FIRST, before adding the rest of the standard
+payload type frames.  This metadata gives the reader important data on palettes, stream configuration, and on the payload
+itself.  Some frames may be recognized as corrupted when this data is lacking.  Once metadata is received, the order of
+images to input becomes irrelevant, and the library takes care of the rest.
 
 `stop_at_metadata_load=False` This will break out of the function *if* metadata for the stream is read.  This allows you
 to view the metadata and manifest (file/directory contents) of the stream itself, to verify the values for yourself.  From
@@ -271,11 +286,14 @@ a share code which anyone can use to import your palette.
 
 `import_palette_base64(base64_string)` Import palettes from a unique share code (see directly above).
 
-`generate_sample_frame(directory_path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False)` 
+`generate_sample_frame(directory_path, palette_id=None, palette_nickname=None, all_palettes=False, include_default=False,
+pixel_width=20, block_height=20, block_width=20)` 
 Generates a small 'thumbprint' frame of a palette, giving you an idea of how it would appear in a normal rendering.  
 `directory_path` is an existing directory in which it will be saved. `all_palettes` toggles whether you want to get a 
 sample from a specific palette (using `palette_id` or `palette_nickname`) or all palettes saved.  `include_default` toggles
 whether you want to include all default palettes in the generated output, or if you only want to generate custom palettes.
+The last 3 arguments let you control the exact size of the frames.  You can also use this function to generate artwork
+or cool looking wallpapers using the palettes as well.
 
 `return_all_palettes()` Returns a list of dictionary objects of all palettes in your database.
 
@@ -384,7 +402,7 @@ and saved palettes.  All settings get reverted to default, and default/included 
                     save_statistics=None, output_stream_title=None)` Allows you to update any of the settings.  Use caution
 when changing these, as it could potentially result in crashes for invalid values.
 
-![Splitter](https://i.imgur.com/qIygifj.png)
+![Splitter](https://i.imgur.com/tozbtUz.png)
 
 ### Contributing
 

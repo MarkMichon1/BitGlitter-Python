@@ -135,22 +135,25 @@ def remove_all_custom_palettes():
 
 
 def generate_sample_frame(directory_path, palette_id=None, palette_nickname=None, all_palettes=False,
-                          include_default=False):
+                          include_default=False, pixel_width=20, block_height=20, block_width=20):
     """Prints a small sample frame of a given palette to give an idea of its appearance in normal rendering, selecting
     random colors from the palette for each of the blocks.  Alternatively, if all_palettes=True, all palettes in the
-    database will be generated.  Argument include_default toggles whether default palettes are included as well.
+    database will be generated.  Argument include_default toggles whether default palettes are included as well.  Can
+    optionally control the size of the sample frames with the last 3 arguments.
     """
 
     if not all_palettes:
         palette = _return_palette(palette_id=palette_id, palette_nickname=palette_nickname)
-        render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path)
+        render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path,
+                            block_width, block_height, pixel_width)
     else:
         if include_default:
             palettes = session.query(Palette).all()
         else:
             palettes = session.query(Palette).filter(Palette.is_custom)
         for palette in palettes:
-            render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path)
+            render_sample_frame(palette.name, palette.convert_colors_to_tuple(), palette.is_24_bit, directory_path,
+                                block_width, block_height, pixel_width)
 
 
 def import_palette_base64(base64_string):

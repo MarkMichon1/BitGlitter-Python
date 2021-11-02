@@ -1,14 +1,12 @@
 import logging
 from multiprocessing import cpu_count, Pool
 
-from bitglitter.config.configmodels import CurrentJobState
 from bitglitter.config.palettefunctions import _return_palette
 from bitglitter.utilities.filemanipulation import create_default_output_folder
 from bitglitter.write.render.headerencode import metadata_header_encode, custom_palette_header_encode, \
     stream_header_encode
 from bitglitter.write.render.framestategenerator import frame_state_generator
 from bitglitter.write.render.renderutilities import draw_frame, total_frames_estimator
-from bitglitter.write.render.videorender import render_video
 
 
 class RenderHandler:
@@ -27,7 +25,10 @@ class RenderHandler:
                  datetime_started, bg_version, manifest, protocol_version,
 
                  # Render Output
-                 frames_per_second, output_mode, output_path, stream_name_file_output
+                 output_mode, output_path, stream_name_file_output,
+
+                 # Statistics
+                 save_statistics
 
                  ):
 
@@ -71,8 +72,7 @@ class RenderHandler:
         else:
             pool_size = max_cpu_cores
 
-        block_position = 0
-        total_operations = self.total_frames * (1 + int(output_mode != 'image'))
+        self.total_operations = self.total_frames * (1 + int(output_mode != 'image'))
 
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
@@ -83,22 +83,10 @@ class RenderHandler:
                                                                                    self.total_frames, stream_header, metadata_header_bytes,
                                                                                    palette_header_bytes, stream_sha256, initializer_palette_dict,
                                                                                    initializer_palette_dict_b, stream_palette_dict, default_output_path,
-                                                                                   stream_name), chunksize=1):
-                if frame_encode['frame_number'] == self.total_frames:
-                    block_position = frame_encode['block_position']
+                                                                                   stream_name, save_statistics), chunksize=1):
 
-                percentage_string = f'{round(((count / total_operations) * 100), 2):.2f}'
+                percentage_string = f'{round(((count / self.total_operations) * 100), 2):.2f}'
                 logging.info(f'Generating frame {count} of {self.total_frames}... ({percentage_string} %)')
-
                 count += 1
+
         logging.info('Rendering frames complete.')
-
-        # Video Render
-        if output_mode == 'video':
-            render_video(output_path, default_output_path, stream_name_file_output, working_dir, self.total_frames,
-                         frames_per_second, stream_sha256, block_width, block_height, pixel_width, stream_name,
-                         total_operations)
-
-        # Wrap-up
-        self.blocks_wrote = (block_width * block_height) * self.total_frames + block_position
-        CurrentJobState.end_task()

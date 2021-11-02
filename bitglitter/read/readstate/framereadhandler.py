@@ -3,7 +3,6 @@ from multiprocessing import cpu_count
 
 from cv2 import imread
 
-from bitglitter.config.configfunctions import _read_update
 from bitglitter.config.palettemodels import Palette
 from bitglitter.read.readstate.videoframegenerator import video_frame_generator
 from bitglitter.read.readstate.frameprocess import frame_process
@@ -26,7 +25,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     initializer_palette_a_dict = initializer_palette_a.return_decoder()
     initializer_palette_b_dict = initializer_palette_b.return_decoder()
     # todo clean up when finalized vvv
-    process_state_dict = {'output_directory': output_directory, 'block_height_override': block_height_override,
+    initial_state_dict = {'output_directory': output_directory, 'block_height_override': block_height_override,
                       'block_width_override':
                    block_width_override, 'encryption_key': encryption_key, 'scrypt_n': scrypt_n, 'scrypt_r': scrypt_r,
                    'scrypt_p': scrypt_p, 'temp_save_directory': temp_save_directory, 'initializer_palette_a':
@@ -34,7 +33,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                    'initializer_palette_b_color_set': initializer_palette_b_color_set, 'initializer_palette_a_dict':
                    initializer_palette_a_dict, 'initializer_palette_b_dict': initializer_palette_b_dict,
                    'auto_delete_finished_stream': auto_delete_finished_stream, 'stop_at_metadata_load':
-                              stop_at_metadata_load}
+                              stop_at_metadata_load, 'save_statistics': save_statistics}
 
     if input_type == 'video':
 
@@ -43,7 +42,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         logging.info(f'{total_video_frames} frame(s) detected in video file.')
 
         frame_strikes_this_session = 0
-        process_state_dict['mode'] = 'video'
+        initial_state_dict['mode'] = 'video'
 
         # Processing frames in a single process until all metadata has been received, then switch to multicore
         for frame_data in frame_generator:
@@ -51,13 +50,9 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             percentage_string = f'{round(((current_frame_position / total_video_frames) * 100), 2):.2f}'
             logging.info(f'Scanning frame {current_frame_position} of {total_video_frames}... ({percentage_string} %)')
 
-            process_state_dict['frame'] = frame_data['frame']
-            frame_results = frame_process(process_state_dict)
+            initial_state_dict['frame'] = frame_data['frame']
+            frame_results = frame_process(initial_state_dict)
             stream_read = frame_results['stream_read']
-
-            # Stats
-            if save_statistics:
-                _read_update(frame_results['blocks_read'], 1, frame_results['data_read'])
 
             # Errors
             if 'error' in frame_results:
@@ -108,18 +103,18 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
         input_list = [input_path] if isinstance(input_path, str) else input_path
 
-        process_state_dict['mode'] = 'image'
-        process_state_dict['frame'] = imread(input_list) #todo move to generator
+        frame_strikes_this_session = 0
+        initial_state_dict['mode'] = 'image'
+
+        initial_state_dict['frame'] = imread(input_list) #todo move to generator
+
+        frame_generator = video_frame_generator(input_list, initial_state_dict)
 
         frames_read = 1
-        returned_state = frame_process(process_state_dict)
+        returned_state = frame_process(initial_state_dict)
 
         #mc integrate
-
-        # Stats
-        # frames_read += 1 #todo: integrate into mp return
-        # blocks_read = returned_state['blocks_read']
-        # data_read = returned_state['data_read']
+        # image_state_generator
 
         #Errors todo mp return
         return {'abort': True}

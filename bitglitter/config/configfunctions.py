@@ -64,12 +64,12 @@ def clear_stats():
     stats.clear_stats()
 
 
-def _write_update(blocks, frames, data):
+def write_stats_update(blocks, frames, data):
     """Internal function to update stats after rendering completes, along with read update below."""
     stats = session.query(Statistics).first()
     stats.write_update(blocks, frames, data)
 
 
-def _read_update(blocks, frames, data):
+def read_stats_update(blocks, frames, data):
     stats = session.query(Statistics).first()
     stats.read_update(blocks, frames, data)

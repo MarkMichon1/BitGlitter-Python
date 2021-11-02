@@ -1,12 +1,13 @@
+from bitstring import BitArray, ConstBitStream
+import cv2
+import numpy
+
 import hashlib
 import itertools
 import logging
 import math
 from pathlib import Path
 from random import choice, randint
-
-from bitstring import BitArray, ConstBitStream
-from PIL import Image, ImageDraw
 
 from bitglitter.write.render.renderutilities import render_coords_generator
 
@@ -146,16 +147,10 @@ def get_palette_id_from_hash(name, description, time_created, color_set):
     return hasher.hexdigest()
 
 
-def render_sample_frame(palette_name, palette_colors_rgb_tuple, is_24_bit, save_path):
+def render_sample_frame(palette_name, palette_colors_rgb_tuple, is_24_bit, save_path, block_width, block_height,
+                        pixel_width):
 
-    image_height = 400
-    image_width = 400
-    block_width = 20
-    block_height = 20
-    pixel_width = image_height / block_height
-
-    image = Image.new('RGB', (image_width, image_height), 'black')
-    draw = ImageDraw.Draw(image)
+    image = numpy.zeros((pixel_width * block_height, pixel_width * block_width, 3), dtype='uint8')
     next_coordinates = render_coords_generator(block_height, block_width, pixel_width, False)
     for i in range(block_width * block_height):
         if not is_24_bit:
@@ -163,9 +158,9 @@ def render_sample_frame(palette_name, palette_colors_rgb_tuple, is_24_bit, save_
         else:
             chosen_color = (randint(0, 255), randint(0, 255), randint(0, 255))
         block_coordinates = next(next_coordinates)
-        draw.rectangle((block_coordinates[0], block_coordinates[1], block_coordinates[2], block_coordinates[3]),
-                       fill=f'rgb{str(chosen_color)}')
+        cv2.rectangle(image, (block_coordinates[0], block_coordinates[1]), (block_coordinates[2], block_coordinates[3]),
+                      (chosen_color[2], chosen_color[1], chosen_color[0]), -1)
 
     save_directory = Path(save_path)
     save_path = save_directory / f'{palette_name}.png'
-    image.save(save_path)
+    cv2.imwrite(str(save_path), image)

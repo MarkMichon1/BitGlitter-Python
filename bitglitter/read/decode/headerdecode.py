@@ -10,8 +10,8 @@ from bitglitter.utilities.compression import decompress_bytes
 from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
 
 #  When there is an integrity error in these functions, two tiers of errors can be returned:
-FAILURE_RETURN = {'abort': True}  # Generic failure, can be a frame failing or an incorrect decryption key.
-STREAM_FAILURE_RETURN = {'abort': True, 'complete': True}  # The stream stops after these
+ERROR_SOFT = {'error': True}  # Generic failure, can be a frame failing or an incorrect decryption key.
+ERROR_FATAL = {'error': True, 'fatal': True}  # Read operation stops after these
 
 
 def initializer_header_decode(bit_stream, block_height_estimate, block_width_estimate):
@@ -30,7 +30,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
 
     if not crc_verify(bit_stream):
         logging.warning('Initializer checksum failure.  Aborting...')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
 
     bit_stream.pos = 0
     protocol_version = bit_stream.read('uint : 4')
@@ -39,7 +39,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
     if str(protocol_version) not in constants.return_supported_protocols():
         logging.warning(f'Protocol v{str(protocol_version)} not supported in v{constants.BG_VERSION} of BitGlitter.'
                         f'  Please update to fix.  Aborting...')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
 
     decoded_block_height = bit_stream.read('uint : 16')
     decoded_block_width = bit_stream.read('uint : 16')
@@ -48,7 +48,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
                         ' cannot properly read the calibrator.  Aborting...')
         logging.debug(f'decoded_block_height: {decoded_block_height} block_height_estimate: {block_height_estimate}'
                       f'\ndecoded_block_width: {decoded_block_width} block_width_estimate: {block_width_estimate}')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
 
     bit_stream.pos += 192
     stream_palette_id = bit_stream.read('uint : 64')
@@ -72,7 +72,7 @@ def initializer_header_decode(bit_stream, block_height_estimate, block_width_est
             logging.warning('This default palette is unknown by this version of BitGlitter.  This could be the case '
                             'if you\'re using an older version.  Aborting...')
             logging.debug(f'stream_palette_id: {stream_palette_id}')
-            return STREAM_FAILURE_RETURN
+            return ERROR_FATAL
         else:
             logging.info(f'Default palette \'{palette.name}\' detected.')
 
@@ -92,7 +92,7 @@ def frame_header_decode(bit_stream):
 
     if not crc_verify(bit_stream):
         logging.warning('Frame header checksum failure!  Aborting frame...')
-        return FAILURE_RETURN
+        return ERROR_SOFT
 
     bit_stream.pos = 0
     bits_to_read = bit_stream.read('uint : 32')
@@ -112,7 +112,7 @@ def stream_header_decode(bit_stream):
 
     if not crc_verify(bit_stream):
         logging.warning('Stream header checksum failure!  Aborting...')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
 
     bit_stream.pos = 0
     size_in_bytes = bit_stream.read('uint : 64')
@@ -144,7 +144,7 @@ def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encry
         if not decrypted_bytes:  # Signalling there was a decryption failure
             logging.warning('Provided decryption values (key, scrypt_n, scrypt_r, scrypt_p) invalid.  Cannot extract'
                             ' files until correct parameters received.')
-            return FAILURE_RETURN
+            return ERROR_SOFT
 
     decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled else header_bytes)
 
@@ -153,7 +153,7 @@ def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encry
     if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
         logging.warning('Read Stream SHA-256 does not match calculated.  This should never (in theory) be seen'
                         'from the other layers of integrity checks.  Aborting...')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
 
     decoded = decompressed_bytes.decode()
     bg_version, stream_name, stream_description, time_created, manifest_string = decoded.split('\\\\')
@@ -174,7 +174,7 @@ def custom_palette_header_validate_decode(header_bytes, read_sha256):
     if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
         logging.warning('Read palette header SHA-256 does not match calculated.  This should never (in theory) be seen'
                         ' from the other layers of integrity checks.  Aborting...')
-        return STREAM_FAILURE_RETURN
+        return ERROR_FATAL
     palette_id, palette_name, palette_description, time_created, number_of_colors, color_list = \
         decompressed_bytes.decode().split('\\\\')
     time_created = int(time_created)

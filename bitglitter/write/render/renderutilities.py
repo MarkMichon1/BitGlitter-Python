@@ -84,6 +84,7 @@ def draw_frame(dict_obj):
     total_frames = dict_obj['total_frames']
     image_output_path = dict_obj['image_output_path']
     stream_sha256 = dict_obj['stream_sha256']
+    save_statistics = dict_obj['save_statistics']
 
     logging.debug(f'Rendering {frame_number} of {total_frames} ...')
     image = numpy.zeros((pixel_width * block_height, pixel_width * block_width, 3), dtype='uint8')
@@ -136,4 +137,11 @@ def draw_frame(dict_obj):
 
     # Ensure every bit in payload is accounted for.
     assert frame_payload.len == frame_payload.bitpos
-    return {'block_position': block_position, 'frame_number': frame_number}
+
+    if save_statistics:
+        from bitglitter.config.configfunctions import write_stats_update
+        if frame_number != total_frames:
+            blocks_wrote = block_height * block_width
+        else:
+            blocks_wrote = block_position
+        write_stats_update(blocks_wrote, 1, int(frame_payload.len / 8))

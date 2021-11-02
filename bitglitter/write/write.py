@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from bitglitter.config.config import session
-from bitglitter.config.configfunctions import _write_update
 from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.presetfunctions import return_preset
 from bitglitter.utilities.filemanipulation import remove_working_folder
@@ -9,6 +8,7 @@ from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.validation.validatewrite import write_parameter_validate
 from bitglitter.write.preprocess.preprocessor import PreProcessor
 from bitglitter.write.render.renderhandler import RenderHandler
+from bitglitter.write.render.videorender import render_video
 
 
 def write(
@@ -90,19 +90,22 @@ def write(
     pre_processor = PreProcessor(working_dir, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,
                                  scrypt_p, stream_name)
 
-    # This is where the final steps leading up to rendering as well as rendering itself takes place.
+    # This is where the final steps leading up to frame generation as well as generation itself takes place.
     render_handler = RenderHandler(stream_name, stream_description, working_dir, default_output_path, encryption_key,
                                    scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
                                    stream_palette_id, max_cpu_cores, pre_processor.stream_sha256,
                                    pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
                                    file_mask_enabled, pre_processor.datetime_started, constants.BG_VERSION,
-                                   pre_processor.manifest, constants.PROTOCOL_VERSION, frames_per_second,
-                                   output_mode, output_directory, stream_name_file_output)
+                                   pre_processor.manifest, constants.PROTOCOL_VERSION, output_mode, output_directory,
+                                   stream_name_file_output, save_statistics)
+
+    # Video render
+    if output_mode == 'video':
+        render_video(output_directory, default_output_path, stream_name_file_output, working_dir,
+                     render_handler.total_frames, frames_per_second, pre_processor.stream_sha256, block_width,
+                     block_height, pixel_width, stream_name, render_handler.total_operations)
 
     # Removing temporary files
     remove_working_folder(working_dir)
-
-    if save_statistics:
-        _write_update(render_handler.blocks_wrote, render_handler.total_frames, pre_processor.size_in_bytes)
 
     return pre_processor.stream_sha256

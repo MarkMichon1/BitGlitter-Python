@@ -1,10 +1,12 @@
 from sqlalchemy import Column, create_engine, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.pool import NullPool
 
 from pathlib import Path
 
-engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}?check_same_thread=False')
+engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}?check_same_thread=False',
+                       poolclass=NullPool)
 engine.connect()
 Session = scoped_session(sessionmaker(bind=engine))
 session = Session()
