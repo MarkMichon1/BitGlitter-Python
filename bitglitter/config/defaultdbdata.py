@@ -1,4 +1,5 @@
 from bitglitter.config.config import session
+from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.config.configmodels import Config, Constants, CurrentJobState, Statistics
 from bitglitter.config.palettemodels import Palette
 
@@ -483,7 +484,7 @@ def load_default_db_data():
         }
     ]
 
-    palettes_types_pending = default_palette_data + custom_palette_data
+    palettes_types_pending = default_palette_data #+ custom_palette_data #todo TEMP to speed up testing
 
     for palette in palettes_types_pending:
         Palette.create(palette_id=palette['palette_id'], is_24_bit=palette['is_24_bit'], is_custom=palette['is_custom'],

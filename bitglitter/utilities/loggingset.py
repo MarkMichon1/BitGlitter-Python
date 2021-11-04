@@ -5,7 +5,7 @@ import os
 from bitglitter.validation.utilities import logging_config_validate
 
 
-def logging_setter(logging_level, logging_stdout_output, logging_txt_output, logging_save_path):
+def logging_setter(logging_level, logging_stdout_output, logging_txt_output, logging_save_path=None):
     """This is what the logging level and output during the write operation.  It's worth nothing that this is the ONLY
     function that checks parameters outside of verify_write_parameters, because that function's logging outputs hinge in
     the configuration for logging.

@@ -1,11 +1,11 @@
 #  This model has its own module because of its large size
 
-import logging
-
+from bitstring import BitStream
 from sqlalchemy import BLOB, Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 import json
+import logging
 from pathlib import Path
 import time
 
@@ -35,15 +35,16 @@ class StreamRead(SQLBaseClass):
     stream_description = Column(String)
     time_created = Column(Integer)
     size_in_bytes = Column(Integer)
-    output_directory = Column(String)  # output-dir/stream-name/
-    temp_directory = Column(String)  # temp-dir/stream-sha256/
+    output_directory = Column(String)
+    temp_directory = Column(String)
     manifest_string = Column(String)
 
-
-    # Read State
+    # Header Management
     remaining_pre_payload_bits = Column(Integer)
     carry_over_header_bytes = Column(BLOB)
-    carry_over_padding_bits = Column(Integer) #todo
+    carry_over_padding_bits = Column(Integer)
+
+    # Read State
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)
@@ -52,10 +53,11 @@ class StreamRead(SQLBaseClass):
     metadata_header_size_bytes = Column(Integer)
     metadata_header_hash = Column(String)
     stream_header_complete = Column(Boolean, default=False)
-    palette_header_complete = Column(Boolean, default=False)
     metadata_header_complete = Column(Boolean, default=False)
+    palette_header_complete = Column(Boolean, default=False)
     completed_frames = Column(Integer, default=0)
     highest_consecutive_frame_one_read = Column(Integer, default=0)  # Important for initial metadata grab
+    metadata_header_bytes = Column(BLOB)  # Used when file masking and incorrect key.  Flushed when correct.
 
     # Operation State
     active_this_session = Column(Boolean, default=True)
@@ -63,7 +65,8 @@ class StreamRead(SQLBaseClass):
 
     # Unpackage State
     auto_delete_finished_stream = Column(Boolean)
-    unpackage_files = Column(Boolean)
+    auto_unpackage_stream = Column(Boolean)
+    stop_at_metadata_load = Column(Boolean)
 
     # Geometry
     pixel_width = Column(Integer)
@@ -74,7 +77,7 @@ class StreamRead(SQLBaseClass):
     scrypt_n = Column(Integer)
     scrypt_r = Column(Integer)
     scrypt_p = Column(Integer)
-    encryption_key = Column(String)
+    decryption_key = Column(String)
 
     # Relationships
     frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True)
@@ -82,12 +85,20 @@ class StreamRead(SQLBaseClass):
     progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
 
     def __str__(self):
-        return f'{self.stream_name} - {self.stream_sha256}'
+        return f"{self.stream_name if self.stream_name else '(Name not loaded yet)'} - {self.stream_sha256}"
 
-    def return_state(self):
-        return {} #todo:
+    def return_state(self, advanced=False):  # todo: do at end w/ all state
+        basic_state = {}  # metadata
+        advanced_state = {}  # everything else
+        return basic_state | advanced_state if advanced else basic_state
 
-    def session_activity(self, bool_set: bool): #todo implement
+    def return_pending_header_bits(self):
+        header_bytes = self.carry_over_header_bytes
+        header_bits = BitStream(header_bytes)
+        trimmed_bits = header_bits.read(header_bits.len - self.carry_over_padding_bits)
+        return trimmed_bits
+
+    def session_activity(self, bool_set: bool):  # todo for images, partial video
         self.active_this_session = bool_set
         self.save()
 
@@ -97,8 +108,9 @@ class StreamRead(SQLBaseClass):
         self.pixel_width = pixel_width
         self.save()
 
-    def stream_palette_id_load(self, stream_palette_id):
-        self.stream_palette_id = stream_palette_id
+    def stream_palette_load(self, stream_palette):
+        self.stream_palette_id = stream_palette.palette_id
+        self.custom_palette_used = stream_palette.is_custom
         self.save()
 
     def stream_header_load(self, size_in_bytes, total_frames, compression_enabled, encryption_enabled,
@@ -117,12 +129,15 @@ class StreamRead(SQLBaseClass):
             self.palette_header_complete = True
         self.palette_header_hash = custom_palette_header_hash
         self.stream_header_complete = True
+
+        if not encryption_enabled:  # Purging password in DB if not needed
+            self.decryption_key = None
         self.save()
 
     def metadata_header_load(self, bg_version, stream_name, stream_description, time_created, manifest_string):
         logging.debug('Metadata header load')
-        self.bg_version = bg_version #
-        self.stream_name = stream_name #
+        self.bg_version = bg_version
+        self.stream_name = stream_name
         self.stream_description = stream_description
         self.time_created = time_created
         self.manifest_string = manifest_string
@@ -143,26 +158,19 @@ class StreamRead(SQLBaseClass):
         all stream header and metadata attributes, as well as stream header data if its a learned palette.
         """
 
-        #todo- return palette data if not grabbed yet
-        #todo- return metadata as dict
+        # todo- return palette data if not grabbed yet
         returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
-                         self.bg_version, 'stream_description': self.stream_description, 'time_created':
-                         self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
-                         self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
-                         self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled, 'protocol_version':
-                         self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
-                         'manifest_decrypt_success': None} # <- todo
-
-
-
+            self.bg_version, 'stream_description': self.stream_description, 'time_created':
+                             self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
+                             self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
+                             self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled,
+                         'protocol_version':
+                             self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
+                         'manifest_decrypt_success': None, 'stream_palette_id': self.stream_palette_id}  # <- todo
         return returned_dict
 
-
-    def accept_frame(self, payload_bits, frame_number):
-        logging.debug(f'Frame {frame_number} accepted')
-
     def completed_frame_count_update(self):
-        self.completed_frames = self.frames.filter.count() #todo...
+        self.completed_frames = self.frames.filter.count()  # todo...
         self.save()
 
     def attempt_unpackage(self):
@@ -170,13 +178,21 @@ class StreamRead(SQLBaseClass):
         summary of the results.
         """
 
+        if self.metadata_header_complete and self.manifest_string:
+            pass  # attempt ex
+
         # blob calculate
         # assess existing files (from previous sessions)
+        # mark stream AS COMPLETE if so...
+
         return {}
 
-    def update_config(self):
-        pass #todo rename
+    def autodelete_attempt(self):
+        if self.auto_delete_finished_stream and self.is_complete:
+            self.delete()
 
+    def update_config(self):
+        pass  # todo rename
 
     # User control
     def _delete_data_folder(self):

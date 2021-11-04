@@ -10,9 +10,9 @@ from bitglitter.validation.validateread import verify_read_parameters
 
 
 def read(file_path,
-         stop_at_metadata_load=True, #fp
-         unpackage_files=True,  #todo- dont autodelete if False ### not fp
-         auto_delete_finished_stream=True, #fp
+         stop_at_metadata_load=True,
+         auto_unpackage_stream=True,
+         auto_delete_finished_stream=True,
          output_directory=None,
          bad_frame_strikes=25,
          max_cpu_cores=0,
@@ -62,16 +62,17 @@ def read(file_path,
 
     # Pull valid frame data from the inputted file.
     frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
-                                  block_height_override, block_width_override, decryption_key, scrypt_n, scrypt_r,
-                                  scrypt_p, temp_save_directory, stop_at_metadata_load, unpackage_files,
-                                  auto_delete_finished_stream, save_statistics)
-
-    # Return metadata if conditions are met
-    if 'metadata' in frame_read_results:
-        return frame_read_results['metadata']
+                                            block_height_override, block_width_override, decryption_key, scrypt_n,
+                                            scrypt_r, scrypt_p, temp_save_directory, stop_at_metadata_load,
+                                            auto_unpackage_stream, auto_delete_finished_stream, save_statistics)
 
     #  Remove incomplete frames from db
     session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()
     session.commit()
 
+    # Return metadata if conditions are met
+    if 'metadata' in frame_read_results:
+        return frame_read_results['metadata']
+
+    logging.info('Read cycle complete.')
     return frame_read_results['stream_sha256'] if 'stream_sha256' in frame_read_results else None

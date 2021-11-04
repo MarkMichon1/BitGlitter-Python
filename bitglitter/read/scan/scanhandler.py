@@ -98,7 +98,7 @@ class ScanHandler:
             self.leftover_bits = bits.read(bits.len - number_of_bits)
             bits.pos = 0
             bits = bits.read(number_of_bits)
-        logging.debug(f'{bits.len=} {number_of_bits=}')
+        # logging.debug(f'{bits.len=} {number_of_bits=}')
         if complete_request:
             assert bits.len == number_of_bits
         return {'blocks_read': number_of_blocks, 'bits': bits, 'complete_request': complete_request}

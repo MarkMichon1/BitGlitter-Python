@@ -208,7 +208,7 @@ there, you can choose to either re-read the file and continue getting the files,
 to double check what the contents are, before you extract the files onto your computer.  Please note that this will only
 run **once** per stream.  When re-ran, the stream will continue to read and decode the files (if enabled in the arguments).
 
-`unpackage_files=True` controls whether files embedded in the stream should be extracted during read as the frame data
+`auto_unpackage_stream=True` controls whether files embedded in the stream should be extracted during read as the frame data
 becomes available to do so.  This lets you extract all files that are available each time read concludes if enabled.  If
 disabled, you can unpackage files using the function `unpackage(stream_sha256)`.  For more information, go to **Read Functions**
 
@@ -222,9 +222,9 @@ recognized/created during read, the output path will be bound to the stream.  Su
 will continue to have the outputted files going to the right place.
 
 `bad_frame_strikes=25` Sets how many corrupted frames the reader is to detect before it aborts out of a video.  
-This allows you to break out of a stream relatively quickly if the video is substantially corrupted, without needing to
- iterate over each frame.  If this is set to 0, it will disable strikes altogether and attempt to read each frame 
- regardless of the level of corruption.
+This allows you to break out of a stream relatively quickly if the video or images are substantially corrupted, without 
+needing to iterate over each frame.  If this is set to 0, it will disable strikes altogether and attempt to read every 
+frame regardless of the level of corruption.
 
 `max_cpu_cores=0` determines the amount of CPU cores to use, like `write()`.  The default value of 0
 sets it to maximum available.
@@ -326,14 +326,16 @@ SHA-256 hash.
 `unpackage(stream_sha256)` If `unpackage_files=False` was an argument in read(), this will unpackage the stream (or as
 much as it can from what has been scanned).
 
-`return_single_read(stream_sha256)` Returns a dictionary object of the full state of the read.
+`return_single_read(stream_sha256, advanced=False)` Returns a basic dictionary object of stream read's state. Some fields
+may be empty depending on its state, or how many metadata headers have been decoded so far.  Setting `advanced` to 
+`True` will return all state data (for development, debugging, or if you're just curious).  Returns `False` if SHA-256 
+matches no existing stream.
 
-`return_all_read_information()` Returns a list of dictionary objects of the full state of all stream reads.
+`return_all_read_information(advanced=False)` Returns a list of dictionary objects of all of the stream read states
+in your database.  For more information on what `advanced` does, look directly above this.
 
-`attempt_password(stream_sha256, encryption_key, attempt_unpackaging, scrypt_n=None, scrypt_r=None, scrypt_p=None)` Will
-attempt to decrypt a locked password protected stream with your encryption key.  Will return `True` or `False` indicating
-its success (or failure).  Optional `scrypt_n` `scrypt_r` `scrypt_p` parameters shouldn't be changed unless you know what
-you're doing.  See `write()` for more information on these.
+`update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scrypt_r=None, scrypt_p=None)`
+Updates values to decrypt the stream.  From here, you can either 
 
 `return_stream_manifest(stream_sha256)` Returns a raw unformatted JSON string as received by BitGlitter in a stream's
 metadata header.  Nested directory structures (if applicable) and file data are described in the string.  Keys are quite
@@ -351,8 +353,8 @@ Files are compressed in transit (unless you explicitly disable it in `write()` s
 
 `remove_all_partial_save_data()` Removes all stream reads from the database.
 
-`update_stream_read(stream_sha256, auto_delete_finished_stream=None, unpackage_files=None)` Is where you can configure 
-other values for stream reads.
+`update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unpackage_stream=None)` Is where you can
+update behavior when the stream unpackages.
 
 `blacklist_stream_sha256(stream_sha256)` Disallow a specific SHA-256 hash of a stream to be read on your client.  Will
 also remove the Stream Read containing that hash as well, if it exists.
@@ -404,12 +406,34 @@ when changing these, as it could potentially result in crashes for invalid value
 
 ![Splitter](https://i.imgur.com/tozbtUz.png)
 
+### Roadmap
+
+Here are a few possible directions this can move in which would increase its usefulness and versatility:
+- **"Splash Screen":** At the end of streams, include some cool looking rendered animation with the project logo, a 
+brief explanation of what it is, and a URL to download the software.  People not knowing what BitGlitter is will now
+have an idea as well as a way to download it, increasing usage and fueling development of the project.  Could also
+include metadata about the stream itself.
+- **Inline streams:** Have a stream embedded in another (non-BitGlitter) video, allowing for data to be read inside of
+a normal, human-friendly video.  Rather than taking up the full video screen, the stream could be a bar on the top or
+bottom of the screen, or any arbitrary shape (perhaps even animated).  This allows content creators to 'attach' files
+to their videos, much like you can attach arbitrary files to an email.
+- **Moving heavy lifting away from Python:** While libraries like `cv2` and `numpy` are used which utilize C++, pure
+Python is used in a few heavily used functions (thousands of times per second).  Moving these to Rust or C++ would 
+substantially speed up the software, and make new use cases possible...
+- **Livestream capabilities:** BitGlitter streams can be 'broadcast' over live video.  Reader would be able to detect
+data streams through visual or audio cues from the multimedia, and can process/decode on the fly.  BitGlitter streams 
+are no longer restricted to 'static' files, but are open to any kind of live-streaming data, which can be optionally
+compressed/encrypted through the original feature set.
+
 ### Contributing
 
 **Let me know of your ideas and suggestions!**  There are many directions this technology can go in, and with enough interest
-your ideas can be future additions to this core library (as well as the desktop app).
+your ideas can be future additions to this core library (as well as the desktop app).  If you're looking to help with 
+developing it.... awesome.  All I ask is you're skilled with Python, and can write clean and structured code.  I went
+out of my way to have clear variable and function names as well as a decent amount of comments scattered throughout the
+library- it should be relatively easy to get up to speed to understand how BitGlitter works underneath the hood.
 
-Heres my Discord server, feel free to drop in and say hi:
+Drop in and say hi on the Discord server:
 
 **https://discord.gg/t9uv2pZ**
 

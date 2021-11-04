@@ -1,10 +1,25 @@
-def video_state_generator(video_frame_generator, stream_read):
+import cv2
+
+
+def video_state_generator(video_frame_generator, stream_read, save_statistics, initializer_palette,
+                          initializer_palette_dict, initializer_color_set, total_video_frames):
     """Returns a dict object for frame_process to use when switching to multiprocessing"""
 
-    for frame in video_frame_generator:
-        yield {'mode': 'video', 'stream_read': stream_read}
+    for returned_state in video_frame_generator:
+        yield {'mode': 'video', 'stream_read': stream_read, 'frame': returned_state['frame'], 'save_statistics':
+                save_statistics, 'initializer_palette': initializer_palette, 'initializer_palette_dict':
+                initializer_palette_dict, 'initializer_color_set': initializer_color_set, 'current_frame_position':
+                returned_state['current_frame_position'], 'total_frames': total_video_frames}
 
 
-def image_state_generator():
-    for image in temp:
-        pass
+def image_state_generator(input_list, initial_state_dict):
+    """Used for all image decoding regardless of placement, since they need to be approached with an empty slate in
+    terms of state.
+    """
+
+    total_frames = len(input_list)
+    count = 1
+    for image_path in input_list:
+        frame = cv2.imread(image_path)
+        yield {'mode': 'image', 'frame': frame, 'current_frame_position': count, 'total_frames': total_frames}
+        count += 1

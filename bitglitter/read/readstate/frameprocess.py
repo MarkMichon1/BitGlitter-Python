@@ -3,8 +3,8 @@ from bitstring import ConstBitStream
 import logging
 
 from bitglitter.config.configfunctions import read_stats_update
-from bitglitter.config.readmodels.readmodels import StreamFrame, StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
+from bitglitter.config.readmodels.readmodels import StreamFrame, StreamSHA256Blacklist
 from bitglitter.read.decode.headerdecode import frame_header_decode, initializer_header_decode, \
     metadata_header_validate_decode, stream_header_decode
 from bitglitter.read.scan.scanvalidate import frame_lock_on, geometry_override_checkpoint
@@ -34,7 +34,7 @@ def frame_process(dict_obj):
         output_directory = dict_obj['output_directory']
         block_height_override = dict_obj['block_height_override']
         block_width_override = dict_obj['block_width_override']
-        encryption_key = dict_obj['encryption_key']
+        decryption_key = dict_obj['decryption_key']
         scrypt_n = dict_obj['scrypt_n']
         scrypt_r = dict_obj['scrypt_r']
         scrypt_p = dict_obj['scrypt_p']
@@ -45,8 +45,9 @@ def frame_process(dict_obj):
         initializer_palette_a_dict = dict_obj['initializer_palette_a_dict']
         initializer_palette_b_dict = dict_obj['initializer_palette_b_dict']
 
-        stop_at_metadata_load = dict_obj['stop_at_metadata_load']
         auto_delete_finished_stream = dict_obj['auto_delete_finished_stream']
+        auto_unpackage_stream = dict_obj['auto_unpackage_stream']
+        stop_at_metadata_load = dict_obj['stop_at_metadata_load']
 
         # Statistics
         blocks_read = 0
@@ -102,10 +103,10 @@ def frame_process(dict_obj):
             scan_handler.set_stream_palette(stream_palette, stream_palette_dict, stream_palette_color_set)
             palette_header_complete = True
 
-        # Loading or creating StreamRead instance
         stream_sha256 = results['stream_sha256']
+
         # Blacklist check
-        blacklisted_hash = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist == stream_sha256)
+        blacklisted_hash = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist == stream_sha256).first()
         if blacklisted_hash:
             logging.warning(f'Hash {stream_sha256} is on your blacklist.')
             if mode == 'video':
@@ -114,6 +115,8 @@ def frame_process(dict_obj):
             elif mode == 'image':
                 logging.warning('Aborting frame...')
                 return ERROR_SOFT
+
+        # Loading or creating StreamRead instance
         stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
         if stream_read:
             if stream_read.stream_name:
@@ -131,15 +134,16 @@ def frame_process(dict_obj):
             stream_read = StreamRead.create(temp_directory=str(temp_save_directory / stream_sha256),
                                             stream_sha256=stream_sha256, stream_is_video=True,
                                             protocol_version=protocol_version, output_directory=output_directory,
-                                            encryption_key=encryption_key, scrypt_n=scrypt_n, scrypt_r=scrypt_r,
+                                            decryption_key=decryption_key, scrypt_n=scrypt_n, scrypt_r=scrypt_r,
                                             scrypt_p=scrypt_p, auto_delete_finished_stream=auto_delete_finished_stream,
                                             stop_at_metadata_load=stop_at_metadata_load, palette_header_complete=
-                                            palette_header_complete)
+                                            palette_header_complete, auto_unpackage_stream=auto_unpackage_stream)
             stream_read.geometry_load(block_height, block_width, pixel_width)
             if stream_palette:
-                stream_read.stream_palette_id_load(stream_palette.palette_id)
+                stream_read.stream_palette_load(stream_palette)
 
-        # todo: existing frame pic/vid, return anything?
+        #todo- switching to image payload vs video validation
+
 
         # Frame header read and decode
         results = scan_handler.return_frame_header_bits(is_initializer_palette=True)
@@ -157,13 +161,13 @@ def frame_process(dict_obj):
             .filter(StreamFrame.frame_number == frame_number).first()
         if stream_frame:  # Frame already loaded, skipping
             if stream_frame.is_complete:  # Current frame is fully validated and saved
-                logging.debug(f'Complete frame: {frame_number}')
+                logging.debug(f'Frame is already complete: {frame_number}')
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {frame_number}')
-            return {'stream_read': stream_read}
+            return {'stream_read': stream_read, 'blocks_read': blocks_read, 'bits_read': bits_to_read}
         else:  # New frame
-            logging.debug(f'New frame: {frame_number}')
             stream_frame = StreamFrame.create(stream_id=stream_read.id, frame_number=frame_number)
+            logging.debug(f'Frame accepted: #{frame_number}')
 
         # Stream header process and decode
         results = scan_handler.return_stream_header_bits(is_initializer_palette=True)
@@ -206,11 +210,13 @@ def frame_process(dict_obj):
 
         blocks_read += results['blocks_read']
         data_read_bits += results['blocks_read']
-        results = metadata_header_validate_decode(metadata_header_bytes, metadata_header_hash, encryption_key,
+        results = metadata_header_validate_decode(metadata_header_bytes, metadata_header_hash, decryption_key,
                                                   encryption_enabled, scrypt_n, scrypt_r, scrypt_p)
-        if 'abort' in results:
-            if 'complete' in results:
-                return  # todo- fatal failure
+        if not results:
+            if mode == 'video':
+                return ERROR_FATAL
+            elif mode == 'image':
+                return ERROR_SOFT
         else:
             stream_read.metadata_header_load(results['bg_version'], results['stream_name'],
                                              results['stream_description'], results['time_created'],
@@ -224,13 +230,23 @@ def frame_process(dict_obj):
         data_read_bits += results['blocks_read']
         # Validating frame as a whole
         if frame_sha256 != get_sha256_hash_from_bytes(hashable_bytes):
-            logging.debug('Frame payload corrupted.  Aborting frame...')
-            return {}  # bad frame strike todo
+            logging.warning('Frame payload corrupted.  Aborting frame...')
+            if mode == 'video':
+                return ERROR_FATAL
+            elif mode == 'image':
+                return ERROR_SOFT
+
+        returned_dict = {'blocks_read': blocks_read, 'bits_read': data_read_bits, 'stream_read': stream_read}
 
         # Marking frame as complete, moving on to the next frame
         stream_frame.finalize_frame(stream_payload_bits)
 
-        return {'stream_read': stream_read, 'blocks_read': blocks_read, 'bits_read': data_read_bits}
+        # Now that all processing is complete
+        if stream_read.stop_at_metadata_load:
+            logging.info(f'Returning metadata from {stream_read}...')
+            returned_dict['metadata'] = stream_read.metadata_checkpoint_return()
+
+        return returned_dict
 
     def _video_frame_process(dict_obj):
         """Used on every video frame except the first frame (which needs to be treated differently)"""
@@ -241,12 +257,26 @@ def frame_process(dict_obj):
         # Frame Base Geometry
         frame_pixel_height = frame.shape[0]
         frame_pixel_width = frame.shape[1]
+        block_height = stream_read.block_height
+        block_width = stream_read.block_width
+        pixel_width = stream_read.pixel_width
+
+        # Palette Load
+        initializer_palette = None
+        initializer_palette_dict = None
+        initializer_color_set = None
+
+        scan_handler = ScanHandler(frame, has_initializer=False, )
 
         # Statistics
         blocks_read = 0
         data_read_bits = 0
 
         returned_state = {}
+
+        logging.info('TEMP VID FP')
+
+        #todo: flow between 2+ pre-multicore, and 2+ header decode
 
         if not stream_read.stream_header_complete:
             carry_over_bits = dict_obj['dict_object']  # todo get from sr
@@ -259,9 +289,18 @@ def frame_process(dict_obj):
             carry_over_bits = dict_obj['dict_object']
             # todo palette ID load if applicable
 
+        #palette switch todo
+
+
+
         # Continuing on to begin processing payload on this frame
 
         return returned_state  # sr todo
+
+    current_frame_position = dict_obj['current_frame_position']
+    total_frames = dict_obj['total_frames']
+    percentage_string = f'{round(((current_frame_position / total_frames) * 100), 2):.2f}'
+    logging.info(f'Scanning frame {current_frame_position} of {total_frames}... ({percentage_string} %)')
 
     if dict_obj['mode'] == 'video':  # First video frame
         if 'stream_read' in dict_obj:  # Frames 2+
@@ -274,7 +313,8 @@ def frame_process(dict_obj):
     if 'error' in results:
         return results
 
-    if dict_obj['statistics_enabled']:
+    if dict_obj['save_statistics']:
         read_stats_update(results['blocks_read'], 1, int(results['bits_read'] / 8))
 
+    logging.debug(f'Successful frame process cycle')
     return results
