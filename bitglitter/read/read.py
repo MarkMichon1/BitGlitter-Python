@@ -6,7 +6,7 @@ from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.read.readstate.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
-from bitglitter.validation.validateread import verify_read_parameters
+from bitglitter.validation.validateread import validate_read_parameters
 
 
 def read(file_path,
@@ -56,9 +56,9 @@ def read(file_path,
     logging.info('Starting read...')
 
     # Are all parameters acceptable?
-    input_type = verify_read_parameters(file_path, output_directory, decryption_key, scrypt_n, scrypt_r, scrypt_p,
-                                        block_height_override, block_width_override, max_cpu_cores, save_statistics,
-                                        bad_frame_strikes)
+    input_type = validate_read_parameters(file_path, output_directory, decryption_key, scrypt_n, scrypt_r, scrypt_p,
+                                          block_height_override, block_width_override, max_cpu_cores, save_statistics,
+                                          bad_frame_strikes)
 
     # Pull valid frame data from the inputted file.
     frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,

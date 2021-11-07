@@ -10,7 +10,7 @@ from bitglitter.utilities.compression import decompress_bytes
 from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
 
 
-def initializer_header_decode(bit_stream, block_height_estimate, block_width_estimate):
+def initializer_header_validate_decode(bit_stream, block_height_estimate, block_width_estimate):
     """This decodes the raw binary data from the initializer header after verifying its CRC checksum, and will
     stop the read if any of these conditions are met:  If the read checksum differs from the calculated checksum, if the
     read protocol version isn't supported by this BitGlitter version, if the decoded block height or block width differ

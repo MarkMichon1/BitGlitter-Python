@@ -5,7 +5,7 @@ import logging
 from bitglitter.config.configfunctions import read_stats_update
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.config.readmodels.readmodels import StreamFrame, StreamSHA256Blacklist
-from bitglitter.read.decode.headerdecode import frame_header_decode, initializer_header_decode, \
+from bitglitter.read.decode.headerdecode import frame_header_decode, initializer_header_validate_decode, \
     metadata_header_validate_decode, stream_header_decode
 from bitglitter.read.scan.scanvalidate import frame_lock_on, geometry_override_checkpoint
 from bitglitter.read.scan.scanhandler import ScanHandler
@@ -50,8 +50,8 @@ def frame_process(dict_obj):
         stop_at_metadata_load = dict_obj['stop_at_metadata_load']
 
         # Statistics
-        blocks_read = 0
-        data_read_bits = 0
+        stat_blocks_read = 0
+        stat_data_read_bits = 0
 
         #  Ensuring override parameters (if given) don't exceed frame pixel dimensions
         if not geometry_override_checkpoint(block_height_override, block_width_override, frame_pixel_height,
@@ -85,9 +85,9 @@ def frame_process(dict_obj):
         #  Initializer scan and decode
         results = scan_handler.return_initializer_bits()
         initializer_bits = results['bits']
-        blocks_read += results['blocks_read']
-        data_read_bits += results['blocks_read']
-        results = initializer_header_decode(initializer_bits, block_height, block_width)
+        stat_blocks_read += results['blocks_read']
+        stat_data_read_bits += results['blocks_read']
+        results = initializer_header_validate_decode(initializer_bits, block_height, block_width)
         if 'error' in results:
             if mode == 'video':
                 return ERROR_FATAL
@@ -119,11 +119,8 @@ def frame_process(dict_obj):
         # Loading or creating StreamRead instance
         stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
         if stream_read:
-            if stream_read.stream_name:
-                logging.info(f'Existing stream read found for {stream_read.stream_name} -- {stream_sha256}')
-            else:
-                logging.info(f'Existing stream read found: {stream_sha256}')
-            if stream_read.is_complete:
+            logging.info(f'Existing stream read found: {stream_read}')
+            if stream_read.is_complete: #todo FIRST img
                 logging.info(f'{stream_read.stream_name} -- {stream_sha256} is complete.  Aborting...')
                 if mode == 'video':
                     return ERROR_FATAL
@@ -138,7 +135,6 @@ def frame_process(dict_obj):
                                             scrypt_p=scrypt_p, auto_delete_finished_stream=auto_delete_finished_stream,
                                             stop_at_metadata_load=stop_at_metadata_load, palette_header_complete=
                                             palette_header_complete, auto_unpackage_stream=auto_unpackage_stream)
-            stream_read.geometry_load(block_height, block_width, pixel_width)
             if stream_palette:
                 stream_read.stream_palette_load(stream_palette)
 
@@ -148,8 +144,8 @@ def frame_process(dict_obj):
         # Frame header read and decode
         results = scan_handler.return_frame_header_bits(is_initializer_palette=True)
         frame_header_bits = results['bits']
-        blocks_read += results['blocks_read']
-        data_read_bits += results['blocks_read']
+        stat_blocks_read += results['blocks_read']
+        stat_data_read_bits += results['blocks_read']
         results = frame_header_decode(frame_header_bits)
         frame_sha256 = results['frame_sha256']
         frame_number = results['frame_number']
@@ -164,7 +160,7 @@ def frame_process(dict_obj):
                 logging.debug(f'Frame is already complete: {frame_number}')
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {frame_number}')
-            return {'stream_read': stream_read, 'blocks_read': blocks_read, 'bits_read': bits_to_read}
+            return {'stream_read': stream_read, 'blocks_read': stat_blocks_read, 'bits_read': bits_to_read}
         else:  # New frame
             stream_frame = StreamFrame.create(stream_id=stream_read.id, frame_number=frame_number)
             logging.debug(f'Frame accepted: #{frame_number}')
@@ -175,8 +171,8 @@ def frame_process(dict_obj):
             return  # todo return carry over bits
         stream_header_bits = results['bits']
         hashable_bits = stream_header_bits
-        blocks_read += results['blocks_read']
-        data_read_bits += results['blocks_read']
+        stat_blocks_read += results['blocks_read']
+        stat_data_read_bits += results['blocks_read']
 
         results = stream_header_decode(stream_header_bits)
         if 'abort' in results:
@@ -208,8 +204,8 @@ def frame_process(dict_obj):
         metadata_header_bytes = results['bits'].bytes
         hashable_bits += metadata_header_bytes
 
-        blocks_read += results['blocks_read']
-        data_read_bits += results['blocks_read']
+        stat_blocks_read += results['blocks_read']
+        stat_data_read_bits += results['blocks_read']
         results = metadata_header_validate_decode(metadata_header_bytes, metadata_header_hash, decryption_key,
                                                   encryption_enabled, scrypt_n, scrypt_r, scrypt_p)
         if not results:
@@ -226,8 +222,8 @@ def frame_process(dict_obj):
         results = scan_handler.return_payload_bits()
         stream_payload_bits = results['bits']
         hashable_bytes = (hashable_bits + stream_payload_bits).tobytes()
-        blocks_read += results['blocks_read']
-        data_read_bits += results['blocks_read']
+        stat_blocks_read += results['blocks_read']
+        stat_data_read_bits += results['blocks_read']
         # Validating frame as a whole
         if frame_sha256 != get_sha256_hash_from_bytes(hashable_bytes):
             logging.warning('Frame payload corrupted.  Aborting frame...')
@@ -236,7 +232,7 @@ def frame_process(dict_obj):
             elif mode == 'image':
                 return ERROR_SOFT
 
-        returned_dict = {'blocks_read': blocks_read, 'bits_read': data_read_bits, 'stream_read': stream_read}
+        returned_dict = {'blocks_read': stat_blocks_read, 'bits_read': stat_data_read_bits, 'stream_read': stream_read}
 
         # Marking frame as complete, moving on to the next frame
         stream_frame.finalize_frame(stream_payload_bits)

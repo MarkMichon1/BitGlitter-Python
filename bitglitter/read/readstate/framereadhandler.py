@@ -32,7 +32,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                           'initializer_palette_a_dict': initializer_palette_a_dict, 'initializer_palette_b_dict':
                           initializer_palette_b_dict, 'auto_delete_finished_stream': auto_delete_finished_stream,
                           'stop_at_metadata_load': stop_at_metadata_load, 'save_statistics': save_statistics,
-                          'unpackage_files': auto_unpackage_stream}
+                          'auto_unpackage_stream': auto_unpackage_stream, 'sequential': True}
 
     # Multicore setup
     if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
@@ -61,7 +61,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             # Errors
             if 'error' in frame_read_results:
                 if 'fatal' in frame_read_results:  # Session-ending error, such as a metadata frame being corrupted
-                    logging.warning('Critical error, cannot continue.')
+                    logging.warning('Cannot continue.')
                     return {'error': True}
                 if bad_frame_strikes:  # Corrupted frame, skipping to next one
                     frame_strikes_this_session += 1

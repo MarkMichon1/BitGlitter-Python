@@ -37,22 +37,23 @@ def _file_path_validate(file_path, type_requirement, video_formats, image_format
     return input_type
 
 
-def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
-                           block_height_override, block_width_override, max_cpu_cores, save_statistics,
-                           bad_frame_strikes):
+def validate_read_parameters(file_path, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
+                             block_height_override, block_width_override, max_cpu_cores, save_statistics,
+                             bad_frame_strikes, stop_at_metadata_load, auto_unpackage_stream,
+                             auto_delete_finished_stream):
     """This function verifies the arguments going into read() to ensure they comform with the required format for
     processing.
     """
 
-    logging.info("Verifying read parameters...")
+    logging.info("Validating read parameters...")
     constants = session.query(Constants).first()
 
     valid_video_formats = constants.return_valid_video_formats()
     valid_image_formats = constants.return_valid_image_formats()
 
-    if isinstance(file_path, str): # Single video or image file to decode
+    if isinstance(file_path, str):  # Single video or image file to decode
         input_type = _file_path_validate(file_path, 'all', valid_video_formats, valid_image_formats)
-    elif isinstance(file_path, list): # Multiple images
+    elif isinstance(file_path, list):  # Multiple images
         for path in file_path:
             input_type = _file_path_validate(path, 'image', valid_video_formats, valid_image_formats)
     else:
@@ -76,6 +77,9 @@ def verify_read_parameters(file_path, output_path, encryption_key, scrypt_n, scr
         raise ValueError('max_cpu_cores must be an integer greater than or equal to 0.')
 
     is_bool('save_statistics', save_statistics)
+    is_bool('stop_at_metadata_load', stop_at_metadata_load)
+    is_bool('auto_unpackage_stream', auto_unpackage_stream)
+    is_bool('auto_delete_finished_stream', auto_delete_finished_stream)
     logging.info("Read parameters validated.")
 
     return input_type

@@ -57,7 +57,7 @@ several major sites, and were tweaked until there was 100% readability across te
   you'd like.  Larger block sizes gives you greater data integrity, and smaller block sizes increase data capacity per
   frame.
   + **Frame dimensions:** Whether you want to output 144p compatible videos or 8K, it does it all.
-  + **Frame rate:** If its an integer, yes
+  + **Frame rate:** If its a non-zero whole number, yep
   + **Output mode:**  Choose from either an MP4 video output, or a series of PNG images (BitGlitter accepts and reads both),
   giving you greater flexibility on where you can host your data.
 + **Built in file integrity:** Metadata, files, and the stream and frames themselves are protected with SHA-256 hashes.
@@ -409,11 +409,13 @@ when changing these, as it could potentially result in crashes for invalid value
 ### Roadmap
 
 Here are a few possible directions this can move in which would increase its usefulness and versatility:
+- **Command line functionality:** Ability to read and write BitGlitter streams as well as use the rest of the built-in
+functions, straight from the terminal.
 - **"Splash Screen":** At the end of streams, include some cool looking rendered animation with the project logo, a 
 brief explanation of what it is, and a URL to download the software.  People not knowing what BitGlitter is will now
 have an idea as well as a way to download it, increasing usage and fueling development of the project.  Could also
 include metadata about the stream itself.
-- **Inline streams:** Have a stream embedded in another (non-BitGlitter) video, allowing for data to be read inside of
+- **Inline streams:** Have a stream embedded in another (non-BitGlitter) video, allowing for data to be read inside
 a normal, human-friendly video.  Rather than taking up the full video screen, the stream could be a bar on the top or
 bottom of the screen, or any arbitrary shape (perhaps even animated).  This allows content creators to 'attach' files
 to their videos, much like you can attach arbitrary files to an email.

@@ -16,9 +16,10 @@ class StreamFrame(SQLBaseClass):
     frame_number = Column(Integer)
     is_complete = Column(Boolean, default=False)
 
-    def finalize_frame(self, payload_bits):
-        self.payload_bits = payload_bits.len
-        self.payload = payload_bits.tobytes()
+    def finalize_frame(self, payload_bits=None):
+        if payload_bits:
+            self.payload_bits = payload_bits.len
+            self.payload = payload_bits.tobytes()
         self.is_complete = True
         self.save()
 

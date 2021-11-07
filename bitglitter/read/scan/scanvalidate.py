@@ -79,7 +79,7 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
             return False
         block_height = block_dimension_guess
 
-    logging.debug(f'Lockon successful.\npixel_width: {pixel_width}\nblock_height: {block_height}\nblock_width: '
+    logging.debug(f'Lockon successful. \nPixel width: {pixel_width}\nBlock height: {block_height}\nBlock width: '
                   f'{block_width}')
     return {'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width}
 

@@ -58,7 +58,10 @@ class ScanHandler:
             for x_block in range(self.x_range):
                 yield x_block + int(self.has_initializer), y_block + int(self.has_initializer)
 
-    def return_bits(self, number_of_bits, is_initializer_palette, is_payload):
+    def return_bits(self, number_of_bits, is_initializer_palette, is_payload, byte_input=False):
+        if byte_input:
+            number_of_bits = number_of_bits * 8
+
         if is_payload:
             self.bits_read += number_of_bits
 
@@ -101,7 +104,11 @@ class ScanHandler:
         # logging.debug(f'{bits.len=} {number_of_bits=}')
         if complete_request:
             assert bits.len == number_of_bits
-        return {'blocks_read': number_of_blocks, 'bits': bits, 'complete_request': complete_request}
+
+        # Statistics update
+        self.block_position = number_of_blocks
+
+        return {'bits': bits, 'complete_request': complete_request}
 
     def set_scan_geometry(self, block_height, block_width, pixel_width):
         self.block_height = block_height
@@ -133,3 +140,11 @@ class ScanHandler:
         remainder_bits = self.bits_to_read - self.bits_read
         # logging.debug(f'{self.bits_read=} {self.bits_to_read=}')
         return self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)
+
+    def skip_palette_header_bits(self):
+        """If the custom palette is already recognized by the database, there is no need to read and decode the header.
+        This lets you skip over those bits.
+        """
+        #todo
+        # tack on leftover bits to beginning, clear
+        # if is_complete, compare len outside this scope

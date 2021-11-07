@@ -56,7 +56,7 @@ class StreamRead(SQLBaseClass):
     metadata_header_complete = Column(Boolean, default=False)
     palette_header_complete = Column(Boolean, default=False)
     completed_frames = Column(Integer, default=0)
-    highest_consecutive_frame_one_read = Column(Integer, default=0)  # Important for initial metadata grab
+    highest_consecutive_setup_frame_read = Column(Integer, default=0)  # Important for initial metadata grab
     metadata_header_bytes = Column(BLOB)  # Used when file masking and incorrect key.  Flushed when correct.
 
     # Operation State
@@ -85,7 +85,10 @@ class StreamRead(SQLBaseClass):
     progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
 
     def __str__(self):
-        return f"{self.stream_name if self.stream_name else '(Name not loaded yet)'} - {self.stream_sha256}"
+        if self.stream_name:
+            return f'{self.stream_name} | {self.stream_sha256}'
+        else:
+            return self.stream_sha256
 
     def return_state(self, advanced=False):  # todo: do at end w/ all state
         basic_state = {}  # metadata
@@ -100,12 +103,6 @@ class StreamRead(SQLBaseClass):
 
     def session_activity(self, bool_set: bool):  # todo for images, partial video
         self.active_this_session = bool_set
-        self.save()
-
-    def geometry_load(self, block_height, block_width, pixel_width):
-        self.block_height = block_height
-        self.block_width = block_width
-        self.pixel_width = pixel_width
         self.save()
 
     def stream_palette_load(self, stream_palette):
@@ -169,6 +166,11 @@ class StreamRead(SQLBaseClass):
                          'manifest_decrypt_success': None, 'stream_palette_id': self.stream_palette_id}  # <- todo
         return returned_dict
 
+    def new_setup_frame(self, frame_number):
+        if frame_number == self.highest_consecutive_setup_frame_read + 1:
+            self.highest_consecutive_setup_frame_read += 1
+            self.save()
+
     def completed_frame_count_update(self):
         self.completed_frames = self.frames.filter.count()  # todo...
         self.save()
@@ -193,13 +195,6 @@ class StreamRead(SQLBaseClass):
 
     def update_config(self):
         pass  # todo rename
-
-    # User control
-    def _delete_data_folder(self):
-        pass
-
-    def _delete_stream(self):
-        self.delete()
 
 
 # v These need to be at bottom to resolve import/DB relationship issues.  It works but perhaps a better way exists.
