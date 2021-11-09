@@ -45,7 +45,7 @@ def validate_read_parameters(file_path, output_path, encryption_key, scrypt_n, s
     processing.
     """
 
-    logging.info("Validating read parameters...")
+    logging.debug("Validating read parameters...")
     constants = session.query(Constants).first()
 
     valid_video_formats = constants.return_valid_video_formats()
@@ -80,6 +80,6 @@ def validate_read_parameters(file_path, output_path, encryption_key, scrypt_n, s
     is_bool('stop_at_metadata_load', stop_at_metadata_load)
     is_bool('auto_unpackage_stream', auto_unpackage_stream)
     is_bool('auto_delete_finished_stream', auto_delete_finished_stream)
-    logging.info("Read parameters validated.")
+    logging.debug("Read parameters validated.")
 
     return input_type

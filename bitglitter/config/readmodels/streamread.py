@@ -36,7 +36,6 @@ class StreamRead(SQLBaseClass):
     time_created = Column(Integer)
     size_in_bytes = Column(Integer)
     output_directory = Column(String)
-    temp_directory = Column(String)
     manifest_string = Column(String)
 
     # Header Management
@@ -67,6 +66,7 @@ class StreamRead(SQLBaseClass):
     auto_delete_finished_stream = Column(Boolean)
     auto_unpackage_stream = Column(Boolean)
     stop_at_metadata_load = Column(Boolean)
+    metadata_checkpoint_ran = Column(default=False)
 
     # Geometry
     pixel_width = Column(Integer)
@@ -101,7 +101,7 @@ class StreamRead(SQLBaseClass):
         trimmed_bits = header_bits.read(header_bits.len - self.carry_over_padding_bits)
         return trimmed_bits
 
-    def session_activity(self, bool_set: bool):  # todo for images, partial video
+    def session_activity(self, bool_set: bool):  # todo for images upon creation
         self.active_this_session = bool_set
         self.save()
 
@@ -156,6 +156,8 @@ class StreamRead(SQLBaseClass):
         """
 
         # todo- return palette data if not grabbed yet
+        self.metadata_checkpoint_ran = True
+        self.save()
         returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
             self.bg_version, 'stream_description': self.stream_description, 'time_created':
                              self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':

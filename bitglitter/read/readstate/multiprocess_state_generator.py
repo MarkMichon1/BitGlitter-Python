@@ -2,14 +2,22 @@ import cv2
 
 
 def video_state_generator(video_frame_generator, stream_read, save_statistics, initializer_palette,
-                          initializer_palette_dict, initializer_color_set, total_video_frames):
+                          initializer_palette_dict, initializer_color_set, total_video_frames, stream_palette=None,
+                          stream_palette_dict=None, stream_palette_color_set=None):
     """Returns a dict object for frame_process to use when switching to multiprocessing"""
+
+    if not stream_palette:
+        stream_palette = stream_read
+        stream_palette_dict = stream_palette.return_decoder()
+        stream_palette_color_set = stream_palette.convert_colors_to_tuple()
 
     for returned_state in video_frame_generator:
         yield {'mode': 'video', 'stream_read': stream_read, 'frame': returned_state['frame'], 'save_statistics':
                 save_statistics, 'initializer_palette': initializer_palette, 'initializer_palette_dict':
                 initializer_palette_dict, 'initializer_color_set': initializer_color_set, 'current_frame_position':
-                returned_state['current_frame_position'], 'total_frames': total_video_frames}
+                returned_state['current_frame_position'], 'total_frames': total_video_frames, 'stream_palette':
+                stream_palette, 'stream_palette_dict': stream_palette_dict, 'stream_palette_color_set':
+                stream_palette_color_set, 'sequential': False}
 
 
 def image_state_generator(input_list, initial_state_dict):

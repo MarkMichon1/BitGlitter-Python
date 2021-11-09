@@ -76,7 +76,7 @@ class RenderHandler:
 
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
-            count = 1
+
             for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
                                                                                    pixel_width, protocol_version, initializer_palette, stream_palette,
                                                                                    output_mode, output_path, stream_name_file_output, working_dir,
@@ -84,9 +84,6 @@ class RenderHandler:
                                                                                    palette_header_bytes, stream_sha256, initializer_palette_dict,
                                                                                    initializer_palette_dict_b, stream_palette_dict, default_output_path,
                                                                                    stream_name, save_statistics), chunksize=1):
-
-                percentage_string = f'{round(((count / self.total_operations) * 100), 2):.2f}'
-                logging.info(f'Generating frame {count} of {self.total_frames}... ({percentage_string} %)')
-                count += 1
+                pass
 
         logging.info('Rendering frames complete.')

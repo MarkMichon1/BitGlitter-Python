@@ -4,9 +4,9 @@ from multiprocessing import cpu_count, Pool
 from bitglitter.config.palettemodels import Palette
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.read.readstate.videoframegenerator import video_frame_generator
-from bitglitter.read.readstate.imageframeprocess import image_frame_process
+from bitglitter.read.readstate.imageframeprocessor import ImageFrameProcessor
 from bitglitter.read.readstate.multiprocess_state_generator import image_state_generator, video_state_generator
-from bitglitter.read.readstate.videoframeprocess import video_frame_process
+from bitglitter.read.readstate.videoframeprocessor import VideoFrameProcessor
 
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
@@ -23,6 +23,10 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     initializer_palette_a_dict = initializer_palette_a.return_decoder()
     initializer_palette_b_dict = initializer_palette_b.return_decoder()
 
+    stream_palette = None
+    stream_palette_dict = None
+    stream_palette_color_set = None
+
     initial_state_dict = {'output_directory': output_directory, 'block_height_override': block_height_override,
                           'block_width_override': block_width_override, 'decryption_key': decryption_key, 'scrypt_n':
                           scrypt_n, 'scrypt_r': scrypt_r, 'scrypt_p': scrypt_p, 'temp_save_directory':
@@ -36,11 +40,12 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
     # Multicore setup
     if max_cpu_cores == 0 or max_cpu_cores >= cpu_count():
-        pool_size = cpu_count()
+        cpu_pool_size = cpu_count()
     else:
-        pool_size = max_cpu_cores
+        cpu_pool_size = max_cpu_cores
 
     frame_strikes_this_session = 0
+    frame_read_results = {'active_sessions_this_stream': []}
 
     if input_type == 'video':
 
@@ -51,16 +56,15 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         initial_state_dict['mode'] = 'video'
 
         # Processing frames in a single process until all metadata has been received, then switch to multicore
+        logging.info('Starting single core sequential decoding until metadata captured...')
         for frame_data in frame_generator:
-            initial_state_dict[''] = 0
-
             initial_state_dict['frame'] = frame_data['frame']
             initial_state_dict['current_frame_position'] = frame_data['current_frame_position']
-            frame_read_results = video_frame_process(initial_state_dict)
+            video_frame_processor = VideoFrameProcessor(initial_state_dict)
 
             # Errors
-            if 'error' in frame_read_results:
-                if 'fatal' in frame_read_results:  # Session-ending error, such as a metadata frame being corrupted
+            if 'error' in video_frame_processor.frame_errors:
+                if 'fatal' in video_frame_processor.frame_errors:  # Session-ending error, such as a metadata frame being corrupted
                     logging.warning('Cannot continue.')
                     return {'error': True}
                 if bad_frame_strikes:  # Corrupted frame, skipping to next one
@@ -70,28 +74,36 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                         logging.warning('Reached frame strike limit.  Aborting...')
                         return {'error': True}
 
-            stream_read = frame_read_results['stream_read']
+            stream_read = video_frame_processor.stream_read
 
             # Metadata Return
-            if 'metadata' in frame_read_results and stream_read.stop_at_metadata_load:
-                return {'metadata': frame_read_results['metadata']}
+            if video_frame_processor.metadata and stream_read.stop_at_metadata_load:
+                return {'metadata': video_frame_processor.metadata}
 
             # Headers are decoded, can switch to multiprocessing
             if stream_read.palette_header_complete and stream_read.metadata_header_complete:
                 break
 
+            if video_frame_processor.stream_palette and video_frame_processor.stream_palette_loaded_this_frame:
+                stream_palette = video_frame_processor.stream_palette
+                stream_palette_dict = video_frame_processor.stream_palette_dict
+                stream_palette_color_set = video_frame_processor.stream_palette_color_set
+                initial_state_dict['stream_palette'] = stream_palette
+                initial_state_dict['stream_palette_dict'] = stream_palette_dict
+                initial_state_dict['stream_palette_color_set'] = stream_palette_color_set
+
         # Adding Stream SHA-256 to dict to return #todo...
         frame_read_results['active_sessions_this_stream'] = [stream_read.stream_sha256]
 
         # Begin multicore frame decode
-        with Pool(processes=pool_size) as worker_pool:
-            logging.info(f'Metadata headers fully decoded, now decoding on {pool_size} CPU core(s)...')
+        with Pool(processes=cpu_pool_size) as worker_pool:
+            logging.info(f'Metadata headers fully decoded, now decoding on {cpu_pool_size} CPU core(s)...')
             for frame_read_results in worker_pool.imap(video_frame_process,
                                                        video_state_generator(frame_generator, stream_read,
-                                                                             save_statistics, initializer_palette_a,
-                                                                             initializer_palette_a_dict,
-                                                                             initializer_palette_a_color_set,
-                                                                             total_video_frames)):
+                                                       save_statistics, initializer_palette_a,
+                                                       initializer_palette_a_dict, initializer_palette_a_color_set,
+                                                       total_video_frames, stream_palette, stream_palette_dict,
+                                                       stream_palette_color_set)):
                 if 'error' in frame_read_results:
                     if bad_frame_strikes:  # Corrupted frame, skipping to next one
                         frame_strikes_this_session += 1
@@ -105,8 +117,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         input_list = [input_path] if isinstance(input_path, str) else input_path
 
         # Begin multicore frame decode
-        with Pool(processes=pool_size) as worker_pool:
-            logging.info(f'Decoding on {pool_size} CPU core(s)...')
+        with Pool(processes=cpu_pool_size) as worker_pool:
+            logging.info(f'Decoding on {cpu_pool_size} CPU core(s)...')
             for frame_read_results in worker_pool.imap(image_frame_process, image_state_generator(input_list,
                                                                                                   initial_state_dict)):
                 if 'error' in frame_read_results:

@@ -13,6 +13,11 @@ from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
 
 
 def video_frame_process(dict_obj):
+    frame_position = dict_obj['current_frame_position']
+    total_frames = dict_obj['total_frames']
+    percentage_string = f'{round(((frame_position / total_frames) * 100), 2):.2f}'
+    logging.info(f"Processing video frame {frame_position} of {total_frames}... {percentage_string} %")
+
     ERROR_SOFT = {'error': True}  # Only this frame is cancelled, decoding can continue on next frame
     ERROR_FATAL = {'error': True, 'fatal': True}  # Entire session is cancelled
 
@@ -20,22 +25,46 @@ def video_frame_process(dict_obj):
     frame_pixel_height = frame.shape[0]
     frame_pixel_width = frame.shape[1]
 
+    initializer_palette = dict_obj['initializer_palette']
+    initializer_palette_dict = dict_obj['initializer_palette_dict']
+    initializer_color_set = dict_obj['initializer_color_set']
+
     is_sequential = dict_obj['sequential'] if 'sequential' in dict_obj else False
     is_unique_frame = False
     frame_hashable_bits = BitStream()
 
-    logging.info('') #todo
+    returned_dict = {}
 
     if 'stream_read' in dict_obj:  # Video frames 2+
         stream_read = dict_obj['stream_read']
 
         # Scan handler setup
+        scan_handler = ScanHandler(frame, False, initializer_palette, initializer_palette_dict, initializer_color_set,
+                                   block_height=stream_read.block_height, block_width=stream_read.block_width,
+                                   pixel_width=stream_read.pixel_width)
+        if 'stream_palette' in dict_obj:
+            scan_handler.set_stream_palette(dict_obj['stream_palette'], dict_obj['stream_palette_dict'],
+                                            dict_obj['stream_palette_color_set'])
 
         if is_sequential:  # Sequential frame processing while gathering metadata headers from initial frames
-            pass
+            pass #todo termination frame
 
         else:  # Multicore processing
-            pass
+            # Frame header process and decode
+            frame_header_bits_raw = scan_handler.return_frame_header_bits(is_initializer_palette=False)['bits']
+            frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
+            if not frame_header_decode_results:
+                return ERROR_SOFT
+            frame_sha256 = frame_header_decode_results['frame_sha256']
+            frame_number = frame_header_decode_results['frame_number']
+            bits_to_read = frame_header_decode_results['bits_to_read']
+            scan_handler.set_bits_to_read(bits_to_read)
+
+            # Payload process
+
+            # Frame Validation
+
+            # Accept frame
 
     else:  # First video frame
 
@@ -100,6 +129,9 @@ def video_frame_process(dict_obj):
             stream_palette_color_set = stream_palette.convert_colors_to_tuple()
             scan_handler.set_stream_palette(stream_palette, stream_palette_dict, stream_palette_color_set)
             palette_header_complete = True
+            returned_dict['stream_palette'] = stream_palette
+            returned_dict['stream_palette_dict'] = stream_palette_dict
+            returned_dict['stream_palette_color_set'] = stream_palette_color_set
 
         # Blacklist check
         blacklisted_hash = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist == stream_sha256).first()
@@ -127,7 +159,7 @@ def video_frame_process(dict_obj):
             if stream_palette:
                 stream_read.stream_palette_load(stream_palette)
 
-        # Frame header scan and decode
+        # Frame header process and decode
         frame_header_bits_raw = scan_handler.return_frame_header_bits(is_initializer_palette=True)['bits']
         frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
         if not frame_header_decode_results:
@@ -212,7 +244,7 @@ def video_frame_process(dict_obj):
             stream_payload_bits = scan_handler.return_payload_bits()['bits']
             payload_in_frame = True
 
-        returned_dict = {'stream_read': stream_read}
+        returned_dict['stream_read'] = stream_read
 
         # Frame Validation
         if is_unique_frame:
@@ -230,7 +262,7 @@ def video_frame_process(dict_obj):
                 stream_read.new_setup_frame(frame_number)
 
             # Metadata checkpoint if enabled
-            if stream_read.stop_at_metadata_load:
+            if stream_read.stop_at_metadata_load and not stream_read.metadata_checkpoint_ran:
                 logging.info(f'Returning metadata from {stream_read}')
                 returned_dict['metadata'] = stream_read.metadata_checkpoint_return()
 
@@ -238,6 +270,5 @@ def video_frame_process(dict_obj):
     if dict_obj['save_statistics']:
         read_stats_update(scan_handler.block_position, 1, int(scan_handler.bits_read / 8))
 
-    return returned_dict
-
     logging.debug('Successful video frame process cycle')
+    return returned_dict
