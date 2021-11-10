@@ -8,7 +8,7 @@ from pathlib import Path
 engine = create_engine(f'sqlite:///{Path(__file__).resolve().parent / "config.sqlite3"}?check_same_thread=False',
                        poolclass=NullPool)
 engine.connect()
-Session = scoped_session(sessionmaker(bind=engine))
+Session = scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
 session = Session()
 Base = declarative_base()
 

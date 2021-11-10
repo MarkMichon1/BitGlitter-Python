@@ -1,5 +1,7 @@
 import cv2
 
+from bitglitter.config.palettemodels import Palette
+
 
 def video_state_generator(video_frame_generator, stream_read, save_statistics, initializer_palette,
                           initializer_palette_dict, initializer_color_set, total_video_frames, stream_palette=None,
@@ -7,7 +9,7 @@ def video_state_generator(video_frame_generator, stream_read, save_statistics, i
     """Returns a dict object for frame_process to use when switching to multiprocessing"""
 
     if not stream_palette:
-        stream_palette = stream_read
+        stream_palette = Palette.query.filter(Palette.palette_id == stream_read.stream_palette_id).first()
         stream_palette_dict = stream_palette.return_decoder()
         stream_palette_color_set = stream_palette.convert_colors_to_tuple()
 

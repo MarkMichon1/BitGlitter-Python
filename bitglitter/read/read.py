@@ -6,6 +6,7 @@ from bitglitter.config.configmodels import Config, Constants
 from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.read.readstate.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
+from bitglitter.utilities.read import flush_active_frames
 from bitglitter.validation.validateread import validate_read_parameters
 
 
@@ -42,6 +43,9 @@ def read(file_path,
     config = session.query(Config).first()
     constants = session.query(Constants).first()
 
+    # Cleanup from previous session if crash:
+    flush_active_frames()
+
     # This sets the name of the temporary folder while screened data from partial saves is being written.
     temp_save_directory = Path(constants.DEFAULT_TEMP_SAVE_DIR)
 
@@ -68,8 +72,7 @@ def read(file_path,
                                             auto_unpackage_stream, auto_delete_finished_stream, save_statistics)
 
     #  Remove incomplete frames from db
-    session.query(StreamFrame).filter(not StreamFrame.is_complete).delete()
-    session.commit()
+    flush_active_frames()
 
     # Return metadata if conditions are met
     if 'metadata' in frame_read_results:

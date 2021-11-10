@@ -76,14 +76,11 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
             stream_read = video_frame_processor.stream_read
 
-            # Metadata Return
+            # Metadata return
             if video_frame_processor.metadata and stream_read.stop_at_metadata_load:
                 return {'metadata': video_frame_processor.metadata}
 
-            # Headers are decoded, can switch to multiprocessing
-            if stream_read.palette_header_complete and stream_read.metadata_header_complete:
-                break
-
+            # Stream palette load
             if video_frame_processor.stream_palette and video_frame_processor.stream_palette_loaded_this_frame:
                 stream_palette = video_frame_processor.stream_palette
                 stream_palette_dict = video_frame_processor.stream_palette_dict
@@ -92,25 +89,30 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 initial_state_dict['stream_palette_dict'] = stream_palette_dict
                 initial_state_dict['stream_palette_color_set'] = stream_palette_color_set
 
+            # Headers are decoded, can switch to multiprocessing
+            if stream_read.palette_header_complete and stream_read.metadata_header_complete:
+                break
+
         # Adding Stream SHA-256 to dict to return #todo...
         frame_read_results['active_sessions_this_stream'] = [stream_read.stream_sha256]
 
         # Begin multicore frame decode
         with Pool(processes=cpu_pool_size) as worker_pool:
             logging.info(f'Metadata headers fully decoded, now decoding on {cpu_pool_size} CPU core(s)...')
-            for frame_read_results in worker_pool.imap(video_frame_process,
+            for frame_read_results in worker_pool.imap(VideoFrameProcessor,
                                                        video_state_generator(frame_generator, stream_read,
-                                                       save_statistics, initializer_palette_a,
-                                                       initializer_palette_a_dict, initializer_palette_a_color_set,
-                                                       total_video_frames, stream_palette, stream_palette_dict,
-                                                       stream_palette_color_set)):
-                if 'error' in frame_read_results:
-                    if bad_frame_strikes:  # Corrupted frame, skipping to next one
-                        frame_strikes_this_session += 1
-                        logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
-                        if frame_strikes_this_session >= bad_frame_strikes:
-                            logging.warning('Reached frame strike limit.  Aborting...')
-                            return {'error': True}
+                                                                             save_statistics, initializer_palette_a,
+                                                                             initializer_palette_a_dict, initializer_palette_a_color_set,
+                                                                             total_video_frames, stream_palette, stream_palette_dict,
+                                                                             stream_palette_color_set)):
+                pass
+                # if 'error' in frame_read_results.:
+                #     if bad_frame_strikes:  # Corrupted frame, skipping to next one
+                #         frame_strikes_this_session += 1
+                #         logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
+                #         if frame_strikes_this_session >= bad_frame_strikes:
+                #             logging.warning('Reached frame strike limit.  Aborting...')
+                #             return {'error': True}
 
     elif input_type == 'image':
 

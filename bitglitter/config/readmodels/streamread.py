@@ -1,7 +1,7 @@
 #  This model has its own module because of its large size
 
 from bitstring import BitStream
-from sqlalchemy import BLOB, Boolean, Column, Integer, String
+from sqlalchemy import BLOB, Boolean, Column, Float, Integer, String
 from sqlalchemy.orm import relationship
 
 import json
@@ -66,10 +66,10 @@ class StreamRead(SQLBaseClass):
     auto_delete_finished_stream = Column(Boolean)
     auto_unpackage_stream = Column(Boolean)
     stop_at_metadata_load = Column(Boolean)
-    metadata_checkpoint_ran = Column(default=False)
+    metadata_checkpoint_ran = Column(Boolean, default=False)
 
     # Geometry
-    pixel_width = Column(Integer)
+    pixel_width = Column(Float)
     block_height = Column(Integer)
     block_width = Column(Integer)
 

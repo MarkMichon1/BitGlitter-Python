@@ -1,6 +1,7 @@
-import logging
-
 from bitstring import BitStream, ConstBitStream
+
+import logging
+import math
 
 from bitglitter.read.scan.scanutilities import color_snap, scan_block
 
@@ -76,7 +77,7 @@ class ScanHandler:
 
         complete_request = True
         if number_of_bits:  # Set amount of bits to scan
-            number_of_blocks = (number_of_bits - self.leftover_bits.len) // active_bit_length
+            number_of_blocks = int(math.ceil((number_of_bits - self.leftover_bits.len) / active_bit_length))
             if number_of_blocks > self.remaining_blocks:
                 number_of_blocks = self.remaining_blocks
                 complete_request = False
@@ -101,7 +102,6 @@ class ScanHandler:
             self.leftover_bits = bits.read(bits.len - number_of_bits)
             bits.pos = 0
             bits = bits.read(number_of_bits)
-        # logging.debug(f'{bits.len=} {number_of_bits=}')
         if complete_request:
             assert bits.len == number_of_bits
 
@@ -140,11 +140,3 @@ class ScanHandler:
         remainder_bits = self.bits_to_read - self.bits_read
         # logging.debug(f'{self.bits_read=} {self.bits_to_read=}')
         return self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)
-
-    def skip_palette_header_bits(self):
-        """If the custom palette is already recognized by the database, there is no need to read and decode the header.
-        This lets you skip over those bits.
-        """
-        #todo
-        # tack on leftover bits to beginning, clear
-        # if is_complete, compare len outside this scope

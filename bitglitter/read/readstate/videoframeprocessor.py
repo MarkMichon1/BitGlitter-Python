@@ -14,10 +14,10 @@ from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
 
 class VideoFrameProcessor:
     def __init__(self, dict_obj):
-        frame_position = dict_obj['current_frame_position']
+        self.frame_position = dict_obj['current_frame_position']
         total_frames = dict_obj['total_frames']
-        percentage_string = f'{round(((frame_position / total_frames) * 100), 2):.2f}'
-        logging.info(f"Processing video frame {frame_position} of {total_frames}... {percentage_string} %")
+        percentage_string = f'{round(((self.frame_position / total_frames) * 100), 2):.2f}'
+        logging.info(f"Processing video frame {self.frame_position} of {total_frames}... {percentage_string} %")
 
         self.dict_obj = dict_obj
 
@@ -25,18 +25,19 @@ class VideoFrameProcessor:
         self.ERROR_FATAL = {'error': True, 'fatal': True}  # Entire session is cancelled
         self.frame_errors = {}
 
+
         self.frame = self.dict_obj['frame']
         self.frame_pixel_height = self.frame.shape[0]
         self.frame_pixel_width = self.frame.shape[1]
 
-        self.initializer_palette_a = self.dict_obj['initializer_palette_a_color_set']
-        self.initializer_palette_a_color_set = self.dict_obj['initializer_palette_a_color_set']
-        self.initializer_palette_a_dict = self.dict_obj['initializer_palette_a_dict']
+        self.initializer_palette_a = None
+        self.initializer_palette_a_color_set = None
+        self.initializer_palette_a_dict = None
 
         self.stream_palette = None
         self.stream_palette_dict = None
         self.stream_palette_color_set = None
-        self.stream_palette_loaded_this_frame = False #todo
+        self.stream_palette_loaded_this_frame = False
 
         # State
         self.is_sequential = self.dict_obj['sequential']
@@ -87,24 +88,23 @@ class VideoFrameProcessor:
 
             # Multiprocessing
             else:
-                pass
+                if not self._frame_header_process(first_frame=False):
+                    self.frame_errors = self.ERROR_FATAL
 
+                self.scan_handler = None # Keep as is, multiprocessing cannot return its internal generator and crashes
+
+        # First video frame
         else:
-            if not self._initial_frame_setup():
-                self.frame_errors = self.ERROR_FATAL
-            if not self.frame_errors:
-                if not self._frame_header_process(first_frame=True):
-                    self.frame_errors = self.ERROR_FATAL
-            if not self.frame_errors:
-                if not self._stream_header_process_attempt():
-                    self.frame_errors = self.ERROR_FATAL
-            if not self.frame_errors:
-                if not self._metadata_header_process_attempt():
-                    self.frame_errors = self.ERROR_FATAL
-            if not self.frame_errors:
-                if not self._palette_header_attempt():
-                    self.frame_errors = self.ERROR_FATAL
+            self._initial_frame_setup()
+            self._frame_header_process(first_frame=True)
+            self._stream_header_process_attempt()
+            self._metadata_header_process_attempt()
+            self._palette_header_attempt()
+            self._payload_process()
+            self._frame_validation()
+            self._metadata_checkpoint()
             self._run_statistics()
+        logging.debug('Frame decode cycle complete.')
 
     def _initial_frame_setup(self):
         self.output_directory = self.dict_obj['output_directory']
@@ -115,6 +115,9 @@ class VideoFrameProcessor:
         self.scrypt_r = self.dict_obj['scrypt_r']
         self.scrypt_p = self.dict_obj['scrypt_p']
         self.temp_save_directory = self.dict_obj['temp_save_directory']
+        self.initializer_palette_a = self.dict_obj['initializer_palette_a']
+        self.initializer_palette_a_color_set = self.dict_obj['initializer_palette_a_color_set']
+        self.initializer_palette_a_dict = self.dict_obj['initializer_palette_a_dict']
         self.initializer_palette_b_color_set = self.dict_obj['initializer_palette_b_color_set']
         self.initializer_palette_b_dict = self.dict_obj['initializer_palette_b_dict']
         self.auto_delete_finished_stream = self.dict_obj['auto_delete_finished_stream']
@@ -124,7 +127,8 @@ class VideoFrameProcessor:
         # Geometry override checkpoint
         if not geometry_override_checkpoint(self.block_height_override, self.block_width_override,
                                             self.frame_pixel_height, self.frame_pixel_width):
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
 
         # Frame lock on
         lock_on_results = frame_lock_on(self.frame, self.block_height_override, self.block_width_override,
@@ -132,7 +136,8 @@ class VideoFrameProcessor:
                                         self.initializer_palette_a_color_set, self.initializer_palette_b_color_set,
                                         self.initializer_palette_a_dict, self.initializer_palette_b_dict)
         if not lock_on_results:
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
         self.block_height = lock_on_results['block_height']
         self.block_width = lock_on_results['block_width']
         self.pixel_width = lock_on_results['pixel_width']
@@ -145,12 +150,14 @@ class VideoFrameProcessor:
         #  Initializer scan and decode
         initializer_results = self.scan_handler.return_initializer_bits()
         if 'error' in initializer_results:
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
         initializer_bits_raw = initializer_results['bits']
         initializer_decode_results = initializer_header_validate_decode(initializer_bits_raw, self.block_height,
                                                                         self.block_width)
         if 'error' in initializer_decode_results:
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
 
         protocol_version = initializer_decode_results['protocol_version']
         self.stream_sha256 = initializer_decode_results['stream_sha256']
@@ -170,14 +177,16 @@ class VideoFrameProcessor:
         blacklisted_hash = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist == self.stream_sha256).first()
         if blacklisted_hash:
             logging.warning(f'Hash {self.stream_sha256} is on your blacklist.  Aborting stream...')
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
 
         # Loading or creating StreamRead instance
         self.stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == self.stream_sha256).first()
         if self.stream_read:
             if self.stream_read.is_complete:
                 logging.info(f'{self.stream_read.stream_name} -- {self.stream_sha256} is complete.  Aborting...')
-                return False
+                self.frame_errors = self.ERROR_FATAL
+                return
             else:
                 self.stream_read.session_activity(True)
             logging.info(f'Existing stream read found: {self.stream_read}')
@@ -197,14 +206,15 @@ class VideoFrameProcessor:
             if self.stream_palette:
                 self.stream_read.stream_palette_load(self.stream_palette)
 
-        return True
-
     def _frame_header_process(self, first_frame: bool):
-        # Frame header process and decode
+        if self.frame_errors:
+            return
+
         frame_header_bits_raw = self.scan_handler.return_frame_header_bits(is_initializer_palette=first_frame)['bits']
         frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
         if not frame_header_decode_results:
-            return False
+            self.frame_errors = self.ERROR_FATAL
+            return
         self.frame_sha256 = frame_header_decode_results['frame_sha256']
         self.frame_number = frame_header_decode_results['frame_number']
         bits_to_read = frame_header_decode_results['bits_to_read']
@@ -225,6 +235,8 @@ class VideoFrameProcessor:
             self.is_unique_frame = True
 
     def _stream_header_process_attempt(self):
+        if self.frame_errors:
+            return
         if self.frame_blocks_left:
             stream_header_results = self.scan_handler.return_stream_header_bits(is_initializer_palette=True)
             if not stream_header_results['complete_request']:  # Couldn't fit in this frame, moving to the next
@@ -235,7 +247,8 @@ class VideoFrameProcessor:
                 self.frame_hashable_bits += stream_header_results['bits']
                 stream_header_decode_results = stream_header_decode(stream_header_bits_raw)
                 if not stream_header_decode_results:
-                    return False
+                    self.frame_errors = self.ERROR_FATAL
+                    return
                 size_in_bytes = stream_header_decode_results['size_in_bytes']
                 total_frames = stream_header_decode_results['total_frames']
                 compression_enabled = stream_header_decode_results['compression_enabled']
@@ -249,11 +262,12 @@ class VideoFrameProcessor:
                                                     encryption_enabled, file_masking_enabled, metadata_header_length,
                                                     metadata_header_hash, custom_palette_header_length,
                                                     custom_palette_header_hash)
-        return True
 
     def _metadata_header_process_attempt(self):
+        if self.frame_errors:
+            return
         if self.frame_blocks_left:
-            metadata_header_results = self.scan_handler.return_bits(self.stream_read.metadata_header_length,
+            metadata_header_results = self.scan_handler.return_bits(self.stream_read.metadata_header_size_bytes,
                                                                     is_initializer_palette=True, is_payload=True,
                                                                     byte_input=True)
             if not metadata_header_results['complete_request']:
@@ -270,7 +284,8 @@ class VideoFrameProcessor:
                                                                              self.stream_read.scrypt_r,
                                                                              self.stream_read.scrypt_p)
             if not metadata_header_decode_results:
-                return False
+                self.frame_errors = self.ERROR_FATAL
+                return
             bg_version = metadata_header_decode_results['bg_version']
             stream_name = metadata_header_decode_results['stream_name']
             stream_description = metadata_header_decode_results['stream_description']
@@ -278,22 +293,26 @@ class VideoFrameProcessor:
             manifest_string = metadata_header_decode_results['manifest_string']
             self.stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created,
                                                   manifest_string)
-        return True
 
     def _palette_header_attempt(self):
+        if self.frame_errors:
+            return
         if self.frame_blocks_left and self.stream_read.custom_palette_used:
             pass
             # if palette id is in db scan_handler.skip_frames(len) else normal read
             #todo hashable bits
             #todo skip processing if palette ID is in DB
-        return True
 
     def _payload_process(self):
+        if self.frame_errors:
+            return
         if self.frame_blocks_left:
             self.stream_payload_bits = self.scan_handler.return_payload_bits()['bits']
             self.payload_in_frame = True
 
     def _frame_validation(self):
+        if self.frame_errors:
+            return
         if self.is_unique_frame:
             frame_hashable_bytes = (self.frame_hashable_bits + self.stream_payload_bits).tobytes()
             if self.frame_sha256 != get_sha256_hash_from_bytes(frame_hashable_bytes):
@@ -313,7 +332,6 @@ class VideoFrameProcessor:
             logging.info(f'Returning metadata from {self.stream_read}')
             self.metadata = self.stream_read.metadata_checkpoint_return()
 
-
     def _run_statistics(self):
         if self.save_statistics:
             read_stats_update(self.scan_handler.block_position, 1, int(self.scan_handler.bits_read / 8))
@@ -324,6 +342,7 @@ class VideoFrameProcessor:
                                         self.initializer_palette_a_color_set, block_height=
                                         self.stream_read.block_height, block_width=self.stream_read.block_width,
                                         pixel_width=self.stream_read.pixel_width)
+
         if 'stream_palette' in self.dict_obj:
             self.scan_handler.set_stream_palette(self.dict_obj['stream_palette'], self.dict_obj['stream_palette_dict'],
                                             self.dict_obj['stream_palette_color_set'])
