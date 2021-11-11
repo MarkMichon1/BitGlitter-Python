@@ -56,7 +56,7 @@ def update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scr
     return True
 
 
-def return_stream_manifest(stream_sha256):
+def return_stream_manifest(stream_sha256): #todo attempt byte -> manifest string w/ decrypt if applicable
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return {'error': 'No stream read'}

@@ -96,7 +96,7 @@ class ScanHandler:
                 bits.append(active_color_dict.get_value(average_rgb))
         self.remaining_blocks -= number_of_blocks
 
-        bits = ConstBitStream(bits)
+        bits = BitStream(bits) #todo right type?
         if bits.len > number_of_bits:
             bits.pos = number_of_bits
             self.leftover_bits = bits.read(bits.len - number_of_bits)

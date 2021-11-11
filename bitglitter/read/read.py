@@ -3,7 +3,6 @@ from pathlib import Path
 
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Config, Constants
-from bitglitter.config.readmodels.readmodels import StreamFrame
 from bitglitter.read.readstate.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.utilities.read import flush_active_frames
@@ -79,4 +78,4 @@ def read(file_path,
         return frame_read_results['metadata']
 
     logging.info('Read cycle complete.')
-    return frame_read_results['stream_sha256'] if 'stream_sha256' in frame_read_results else None
+    return frame_read_results

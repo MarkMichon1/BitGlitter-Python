@@ -62,6 +62,11 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             initial_state_dict['current_frame_position'] = frame_data['current_frame_position']
             video_frame_processor = VideoFrameProcessor(initial_state_dict)
 
+            # Skip if all frames completed
+            if video_frame_processor.skip_process:
+                frame_read_results['active_sessions_this_stream'].append(video_frame_processor.stream_sha256)
+                break
+
             # Errors
             if 'error' in video_frame_processor.frame_errors:
                 if 'fatal' in video_frame_processor.frame_errors:  # Session-ending error, such as a metadata frame being corrupted
@@ -91,28 +96,27 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
             # Headers are decoded, can switch to multiprocessing
             if stream_read.palette_header_complete and stream_read.metadata_header_complete:
+                frame_read_results['active_sessions_this_stream'].append(video_frame_processor.stream_sha256)
                 break
 
-        # Adding Stream SHA-256 to dict to return #todo...
-        frame_read_results['active_sessions_this_stream'] = [stream_read.stream_sha256]
-
         # Begin multicore frame decode
-        with Pool(processes=cpu_pool_size) as worker_pool:
-            logging.info(f'Metadata headers fully decoded, now decoding on {cpu_pool_size} CPU core(s)...')
-            for frame_read_results in worker_pool.imap(VideoFrameProcessor,
-                                                       video_state_generator(frame_generator, stream_read,
-                                                                             save_statistics, initializer_palette_a,
-                                                                             initializer_palette_a_dict, initializer_palette_a_color_set,
-                                                                             total_video_frames, stream_palette, stream_palette_dict,
-                                                                             stream_palette_color_set)):
-                pass
-                # if 'error' in frame_read_results.:
-                #     if bad_frame_strikes:  # Corrupted frame, skipping to next one
-                #         frame_strikes_this_session += 1
-                #         logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
-                #         if frame_strikes_this_session >= bad_frame_strikes:
-                #             logging.warning('Reached frame strike limit.  Aborting...')
-                #             return {'error': True}
+        if not video_frame_processor.skip_process:
+            with Pool(processes=cpu_pool_size) as worker_pool:
+                logging.info(f'Metadata headers fully decoded, now decoding on {cpu_pool_size} CPU core(s)...')
+                for multicore_read_results in worker_pool.imap(VideoFrameProcessor,
+                                                           video_state_generator(frame_generator, stream_read,
+                                                           save_statistics, initializer_palette_a,
+                                                           initializer_palette_a_dict, initializer_palette_a_color_set,
+                                                           total_video_frames, stream_palette, stream_palette_dict,
+                                                           stream_palette_color_set)):
+
+                    if multicore_read_results.frame_errors:
+                        if bad_frame_strikes:  # Corrupted frame, skipping to next one
+                            frame_strikes_this_session += 1
+                            logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
+                            if frame_strikes_this_session >= bad_frame_strikes:
+                                logging.warning('Reached frame strike limit.  Aborting...')
+                                return {'error': True}
 
     elif input_type == 'image':
 
@@ -121,9 +125,9 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         # Begin multicore frame decode
         with Pool(processes=cpu_pool_size) as worker_pool:
             logging.info(f'Decoding on {cpu_pool_size} CPU core(s)...')
-            for frame_read_results in worker_pool.imap(image_frame_process, image_state_generator(input_list,
+            for multicore_read_results in worker_pool.imap(ImageFrameProcessor, image_state_generator(input_list,
                                                                                                   initial_state_dict)):
-                if 'error' in frame_read_results:
+                if multicore_read_results.frame_errors:
                     if bad_frame_strikes:  # Corrupted frame, skipping to next one
                         frame_strikes_this_session += 1
                         logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
@@ -134,8 +138,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     logging.info('Frame scanning complete.')
 
     # Closing active sessions and unpackaging streams if its set to:
-    # active_reads_this_session = []  # todo active_session = True
-    active_reads_this_session = StreamRead.query.filter(StreamRead.active_this_session == True)
+    active_reads_this_session = StreamRead.query.filter(StreamRead.active_this_session == True).all()
     unpackaging_this_session = False
     if active_reads_this_session:
         logging.info(f'{len(active_reads_this_session)} active stream(s) this session.')
@@ -144,7 +147,6 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             stream_read.completed_frame_count_update()
             if stream_read.auto_unpackage_stream:
                 unpackaging_this_session = True
-                logging.info(f'Unpackaging {stream_read.stream_name}...')
                 unpackage_results = stream_read.attempt_unpackage()
                 frame_read_results['unpackage_results'][stream_read.stream_sha256] = unpackage_results
                 stream_read.autodelete_attempt()
@@ -152,5 +154,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         if unpackaging_this_session:
             logging.info('File unpackaging complete.')
 
-    # Returns one for video, or all for images
+    # Returns active sessions and unpackaging results (if applicable)
+    if not frame_read_results['unpackage_results']:
+        del frame_read_results['unpackage_results']
     return {'frame_read_results': frame_read_results}

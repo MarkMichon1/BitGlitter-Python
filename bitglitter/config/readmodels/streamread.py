@@ -10,7 +10,8 @@ from pathlib import Path
 import time
 
 from bitglitter.config.config import engine, SQLBaseClass
-
+from bitglitter.read.decode.manifest import manifest_unpack
+from bitglitter.config.readmodels.readmodels import StreamFrame
 
 class StreamRead(SQLBaseClass):
     """This serves as the central data container and API for interacting with saved read data."""
@@ -60,7 +61,8 @@ class StreamRead(SQLBaseClass):
 
     # Operation State
     active_this_session = Column(Boolean, default=True)
-    is_complete = Column(Boolean, default=False)
+    all_frames_accounted_for = Column(Boolean, default=False)  # all frames are saved in DB
+    is_complete = Column(Boolean, default=False)  # is unpackaged
 
     # Unpackage State
     auto_delete_finished_stream = Column(Boolean)
@@ -78,9 +80,10 @@ class StreamRead(SQLBaseClass):
     scrypt_r = Column(Integer)
     scrypt_p = Column(Integer)
     decryption_key = Column(String)
+    is_decrypted = Column(Boolean, default=False)
 
     # Relationships
-    frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True)
+    frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True, lazy='dynamic')
     files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True)
     progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
 
@@ -118,6 +121,8 @@ class StreamRead(SQLBaseClass):
         self.total_frames = total_frames
         self.compression_enabled = compression_enabled
         self.encryption_enabled = encryption_enabled
+        if not encryption_enabled:
+            self.is_decrypted = True
         self.file_masking_enabled = file_masking_enabled
         self.metadata_header_size_bytes = metadata_header_length
         self.metadata_header_hash = metadata_header_hash
@@ -174,18 +179,34 @@ class StreamRead(SQLBaseClass):
             self.save()
 
     def completed_frame_count_update(self):
-        self.completed_frames = self.frames.filter.count()  # todo...
+        self.completed_frames = self.frames.filter(StreamFrame.is_complete == True).count()
+        if self.completed_frames == self.total_frames:
+            logging.info(f'All {self.total_frames} frame(s) have been decoded and are accounted for in stream'
+                         f' {self.stream_name}')
+            self.all_frames_accounted_for = True
         self.save()
 
-    def attempt_unpackage(self):
+    def attempt_unpackage(self, write_cycle=True):
         """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
         summary of the results.
         """
+        logging.info(f'Unpackaging {str(self)}...')
 
-        if self.metadata_header_complete and self.manifest_string:
-            pass  # attempt ex
+        # Metadata header itself hasn't been read from frames yet
+        if not self.metadata_header_complete and not self.manifest_string:
+            logging.info('Cannot unpackage, metadata header has not been read from frames yet.')
+            return {'failure': 'Metadata not read from frames yet.'}
 
+        # Header has been decoded but not decrypted
+        if not self.is_decrypted and self.file_masking_enabled:
+            logging.info('Cannot unpackage, correct decryption key has\'nt been provided.')
+            return {'failure': 'Metadata '}
+
+        # Progress calculate
         # blob calculate
+
+        # Frame calculate
+
         # assess existing files (from previous sessions)
         # mark stream AS COMPLETE if so...
 
@@ -196,11 +217,6 @@ class StreamRead(SQLBaseClass):
             self.delete()
 
     def update_config(self):
-        pass  # todo rename
-
-
-# v These need to be at bottom to resolve import/DB relationship issues.  It works but perhaps a better way exists.
-import bitglitter.config.readmodels.readmodels
-from bitglitter.read.decode.manifest import manifest_unpack
+        self.save()  # todo rename
 
 SQLBaseClass.metadata.create_all(engine)

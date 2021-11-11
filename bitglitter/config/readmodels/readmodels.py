@@ -1,7 +1,8 @@
+from bitstring import BitStream
 from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from bitglitter.config.config import engine, session, SQLBaseClass
+from bitglitter.config.config import session, SQLBaseClass
 
 
 class StreamFrame(SQLBaseClass):
@@ -15,16 +16,27 @@ class StreamFrame(SQLBaseClass):
     payload = Column(BLOB)
     frame_number = Column(Integer)
     is_complete = Column(Boolean, default=False)
+    added_to_progress = Column(Boolean, default=False)
+
+    def progress_calculated(self):
+        """Was used with StreamDataProgress to calculate progress, and doesn't have to be used again."""
+        self.added_to_progress = True
+        self.save()
+
+    def return_frame_payload(self):
+        return BitStream(self.payload).read(self.payload_bits)
 
     def finalize_frame(self, payload_bits=None):
         if payload_bits:
             self.payload_bits = payload_bits.len
             self.payload = payload_bits.tobytes()
+        else:
+            self.added_to_progress = True  # Removing empty frames from upcoming calculation
         self.is_complete = True
         self.save()
 
     def __str__(self):
-        return f'Frame {self.frame_number}/{self.stream.total_frames} for {self.stream.stream_name}'
+        return f'Frame {self.frame_number}/{self.stream.total_frames} for {self.stream}'
 
 
 class StreamFile(SQLBaseClass):
@@ -108,6 +120,3 @@ class StreamSHA256Blacklist(SQLBaseClass):
 
     def __str__(self):
         return self.stream_sha256
-
-
-SQLBaseClass.metadata.create_all(engine)

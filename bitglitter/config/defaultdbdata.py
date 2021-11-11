@@ -1,5 +1,6 @@
 from bitglitter.config.config import session
-from bitglitter.config.readmodels.streamread import StreamRead
+# import bitglitter.config.readmodels.readmodels
+# from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.config.configmodels import Config, Constants, CurrentJobState, Statistics
 from bitglitter.config.palettemodels import Palette
 

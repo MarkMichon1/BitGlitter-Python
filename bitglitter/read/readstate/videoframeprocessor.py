@@ -24,6 +24,7 @@ class VideoFrameProcessor:
         self.ERROR_SOFT = {'error': True}  # Only this frame is cancelled, decoding can continue on next frame
         self.ERROR_FATAL = {'error': True, 'fatal': True}  # Entire session is cancelled
         self.frame_errors = {}
+        self.skip_process = False # Stream has all frames, pending unpackaging
 
 
         self.frame = self.dict_obj['frame']
@@ -75,23 +76,23 @@ class VideoFrameProcessor:
 
         # Video frames 2+
         if 'stream_read' in self.dict_obj:
+            self.stream_read = self.dict_obj['stream_read']
             self._second_frame_onwards_setup()
 
             # Still grabbing setup headers in this frame
             if self.is_sequential:
                 if not self.stream_read.stream_header_complete:
-                    if not self._stream_header_process_attempt():
-                        self.frame_errors = self.ERROR_FATAL
+                    self._stream_header_process_attempt()
+
                 if not self.frame_errors:
                     pass
 
 
             # Multiprocessing
             else:
-                if not self._frame_header_process(first_frame=False):
-                    self.frame_errors = self.ERROR_FATAL
-
-                self.scan_handler = None # Keep as is, multiprocessing cannot return its internal generator and crashes
+                self._frame_header_process(first_frame=False)
+                self._payload_process()
+                self._frame_validation()
 
         # First video frame
         else:
@@ -103,7 +104,9 @@ class VideoFrameProcessor:
             self._payload_process()
             self._frame_validation()
             self._metadata_checkpoint()
-            self._run_statistics()
+
+        self._run_statistics()
+        self.scan_handler = None # Keep as is, multiprocessing cannot return its internal generator and crashes
         logging.debug('Frame decode cycle complete.')
 
     def _initial_frame_setup(self):
@@ -190,6 +193,9 @@ class VideoFrameProcessor:
             else:
                 self.stream_read.session_activity(True)
             logging.info(f'Existing stream read found: {self.stream_read}')
+            if self.stream_read.all_frames_accounted_for:
+                logging.info('All frames accounted for, skipping video frame processing...')
+                self.skip_process = True
 
         else:
             logging.info(f'New stream: {self.stream_sha256}')
@@ -225,7 +231,7 @@ class VideoFrameProcessor:
             .filter(StreamFrame.frame_number == self.frame_number).first()
         if self.stream_frame:  # Frame already loaded, skipping
             if self.stream_frame.is_complete:  # Current frame is fully validated and saved
-                logging.debug(f'Frame is already complete: {self.frame_number}')
+                logging.info(f'Frame is already complete: {self.frame_number}')
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {self.frame_number}')
             self.frame_blocks_left = False
@@ -334,10 +340,9 @@ class VideoFrameProcessor:
 
     def _run_statistics(self):
         if self.save_statistics:
-            read_stats_update(self.scan_handler.block_position, 1, int(self.scan_handler.bits_read / 8))
+            read_stats_update(self.scan_handler.block_position, 1, round(self.scan_handler.bits_read / 8))
 
     def _second_frame_onwards_setup(self):
-        self.stream_read = self.dict_obj['stream_read']
         self.scan_handler = ScanHandler(self.frame, False, self.initializer_palette_a, self.initializer_palette_a_dict,
                                         self.initializer_palette_a_color_set, block_height=
                                         self.stream_read.block_height, block_width=self.stream_read.block_width,
