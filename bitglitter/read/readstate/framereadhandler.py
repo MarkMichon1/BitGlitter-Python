@@ -7,6 +7,7 @@ from bitglitter.read.readstate.videoframegenerator import video_frame_generator
 from bitglitter.read.readstate.imageframeprocessor import ImageFrameProcessor
 from bitglitter.read.readstate.multiprocess_state_generator import image_state_generator, video_state_generator
 from bitglitter.read.readstate.videoframeprocessor import VideoFrameProcessor
+from bitglitter.utilities.read import flush_active_frames
 
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
@@ -137,6 +138,9 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
     logging.info('Frame scanning complete.')
 
+    #  Remove incomplete frames from db
+    flush_active_frames()
+
     # Closing active sessions and unpackaging streams if its set to:
     active_reads_this_session = StreamRead.query.filter(StreamRead.active_this_session == True).all()
     unpackaging_this_session = False
@@ -150,6 +154,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 unpackage_results = stream_read.attempt_unpackage()
                 frame_read_results['unpackage_results'][stream_read.stream_sha256] = unpackage_results
                 stream_read.autodelete_attempt()
+            else:
+                stream_read.check_file_eligibility()
             stream_read.session_activity(False)
         if unpackaging_this_session:
             logging.info('File unpackaging complete.')

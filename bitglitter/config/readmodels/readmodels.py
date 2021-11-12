@@ -18,12 +18,25 @@ class StreamFrame(SQLBaseClass):
     is_complete = Column(Boolean, default=False)
     added_to_progress = Column(Boolean, default=False)
 
+
+    def get_bit_index(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
+        """Returns the start and ending index positions of the greater stream payload, used when calculating progress
+        to tell what specific data is inside of a given frame.
+        """
+        bit_start = 0
+        bit_end = 0
+
+        return bit_start, bit_end
+
     def progress_calculated(self):
         """Was used with StreamDataProgress to calculate progress, and doesn't have to be used again."""
         self.added_to_progress = True
         self.save()
 
-    def return_frame_payload(self):
+    def return_partial_frame_payload(self):
+        pass
+
+    def return_full_frame_payload(self):
         return BitStream(self.payload).read(self.payload_bits)
 
     def finalize_frame(self, payload_bits=None):
@@ -49,6 +62,7 @@ class StreamFile(SQLBaseClass):
     start_bit_position = Column(Integer)
     end_bit_position = Column(Integer)
     is_processed = Column(Boolean, default=False)
+    is_eligible = Column(Boolean, default=False) # Eligible to be processed
     save_path = Column(String)
 
     name = Column(String)
@@ -57,8 +71,12 @@ class StreamFile(SQLBaseClass):
     processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
 
+    def extract(self):
+        # assess existing files (from previous sessions)
+        pass
+
     def __str__(self):
-        return f'File {self.name} in {self.stream.stream_name}'
+        return f'File {self.name} in {self.stream}'
 
 
 class StreamDataProgress(SQLBaseClass):
@@ -76,14 +94,20 @@ class StreamDataProgress(SQLBaseClass):
     bit_end_position = Column(Integer)
 
     def __str__(self):
-        return f'Progress slice for {self.stream.stream_name} - bit pos {self.bit_start_position}-' \
-               f'{self.bit_end_position}'
+        return f'Progress slice for {self.stream.stream_name} - bit pos [{self.bit_start_position}:' \
+               f'{self.bit_end_position}]'
 
     @classmethod
-    def create(cls, stream_sha256, stream_id, bit_start_position, bit_end_position, **kwargs):
+    def create(cls, stream_id, bit_start_position, bit_end_position, **kwargs):
         """Before an object is created, checking to see if an adjacent payload frame has already been read.  Rather than
         making a new object, the old instance will 'pool' the new edges together.
         """
+        identical_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id) \
+            .filter(StreamDataProgress.bit_end_position == bit_end_position) \
+            .filter(StreamDataProgress.bit_start_position == bit_start_position).first()
+        if identical_progress:
+            return
+
         previous_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id) \
             .filter(StreamDataProgress.bit_end_position == bit_start_position - 1).first()
         if previous_progress:

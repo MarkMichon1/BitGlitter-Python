@@ -82,8 +82,6 @@ def remove_all_partial_save_data():
 
 def update_stream_read(stream_sha256, auto_delete_finished_stream=None,
                        auto_unpackage_stream=None):  # todo test... & README
-    if not isinstance(auto_delete_finished_stream, bool):
-        raise ValueError('auto_delete_finished_stream must be type bool')
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256)
     if not stream_read:
         return False

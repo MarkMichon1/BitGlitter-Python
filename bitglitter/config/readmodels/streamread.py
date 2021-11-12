@@ -1,17 +1,19 @@
 #  This model has its own module because of its large size
 
 from bitstring import BitStream
-from sqlalchemy import BLOB, Boolean, Column, Float, Integer, String
+from sqlalchemy import BLOB, Boolean, Column, Float, func, Integer, String
 from sqlalchemy.orm import relationship
 
 import json
 import logging
+import math
 from pathlib import Path
 import time
 
-from bitglitter.config.config import engine, SQLBaseClass
+from bitglitter.config.config import engine, SQLBaseClass, session
 from bitglitter.read.decode.manifest import manifest_unpack
-from bitglitter.config.readmodels.readmodels import StreamFrame
+from bitglitter.config.readmodels.readmodels import StreamFrame, StreamFile, StreamDataProgress
+
 
 class StreamRead(SQLBaseClass):
     """This serves as the central data container and API for interacting with saved read data."""
@@ -19,7 +21,7 @@ class StreamRead(SQLBaseClass):
     __tablename__ = 'stream_reads'
     __abstract__ = False
 
-    # Core
+    # Core Metadata (App)
     time_started = Column(Integer, default=time.time)
     bg_version = Column(String)
     protocol_version = Column(Integer)
@@ -62,6 +64,8 @@ class StreamRead(SQLBaseClass):
     # Operation State
     active_this_session = Column(Boolean, default=True)
     all_frames_accounted_for = Column(Boolean, default=False)  # all frames are saved in DB
+    total_files = Column(Integer)
+    completed_files = Column(Integer, default=0)
     is_complete = Column(Boolean, default=False)  # is unpackaged
 
     # Unpackage State
@@ -69,6 +73,8 @@ class StreamRead(SQLBaseClass):
     auto_unpackage_stream = Column(Boolean)
     stop_at_metadata_load = Column(Boolean)
     metadata_checkpoint_ran = Column(Boolean, default=False)
+    highest_processed_frame = Column(Integer)
+    progress_complete = Column(Boolean, default=False)
 
     # Geometry
     pixel_width = Column(Float)
@@ -83,9 +89,12 @@ class StreamRead(SQLBaseClass):
     is_decrypted = Column(Boolean, default=False)
 
     # Relationships
-    frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True, lazy='dynamic')
-    files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True)
-    progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True)
+    frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True,
+                          lazy='dynamic')
+    files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True,
+                         lazy='dynamic')
+    progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True,
+                            lazy='dynamic')
 
     def __str__(self):
         if self.stream_name:
@@ -108,9 +117,16 @@ class StreamRead(SQLBaseClass):
         self.active_this_session = bool_set
         self.save()
 
+    def _calculate_payload_bits_per_frame(self, stream_palette_bit_length):
+        frame_header_length = 352
+        self.payload_bits_per_standard_frame = ((self.block_width - int(not self.stream_is_video)) *
+                                                (self.block_height - int(not self.stream_is_video))) \
+                                               * stream_palette_bit_length - frame_header_length
+
     def stream_palette_load(self, stream_palette):
         self.stream_palette_id = stream_palette.palette_id
         self.custom_palette_used = stream_palette.is_custom
+        self._calculate_payload_bits_per_frame(stream_palette.bit_length)
         self.save()
 
     def stream_header_load(self, size_in_bytes, total_frames, compression_enabled, encryption_enabled,
@@ -154,6 +170,7 @@ class StreamRead(SQLBaseClass):
         # Manifest process
         manifest_dict = json.loads(manifest_string)
         manifest_unpack(manifest_dict, self.id, new_output_directory)
+        self.total_files = self.files.count()
 
     def metadata_checkpoint_return(self):
         """If stop_at_metadata_load is enabled at read() and this hasn't ran previously, this returns a dictionary of
@@ -186,12 +203,7 @@ class StreamRead(SQLBaseClass):
             self.all_frames_accounted_for = True
         self.save()
 
-    def attempt_unpackage(self, write_cycle=True):
-        """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
-        summary of the results.
-        """
-        logging.info(f'Unpackaging {str(self)}...')
-
+    def check_file_eligibility(self):
         # Metadata header itself hasn't been read from frames yet
         if not self.metadata_header_complete and not self.manifest_string:
             logging.info('Cannot unpackage, metadata header has not been read from frames yet.')
@@ -203,14 +215,64 @@ class StreamRead(SQLBaseClass):
             return {'failure': 'Metadata '}
 
         # Progress calculate
-        # blob calculate
+        self.highest_processed_frame = session.query(func.max(StreamFrame.frame_number)) \
+            .filter(StreamFrame.stream_id == self.id).one()[0]
+
+        # Bypass these calculations
+        if self.all_frames_accounted_for:
+            if not self.progress_complete:
+                self.progress.delete()
+                self.frames.update({StreamFrame.added_to_progress: True})
+                StreamDataProgress.create(self.id, 0, (self.size_in_bytes * 8) - 1)
+                self.progress_complete = True
+
+        # Incomplete stream, calculating progress
+        else:
+            for index_range in range(math.ceil(self.highest_processed_frame / 100)):
+                frame_group = StreamFrame.query.filter(StreamFrame.frame_number < (index_range + 1) * 100) \
+                    .filter(StreamFrame.frame_number >= index_range * 100).filter(StreamFrame.stream_id == self.id)\
+                    .filter(StreamFrame.added_to_progress == False).all()
+                for frame in frame_group:
+                    bit_start, bit_end = frame.get_bit_index(self.payload_start_frame, self.payload_first_frame_bits,
+                                                             self.payload_bits_per_standard_frame)
+                    StreamDataProgress.create(self.id, bit_start, bit_end)
+                    frame.progress_calculated()
+
+        # What files are eligible to be unpackaged that 'fit' inside of the finished data
+        for progress_cluster in self.progress:
+            self.files.filter(StreamFile.is_eligible == False)\
+                .filter(StreamFile.start_bit_position >= progress_cluster.bit_start_position) \
+                .filter(StreamFile.end_bit_position <= progress_cluster.bit_end_position) \
+                .update({StreamFile.is_eligible: True})
+
+
+        return {}
+
+    def attempt_unpackage(self):
+        """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
+        summary of the results.
+        """
+        logging.info(f'Unpackaging {str(self)}...')
+
+        elibility_results = self.check_file_eligibility()
+        if 'failure' in elibility_results:
+            return elibility_results
 
         # Frame calculate
 
-        # assess existing files (from previous sessions)
-        # mark stream AS COMPLETE if so...
+        # File extract
+        pending_extraction = self.files #todo
 
-        return {}
+        for file in pending_extraction:
+            file.extract()
+
+        # Is stream complete?
+        self.completed_files = self.files.filter(StreamFile.is_processed == True).count()
+        if self.completed_files == self.total_files:
+            self.is_complete = True
+        self.save()
+
+        return {} #todo results
 
     def autodelete_attempt(self):
         if self.auto_delete_finished_stream and self.is_complete:
@@ -218,5 +280,11 @@ class StreamRead(SQLBaseClass):
 
     def update_config(self):
         self.save()  # todo rename
+
+    def set_payload_start_data(self, payload_start_frame, payload_first_frame_bits):
+        self.payload_start_frame = payload_start_frame
+        self.payload_first_frame_bits = payload_first_frame_bits
+        self.save()
+
 
 SQLBaseClass.metadata.create_all(engine)

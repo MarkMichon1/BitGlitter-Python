@@ -37,6 +37,7 @@ class ScanHandler:
         self.block_position = 0
         self.remaining_blocks = 0
         self.bits_to_read = 0
+        self.payload_bits_read = 0
         self.bits_read = 0
         self.leftover_bits = BitStream()
 
@@ -64,7 +65,7 @@ class ScanHandler:
             number_of_bits = number_of_bits * 8
 
         if is_payload:
-            self.bits_read += number_of_bits
+            self.payload_bits_read += number_of_bits
 
         if is_initializer_palette:
             active_color_set = self.initializer_color_set
@@ -96,7 +97,7 @@ class ScanHandler:
                 bits.append(active_color_dict.get_value(average_rgb))
         self.remaining_blocks -= number_of_blocks
 
-        bits = BitStream(bits) #todo right type?
+        bits = BitStream(bits)
         if bits.len > number_of_bits:
             bits.pos = number_of_bits
             self.leftover_bits = bits.read(bits.len - number_of_bits)
@@ -106,7 +107,8 @@ class ScanHandler:
             assert bits.len == number_of_bits
 
         # Statistics update
-        self.block_position = number_of_blocks
+        self.block_position += number_of_blocks
+        self.bits_read += number_of_bits
 
         return {'bits': bits, 'complete_request': complete_request}
 
@@ -136,7 +138,6 @@ class ScanHandler:
         return self.return_bits(685, is_initializer_palette, is_payload=True)
 
     def return_payload_bits(self):
-        # Returns the remainder payload bits on the frame.
-        remainder_bits = self.bits_to_read - self.bits_read
-        # logging.debug(f'{self.bits_read=} {self.bits_to_read=}')
+        """Returns the remainder payload bits on the frame."""
+        remainder_bits = self.bits_to_read - self.payload_bits_read
         return self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)

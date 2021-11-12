@@ -231,7 +231,7 @@ class VideoFrameProcessor:
             .filter(StreamFrame.frame_number == self.frame_number).first()
         if self.stream_frame:  # Frame already loaded, skipping
             if self.stream_frame.is_complete:  # Current frame is fully validated and saved
-                logging.info(f'Frame is already complete: {self.frame_number}')
+                logging.info(f'Frame {self.frame_number} is already complete')
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {self.frame_number}')
             self.frame_blocks_left = False
@@ -322,12 +322,15 @@ class VideoFrameProcessor:
         if self.is_unique_frame:
             frame_hashable_bytes = (self.frame_hashable_bits + self.stream_payload_bits).tobytes()
             if self.frame_sha256 != get_sha256_hash_from_bytes(frame_hashable_bytes):
-                logging.warning('Setup frame corrupted.  Aborting stream...')
-                return False
+                logging.warning('Frame corrupted.  Aborting frame...')
+                self.frame_errors = self.ERROR_FATAL
+                return
 
             # Marking frame as complete, moving on to next frame
             if self.payload_in_frame:
                 self.stream_frame.finalize_frame(self.stream_payload_bits)
+                if self.is_sequential:  # First frame with payload in it
+                    self.stream_read.set_payload_start_data(self.frame_number, self.stream_payload_bits.len)
             else:
                 self.stream_frame.finalize_frame()
             if self.is_sequential:
@@ -340,7 +343,7 @@ class VideoFrameProcessor:
 
     def _run_statistics(self):
         if self.save_statistics:
-            read_stats_update(self.scan_handler.block_position, 1, round(self.scan_handler.bits_read / 8))
+            read_stats_update(self.scan_handler.block_position, 1, round(self.scan_handler.payload_bits_read / 8))
 
     def _second_frame_onwards_setup(self):
         self.scan_handler = ScanHandler(self.frame, False, self.initializer_palette_a, self.initializer_palette_a_dict,

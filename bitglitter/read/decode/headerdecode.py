@@ -176,7 +176,8 @@ def custom_palette_header_validate_decode(header_bytes, read_sha256):
     time_created = int(time_created)
     number_of_colors = int(number_of_colors)
     color_list = ast.literal_eval(color_list)
-    # todo: assert color_list is type list (or tuple?)
+    if not isinstance(list, color_list) and not isinstance(tuple, color_list):
+        raise ValueError('Emergency stop- returned string was not a list or tuple.')
 
     return {'palette_id': palette_id, 'palette_name': palette_name, 'palette_description': palette_description,
             'time_created': time_created, 'number_of_colors': number_of_colors, 'color_list': color_list}

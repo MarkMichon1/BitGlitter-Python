@@ -70,9 +70,6 @@ def read(file_path,
                                             scrypt_r, scrypt_p, temp_save_directory, stop_at_metadata_load,
                                             auto_unpackage_stream, auto_delete_finished_stream, save_statistics)
 
-    #  Remove incomplete frames from db
-    flush_active_frames()
-
     # Return metadata if conditions are met
     if 'metadata' in frame_read_results:
         return frame_read_results['metadata']

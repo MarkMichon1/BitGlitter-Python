@@ -74,16 +74,20 @@ class RenderHandler:
 
         self.total_operations = self.total_frames * (1 + int(output_mode != 'image'))
 
+        payload_bits_rendered = 0
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
 
-            for frame_encode in worker_pool.imap(draw_frame, frame_state_generator(block_height, block_width,
-                                                                                   pixel_width, protocol_version, initializer_palette, stream_palette,
-                                                                                   output_mode, output_path, stream_name_file_output, working_dir,
-                                                                                   self.total_frames, stream_header, metadata_header_bytes,
-                                                                                   palette_header_bytes, stream_sha256, initializer_palette_dict,
-                                                                                   initializer_palette_dict_b, stream_palette_dict, default_output_path,
-                                                                                   stream_name, save_statistics), chunksize=1):
-                pass
+            for frame_encode in worker_pool.imap(draw_frame,
+                                                 frame_state_generator(block_height, block_width, pixel_width,
+                                                 protocol_version, initializer_palette, stream_palette, output_mode,
+                                                 output_path, stream_name_file_output, working_dir, self.total_frames,
+                                                 stream_header, metadata_header_bytes, palette_header_bytes,
+                                                 stream_sha256, initializer_palette_dict, initializer_palette_dict_b,
+                                                 stream_palette_dict, default_output_path, stream_name,
+                                                 save_statistics), chunksize=1):
+                payload_bits_rendered += 1
+
+        #assert size_in_bytes == payload_bits_rendered * 8
 
         logging.info('Rendering frames complete.')
