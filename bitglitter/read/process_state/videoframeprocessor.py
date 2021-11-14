@@ -84,6 +84,8 @@ class VideoFrameProcessor:
                 if not self.stream_read.stream_header_complete:
                     self._stream_header_process_attempt()
 
+                #todo- check if next sequential frame in stream.  if not, treat as standard (see mp below)
+
                 if not self.frame_errors:
                     pass
 
@@ -191,7 +193,8 @@ class VideoFrameProcessor:
                 self.frame_errors = self.ERROR_FATAL
                 return
             else:
-                self.stream_read.session_activity(True)
+                self.stream_read.session_activity(True, save=False)
+                self.stream_read.toggle_eligibility_calculations(True)
             logging.info(f'Existing stream read found: {self.stream_read}')
             if self.stream_read.all_frames_accounted_for:
                 logging.info('All frames accounted for, skipping video frame processing...')
@@ -283,22 +286,33 @@ class VideoFrameProcessor:
             metadata_header_bytes = metadata_header_results['bits'].bytes
             self.frame_hashable_bits += metadata_header_bytes
             metadata_header_decode_results = metadata_header_validate_decode(metadata_header_bytes,
-                                                                             self.stream_read.metadata_header_hash,
+                                                                             self.stream_read.metadata_header_sha256,
                                                                              self.stream_read.decryption_key,
                                                                              self.stream_read.encryption_enabled,
+                                                                             self.stream_read.file_masking_enabled,
                                                                              self.stream_read.scrypt_n,
                                                                              self.stream_read.scrypt_r,
                                                                              self.stream_read.scrypt_p)
-            if not metadata_header_decode_results:
+
+            # Successful and decode (and successful decryption if applicable)
+            if 'bg_version' in metadata_header_decode_results:
+                bg_version = metadata_header_decode_results['bg_version']
+                stream_name = metadata_header_decode_results['stream_name']
+                stream_description = metadata_header_decode_results['stream_description']
+                time_created = metadata_header_decode_results['time_created']
+                manifest_string = metadata_header_decode_results['manifest_string']
+                self.stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created,
+                                                      manifest_string)
+
+            # Corrupted header
+            elif metadata_header_decode_results == False:
                 self.frame_errors = self.ERROR_FATAL
                 return
-            bg_version = metadata_header_decode_results['bg_version']
-            stream_name = metadata_header_decode_results['stream_name']
-            stream_description = metadata_header_decode_results['stream_description']
-            time_created = metadata_header_decode_results['time_created']
-            manifest_string = metadata_header_decode_results['manifest_string']
-            self.stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created,
-                                                  manifest_string)
+
+            # Incorrect decryption key, storing header bytes in stream read
+            else:
+                self.stream_read.accept_encrypted_metadata_bytes(metadata_header_bytes)
+
 
     def _palette_header_attempt(self):
         if self.frame_errors:
@@ -343,7 +357,7 @@ class VideoFrameProcessor:
 
     def _run_statistics(self):
         if self.save_statistics:
-            read_stats_update(self.scan_handler.block_position, 1, round(self.scan_handler.payload_bits_read / 8))
+            read_stats_update(self.scan_handler.block_position, 1, self.scan_handler.payload_bits_read)
 
     def _second_frame_onwards_setup(self):
         self.scan_handler = ScanHandler(self.frame, False, self.initializer_palette_a, self.initializer_palette_a_dict,

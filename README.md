@@ -324,7 +324,8 @@ Final note before proceeding- many of these functions you'll see `stream_sha256`
 SHA-256 hash.
 
 `unpackage(stream_sha256)` If `unpackage_files=False` was an argument in read(), this will unpackage the stream (or as
-much as it can from what has been scanned).
+much as it can from what has been scanned and decoded).  A dictionary object will be returned that either outlines
+the actions taken, or the error(s) why unpackaging cannot take place (yet)
 
 `return_single_read(stream_sha256, advanced=False)` Returns a basic dictionary object of stream read's state. Some fields
 may be empty depending on its state, or how many metadata headers have been decoded so far.  Setting `advanced` to 
@@ -335,18 +336,29 @@ matches no existing stream.
 in your database.  For more information on what `advanced` does, look directly above this.
 
 `update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scrypt_r=None, scrypt_p=None)`
-Updates values to decrypt the stream.  From here, you can either 
+Updates values to decrypt the stream.  From here, you have two paths:  If file masking is enabled on the stream,
+`attempt_metadata_decrypt()` will decrypt the metadata header (necessary for extracting files from binary data), and
+from there you can `unpackage()`.  Otherwise if file masking is disabled but the stream is encrypted, you can go straight
+to unpacking.
 
-`return_stream_manifest(stream_sha256)` Returns a raw unformatted JSON string as received by BitGlitter in a stream's
-metadata header.  Nested directory structures (if applicable) and file data are described in the string.  Keys are quite
-short to minimize manifest size when being transmitted.
+`attempt_metadata_decrypt(stream_sha256)` will attempt to decrypt the metadata from your read stream (if it is
+encrypted with file masking enabled), using your supplied decryption parameters (decryption key, scrypt N, scrypt R,
+scrypt P).  Returns a dictionary object explaining the result.
+
+`return_stream_manifest(stream_sha256, return_as_json=False)` Returns an overview of all files included in the given 
+stream, as well as their file size, and SHA-256 hash.  Nested directory structures (if applicable) and file data are 
+included in the returned object.  Keys are quite short to minimize manifest size when being transmitted.
 
 + For directories:  `n` directory name, `f` files in that directory (not including subdirectories), `s` subdirectories for
 that given directory.
 
-+ For files: `fn` file name, `rs` raw file size (its true size), `rh` raw file hash (its true SHA-256 hash), `ps` processed
-file size (its packaged size when being transmitted), `ph` processed file hash (its packaged SHA-256 hash when being transmitted).
-Files are compressed in transit (unless you explicitly disable it in `write()` settings), hence the alternate size and hash for them.
++ For files: `fn` file name, `rs` raw file size (its true size), `rh` raw file hash (its true SHA-256 hash), `ps` 
+processed file size (its packaged size when being transmitted), `ph` processed file hash (its packaged SHA-256 hash when 
+being transmitted). Files are compressed in transit (unless you explicitly disable it in `write()` settings), hence the
+alternate size and hash for them.
+
+`return_as_json` controls the format of the returned output.  If set to `False`, it returns a dictionary object; if 
+`True`, it will send a JSON string.
 
 `remove_partial_save(stream_sha256)` Completely removes the stream read from the database.  Be aware that read argument
 `auto_delete_finished_stream` automatically does this if enabled for the stream.

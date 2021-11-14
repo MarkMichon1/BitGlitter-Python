@@ -26,7 +26,7 @@ class Constants(SQLBaseClass):
 
     __abstract__ = False
     __tablename__ = 'constants'
-    BG_VERSION = Column(String, default='2.0', nullable=False)
+    BG_VERSION = Column(String, default='2.0', nullable=False)  # Change as needed
     PROTOCOL_VERSION = Column(Integer, default=1, nullable=False)
     SUPPORTED_PROTOCOLS = Column(String, default='1', nullable=False)
     WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
@@ -52,36 +52,37 @@ class Statistics(SQLBaseClass):
     __tablename__ = 'statistics'
     blocks_wrote = Column(Integer, default=0)
     frames_wrote = Column(Integer, default=0)
-    data_wrote = Column(Integer, default=0)
+    data_wrote_bits = Column(Integer, default=0)
     blocks_read = Column(Integer, default=0)
     frames_read = Column(Integer, default=0)
-    data_read = Column(Integer, default=0)
+    data_read_bits = Column(Integer, default=0)
 
     def write_update(self, blocks, frames, data):
         self.blocks_wrote += blocks
         self.frames_wrote += frames
-        self.data_wrote += data
+        self.data_wrote_bits += data
         self.save()
 
     def read_update(self, blocks, frames, data):
         self.blocks_read += blocks
         self.frames_read += frames
-        self.data_read += data
+        self.data_read_bits += data
         self.save()
 
     def return_stats(self):
         return {
-            'blocks_wrote': self.blocks_wrote, 'frames_wrote': self.frames_wrote, 'data_wrote': self.data_wrote,
-            'blocks_read': self.blocks_read, 'frames_read': self.frames_read, 'data_read': self.data_read,
+            'blocks_wrote': round(self.data_wrote_bits / 8), 'frames_wrote': self.frames_wrote, 'data_wrote':
+            self.data_wrote_bits, 'blocks_read': self.blocks_read, 'frames_read': self.frames_read, 'data_read':
+            round(self.data_read_bits),
         }
 
     def clear_stats(self):
         self.blocks_wrote = 0
         self.frames_wrote = 0
-        self.data_wrote = 0
+        self.data_wrote_bits = 0
         self.blocks_read = 0
         self.frames_read = 0
-        self.data_read = 0
+        self.data_read_bits = 0
         self.save()
 
 

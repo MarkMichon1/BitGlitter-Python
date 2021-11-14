@@ -1,3 +1,5 @@
+import json
+
 from bitglitter.config.config import session
 from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
@@ -17,7 +19,7 @@ def unpackage(stream_sha256):
         return None
     results = stream_read.attempt_unpackage()
     stream_read.autodelete_attempt()
-    return results #todo + readme
+    return results
 
 
 def return_all_read_information(advanced=False):
@@ -28,10 +30,10 @@ def return_all_read_information(advanced=False):
     return returned_list
 
 
-def return_single_read(stream_sha256, advanced=False):
+def return_single_read_information(stream_sha256, advanced=False):
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
-        return False
+        return None
     else:
         return stream_read.return_state(advanced)
 
@@ -51,18 +53,48 @@ def update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scr
         stream_read.scrypt_r = scrypt_r
     if scrypt_p:
         stream_read.scrypt_p = scrypt_p
-    stream_read.save()
-
+    stream_read.toggle_eligibility_calculations(True)
     return True
 
 
-def return_stream_manifest(stream_sha256): #todo attempt byte -> manifest string w/ decrypt if applicable
+def attempt_metadata_decrypt(stream_sha256):
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
-        return {'error': 'No stream read'}
+        return False
+    if not stream_read.decryption_key:
+        return {'error': 'No decryption key '}
+    if stream_read.manifest_string:
+        return {'error': 'Metadata has already been decrypted'}
+
+    results = metadata_header_validate_decode(stream_read.encrypted_metadata_header_bytes, None,
+                                              stream_read.decryption_key, stream_read.file_masking_enabled,
+                                              stream_read.scrypt_n, stream_read.scrypt_r, stream_read.scrypt_p,
+                                              frame_processor=False)
+
+    if 'bg_version' in results:
+        bg_version = results['bg_version']
+        stream_name = results['stream_name']
+        stream_description = results['stream_description']
+        time_created = results['time_created']
+        manifest_string = results['manifest_string']
+        stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created, manifest_string)
+        return {'success': True}
+    else:
+        return {'error': 'Incorrect decryption value(s)'}
+
+
+def return_stream_manifest(stream_sha256, return_as_json=False):
+    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    if not stream_read:
+        return False
+    if not stream_read.encrypted_metadata_header_bytes:
+        return {'error': 'Metadata header not decoded yet'}
     if not stream_read.manifest_string:
-        if not stream_read.metadata_header_bytes:
-            return {'error': 'Metadata header not decoded yet'}
+        return {'error': 'Metadata not decrypted yet'}
+    if return_as_json:
+        return stream_read.manifest_string
+    else:
+        return json.loads(stream_read.manifest_string)
 
 
 def remove_partial_save(stream_sha256):
@@ -80,8 +112,9 @@ def remove_all_partial_save_data():
     return True
 
 
-def update_stream_read(stream_sha256, auto_delete_finished_stream=None,
-                       auto_unpackage_stream=None):  # todo test... & README
+def update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unpackage_stream=None):
+    """Will get larger as more config options are added; general settings about the stream are changed with this."""
+
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256)
     if not stream_read:
         return False
@@ -95,8 +128,9 @@ def update_stream_read(stream_sha256, auto_delete_finished_stream=None,
 
 def blacklist_stream_sha256(stream_sha256):
     stream_read = session.query(StreamRead).filter(StreamRead.stream_sha256 == stream_sha256).all()
-    if stream_read:
-        stream_read.delete()
+    if not stream_read:
+        return False
+    stream_read.delete()
     StreamSHA256Blacklist.create(stream_sha256=stream_sha256)
     return True
 

@@ -3,10 +3,10 @@ from multiprocessing import cpu_count, Pool
 
 from bitglitter.config.palettemodels import Palette
 from bitglitter.config.readmodels.streamread import StreamRead
-from bitglitter.read.readstate.videoframegenerator import video_frame_generator
-from bitglitter.read.readstate.imageframeprocessor import ImageFrameProcessor
-from bitglitter.read.readstate.multiprocess_state_generator import image_state_generator, video_state_generator
-from bitglitter.read.readstate.videoframeprocessor import VideoFrameProcessor
+from bitglitter.read.process_state.videoframegenerator import video_frame_generator
+from bitglitter.read.process_state.imageframeprocessor import ImageFrameProcessor
+from bitglitter.read.process_state.multiprocess_state_generator import image_state_generator, video_state_generator
+from bitglitter.read.process_state.videoframeprocessor import VideoFrameProcessor
 from bitglitter.utilities.read import flush_active_frames
 
 

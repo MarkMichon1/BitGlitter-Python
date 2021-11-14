@@ -3,7 +3,7 @@ from pathlib import Path
 
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Config, Constants
-from bitglitter.read.readstate.framereadhandler import frame_read_handler
+from bitglitter.read.process_state.framereadhandler import frame_read_handler
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.utilities.read import flush_active_frames
 from bitglitter.validation.validateread import validate_read_parameters

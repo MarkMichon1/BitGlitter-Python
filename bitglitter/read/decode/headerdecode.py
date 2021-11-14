@@ -129,27 +129,31 @@ def stream_header_decode(bit_stream):
                 custom_palette_header_hash}
 
 
-def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encryption_enabled, scrypt_n=14, scrypt_r=8,
-                                    scrypt_p=1):
+def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encryption_enabled, file_mask_enabled,
+                                    scrypt_n=14, scrypt_r=8, scrypt_p=1, frame_processor=True):
     logging.debug('metadata_header_decode running...')
 
     #  Attempt decryption if encryption enabled
     decrypted_bytes = None
-    if encryption_enabled:
+    if encryption_enabled and file_mask_enabled:
         decrypted_bytes = decrypt_bytes(header_bytes, crypto_key, scrypt_n, scrypt_r, scrypt_p)
-        if not decrypted_bytes:  # Signalling there was a decryption failure
+        if decrypted_bytes:
+            logging.info('Successful decryption.')
+        else:  # Signalling there was a decryption failure
             logging.warning('Provided decryption values (key, scrypt_n, scrypt_r, scrypt_p) invalid.  Cannot extract'
                             ' files until correct parameters received.')
-            return False
+            return None
+
 
     decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled else header_bytes)
 
     #  Integrity check
-    calculated_sha256 = get_sha256_hash_from_bytes(decompressed_bytes)
-    if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
-        logging.warning('Read Stream SHA-256 does not match calculated.  This should never (in theory) be seen'
-                        'from the other layers of integrity checks.  Aborting...')
-        return False
+    if frame_processor:
+        calculated_sha256 = get_sha256_hash_from_bytes(decompressed_bytes)
+        if calculated_sha256 != read_sha256:  # Shouldn't be possible but here nonetheless to ensure data integrity.
+            logging.warning('Read Stream SHA-256 does not match calculated.  This should never (in theory) be seen'
+                            'from the other layers of integrity checks.  Aborting...')
+            return False
 
     decoded = decompressed_bytes.decode()
     bg_version, stream_name, stream_description, time_created, manifest_string = decoded.split('\\\\')

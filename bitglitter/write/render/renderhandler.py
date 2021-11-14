@@ -74,7 +74,6 @@ class RenderHandler:
 
         self.total_operations = self.total_frames * (1 + int(output_mode != 'image'))
 
-        payload_bits_rendered = 0
         with Pool(processes=pool_size) as worker_pool:
             logging.info(f'Beginning rendering on {pool_size} CPU core(s)...')
 
@@ -86,8 +85,6 @@ class RenderHandler:
                                                  stream_sha256, initializer_palette_dict, initializer_palette_dict_b,
                                                  stream_palette_dict, default_output_path, stream_name,
                                                  save_statistics), chunksize=1):
-                payload_bits_rendered += 1
-
-        #assert size_in_bytes == payload_bits_rendered * 8
+                pass
 
         logging.info('Rendering frames complete.')

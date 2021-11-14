@@ -10,9 +10,10 @@ from bitglitter.config.configfunctions import clear_stats, output_stats, remove_
     update_settings
 
 # Read Config
-from bitglitter.config.readfunctions import update_decrypt_values, blacklist_stream_sha256, remove_all_blacklist_sha256, \
-    remove_all_partial_save_data, remove_blacklist_sha256, remove_partial_save, return_all_blacklist_sha256, \
-    return_all_read_information, return_single_read, return_stream_manifest, unpackage, update_stream_read
+from bitglitter.config.readfunctions import attempt_metadata_decrypt, blacklist_stream_sha256, \
+    remove_all_blacklist_sha256, remove_all_partial_save_data, remove_blacklist_sha256, remove_partial_save, \
+    return_all_blacklist_sha256, return_all_read_information, return_single_read_information, return_stream_manifest, \
+    unpackage, update_decrypt_values, update_stream_read
 
 # Palette Config
 from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \

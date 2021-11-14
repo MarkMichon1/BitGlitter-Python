@@ -11,6 +11,7 @@ from pathlib import Path
 import time
 
 from bitglitter.config.config import engine, SQLBaseClass, session
+from bitglitter.config.palettemodels import Palette
 from bitglitter.read.decode.manifest import manifest_unpack
 from bitglitter.config.readmodels.readmodels import StreamFrame, StreamFile, StreamDataProgress
 
@@ -29,7 +30,7 @@ class StreamRead(SQLBaseClass):
     stream_is_video = Column(Boolean, nullable=False)
     stream_palette_id = Column(String)
     custom_palette_used = Column(Boolean)
-    custom_palette_loaded = Column(Boolean)
+    custom_palette_loaded = Column(Boolean, default=False)
     total_frames = Column(Integer)
     compression_enabled = Column(Boolean)
     encryption_enabled = Column(Boolean)
@@ -53,16 +54,17 @@ class StreamRead(SQLBaseClass):
     palette_header_size_bytes = Column(Integer)
     palette_header_hash = Column(String)
     metadata_header_size_bytes = Column(Integer)
-    metadata_header_hash = Column(String)
+    metadata_header_sha256 = Column(String)
     stream_header_complete = Column(Boolean, default=False)
     metadata_header_complete = Column(Boolean, default=False)
     palette_header_complete = Column(Boolean, default=False)
     completed_frames = Column(Integer, default=0)
     highest_consecutive_setup_frame_read = Column(Integer, default=0)  # Important for initial metadata grab
-    metadata_header_bytes = Column(BLOB)  # Used when file masking and incorrect key.  Flushed when correct.
+    encrypted_metadata_header_bytes = Column(BLOB)  # Used when file masking and incorrect key.  Flushed when correct.
 
     # Operation State
     active_this_session = Column(Boolean, default=True)
+    recalculate_eligibility = Column(Boolean, default=True) # Toggles file eligibility stuff if new data (or not)
     all_frames_accounted_for = Column(Boolean, default=False)  # all frames are saved in DB
     total_files = Column(Integer)
     completed_files = Column(Integer, default=0)
@@ -86,7 +88,7 @@ class StreamRead(SQLBaseClass):
     scrypt_r = Column(Integer)
     scrypt_p = Column(Integer)
     decryption_key = Column(String)
-    is_decrypted = Column(Boolean, default=False)
+    metadata_is_decrypted = Column(Boolean, default=False)
 
     # Relationships
     frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True,
@@ -102,9 +104,23 @@ class StreamRead(SQLBaseClass):
         else:
             return self.stream_sha256
 
-    def return_state(self, advanced=False):  # todo: do at end w/ all state
-        basic_state = {}  # metadata
-        advanced_state = {}  # everything else
+    def return_state(self, advanced=False):
+        palette_name = None
+        if self.custom_palette_loaded and self.custom_palette_used or not self.custom_palette_used:
+            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id)
+            palette_name = palette.name
+        basic_state = {'time_started': self.time_started, 'bg_version': self.bg_version, 'protocol_version':
+                       self.protocol_version, 'stream_sha256': self.stream_sha256, 'stream_is_video':
+                       self.stream_is_video, 'stream_palette_id': self.stream_palette_id, 'palette_name': palette_name,
+                       'custom_palette_used': self.custom_palette_used, 'total_frames': self.total_frames,
+                       'compression_enabled': self.compression_enabled, 'encryption_enabled': self.encryption_enabled,
+                       'file_masking_enabled': self.file_masking_enabled, 'stream_name': self.stream_name,
+                       'stream_description': self.stream_description, 'time_created': self.time_created,
+                       'size_in_bytes': self.size_in_bytes, 'output_directory': self.output_directory, 'pixel_width':
+                       self.pixel_width, 'block_height': self.block_height, 'block_width': self.block_width,
+                       'scrypt_n': self.scrypt_n, 'scrypt_r': self.scrypt_r, 'scrypt_p': self.scrypt_p,
+                       'decryption_key': self.decryption_key, 'metadata_is_decrypted': self.metadata_is_decrypted}
+        advanced_state = {}  # everything else # todo
         return basic_state | advanced_state if advanced else basic_state
 
     def return_pending_header_bits(self):
@@ -113,35 +129,42 @@ class StreamRead(SQLBaseClass):
         trimmed_bits = header_bits.read(header_bits.len - self.carry_over_padding_bits)
         return trimmed_bits
 
-    def session_activity(self, bool_set: bool):  # todo for images upon creation
-        self.active_this_session = bool_set
-        self.save()
+    def session_activity(self, state: bool, save=True):
+        self.active_this_session = state
+        if save:
+            self.save()
+
+    def toggle_eligibility_calculations(self, state: bool, save=True):
+        self.recalculate_eligibility = state
+        if save:
+            self.save()
 
     def _calculate_payload_bits_per_frame(self, stream_palette_bit_length):
-        frame_header_length = 352
+        FRAME_HEADER_LENGTH_BITS = 352
         self.payload_bits_per_standard_frame = ((self.block_width - int(not self.stream_is_video)) *
                                                 (self.block_height - int(not self.stream_is_video))) \
-                                               * stream_palette_bit_length - frame_header_length
+                                               * stream_palette_bit_length - FRAME_HEADER_LENGTH_BITS
 
     def stream_palette_load(self, stream_palette):
         self.stream_palette_id = stream_palette.palette_id
         self.custom_palette_used = stream_palette.is_custom
+        self.custom_palette_loaded = True
         self._calculate_payload_bits_per_frame(stream_palette.bit_length)
         self.save()
 
     def stream_header_load(self, size_in_bytes, total_frames, compression_enabled, encryption_enabled,
                            file_masking_enabled, metadata_header_length, metadata_header_hash,
                            custom_palette_header_length, custom_palette_header_hash):
-        logging.debug('Steam header load')
+        logging.debug('Stream read- stream header load')
         self.size_in_bytes = size_in_bytes
         self.total_frames = total_frames
         self.compression_enabled = compression_enabled
         self.encryption_enabled = encryption_enabled
-        if not encryption_enabled:
-            self.is_decrypted = True
         self.file_masking_enabled = file_masking_enabled
+        if not encryption_enabled or encryption_enabled and not file_masking_enabled:
+            self.metadata_is_decrypted = True
         self.metadata_header_size_bytes = metadata_header_length
-        self.metadata_header_hash = metadata_header_hash
+        self.metadata_header_sha256 = metadata_header_hash
         self.palette_header_size_bytes = custom_palette_header_length
         if not custom_palette_header_length:
             self.palette_header_complete = True
@@ -153,7 +176,7 @@ class StreamRead(SQLBaseClass):
         self.save()
 
     def metadata_header_load(self, bg_version, stream_name, stream_description, time_created, manifest_string):
-        logging.debug('Metadata header load')
+        logging.debug('Stream read- metadata header load')
         self.bg_version = bg_version
         self.stream_name = stream_name
         self.stream_description = stream_description
@@ -165,30 +188,45 @@ class StreamRead(SQLBaseClass):
         new_output_directory = Path(self.output_directory)
         new_output_directory = new_output_directory / stream_name
         self.output_directory = str(new_output_directory)
-        self.save()
 
         # Manifest process
         manifest_dict = json.loads(manifest_string)
         manifest_unpack(manifest_dict, self.id, new_output_directory)
         self.total_files = self.files.count()
 
+        # Purging encrypted header bytes and decryption key from DB (if applicable)
+        self.encrypted_metadata_header_bytes = None
+        self.decryption_key = None
+
+        self.save()
+
     def metadata_checkpoint_return(self):
         """If stop_at_metadata_load is enabled at read() and this hasn't ran previously, this returns a dictionary of
         all stream header and metadata attributes, as well as stream header data if its a learned palette.
         """
 
-        # todo- return palette data if not grabbed yet
         self.metadata_checkpoint_ran = True
         self.save()
+        palette_name = None
+        if self.custom_palette_loaded and self.custom_palette_used or not self.custom_palette_used:
+            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id)
+            palette_name = palette.name
+        manifest_decrypt_success = True if self.manifest_string else False
         returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
-            self.bg_version, 'stream_description': self.stream_description, 'time_created':
-                             self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
-                             self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
-                             self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled,
-                         'protocol_version':
-                             self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
-                         'manifest_decrypt_success': None, 'stream_palette_id': self.stream_palette_id}  # <- todo
+                        self.bg_version, 'stream_description': self.stream_description, 'time_created':
+                        self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
+                        self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
+                        self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled, 'protocol_version':
+                        self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
+                        'manifest_decrypt_success': manifest_decrypt_success, 'stream_palette_id':
+                        self.stream_palette_id, 'palette_name': palette_name}
         return returned_dict
+
+    def accept_encrypted_metadata_bytes(self, encrypted_metadata_bytes):
+        """If file masking is enabled on the stream and incorrect decryption values are used, this adds the encrypted
+        header to the database until it is decrypted"""
+        self.encrypted_metadata_header_bytes = encrypted_metadata_bytes
+        self.save()
 
     def new_setup_frame(self, frame_number):
         if frame_number == self.highest_consecutive_setup_frame_read + 1:
@@ -204,15 +242,22 @@ class StreamRead(SQLBaseClass):
         self.save()
 
     def check_file_eligibility(self):
+        """Assesses and flags what files can be unpackaged through calculating the decoded bit indexes from finalized
+        frames.
+        """
+
         # Metadata header itself hasn't been read from frames yet
         if not self.metadata_header_complete and not self.manifest_string:
             logging.info('Cannot unpackage, metadata header has not been read from frames yet.')
             return {'failure': 'Metadata not read from frames yet.'}
 
         # Header has been decoded but not decrypted
-        if not self.is_decrypted and self.file_masking_enabled:
+        if not self.metadata_is_decrypted and self.file_masking_enabled:
             logging.info('Cannot unpackage, correct decryption key has\'nt been provided.')
             return {'failure': 'Metadata '}
+
+        if not self.recalculate_eligibility:
+            return {}
 
         # Progress calculate
         self.highest_processed_frame = session.query(func.max(StreamFrame.frame_number)) \
@@ -239,13 +284,17 @@ class StreamRead(SQLBaseClass):
                     frame.progress_calculated()
 
         # What files are eligible to be unpackaged that 'fit' inside of the finished data
-        for progress_cluster in self.progress:
-            self.files.filter(StreamFile.is_eligible == False)\
-                .filter(StreamFile.start_bit_position >= progress_cluster.bit_start_position) \
-                .filter(StreamFile.end_bit_position <= progress_cluster.bit_end_position) \
+        if self.all_frames_accounted_for:
+            self.files.filter(StreamFile.is_eligible == False) \
                 .update({StreamFile.is_eligible: True})
+        else:
+            for progress_cluster in self.progress:
+                self.files.filter(StreamFile.is_eligible == False)\
+                    .filter(StreamFile.start_bit_position >= progress_cluster.bit_start_position) \
+                    .filter(StreamFile.end_bit_position <= progress_cluster.bit_end_position) \
+                    .update({StreamFile.is_eligible: True})
 
-
+        self.toggle_eligibility_calculations(False)
         return {}
 
     def attempt_unpackage(self):
@@ -253,6 +302,9 @@ class StreamRead(SQLBaseClass):
         summary of the results.
         """
         logging.info(f'Unpackaging {str(self)}...')
+
+        #metadata header/manifest logic here (unpackage -> check first)
+        # return {'failure': }
 
         elibility_results = self.check_file_eligibility()
         if 'failure' in elibility_results:
@@ -277,9 +329,6 @@ class StreamRead(SQLBaseClass):
     def autodelete_attempt(self):
         if self.auto_delete_finished_stream and self.is_complete:
             self.delete()
-
-    def update_config(self):
-        self.save()  # todo rename
 
     def set_payload_start_data(self, payload_start_frame, payload_first_frame_bits):
         self.payload_start_frame = payload_start_frame

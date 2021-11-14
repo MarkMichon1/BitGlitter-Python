@@ -146,4 +146,4 @@ def draw_frame(dict_obj):
             blocks_wrote = block_height * block_width
         else:
             blocks_wrote = block_position
-        write_stats_update(blocks_wrote, 1, int(frame_payload.len / 8))
+        write_stats_update(blocks_wrote, 1, frame_payload.len)
