@@ -71,9 +71,10 @@ class StreamRead(SQLBaseClass):
     is_complete = Column(Boolean, default=False)  # is unpackaged
 
     # Unpackage State
-    auto_delete_finished_stream = Column(Boolean)
-    auto_unpackage_stream = Column(Boolean)
     stop_at_metadata_load = Column(Boolean)
+    auto_unpackage_stream = Column(Boolean)
+    auto_delete_frames = Column(Boolean) #todo
+    auto_delete_finished_stream = Column(Boolean)
     metadata_checkpoint_ran = Column(Boolean, default=False)
     highest_processed_frame = Column(Integer)
     progress_complete = Column(Boolean, default=False)
@@ -177,6 +178,7 @@ class StreamRead(SQLBaseClass):
 
     def metadata_header_load(self, bg_version, stream_name, stream_description, time_created, manifest_string):
         logging.debug('Stream read- metadata header load')
+        self.metadata_is_decrypted = True
         self.bg_version = bg_version
         self.stream_name = stream_name
         self.stream_description = stream_description
@@ -209,7 +211,7 @@ class StreamRead(SQLBaseClass):
         self.save()
         palette_name = None
         if self.custom_palette_loaded and self.custom_palette_used or not self.custom_palette_used:
-            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id)
+            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id).first()
             palette_name = palette.name
         manifest_decrypt_success = True if self.manifest_string else False
         returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
@@ -290,6 +292,7 @@ class StreamRead(SQLBaseClass):
         else:
             for progress_cluster in self.progress:
                 self.files.filter(StreamFile.is_eligible == False)\
+                    .filter(StreamFile.is_processed == False) \
                     .filter(StreamFile.start_bit_position >= progress_cluster.bit_start_position) \
                     .filter(StreamFile.end_bit_position <= progress_cluster.bit_end_position) \
                     .update({StreamFile.is_eligible: True})
@@ -309,8 +312,6 @@ class StreamRead(SQLBaseClass):
         elibility_results = self.check_file_eligibility()
         if 'failure' in elibility_results:
             return elibility_results
-
-        # Frame calculate
 
         # File extract
         pending_extraction = self.files #todo

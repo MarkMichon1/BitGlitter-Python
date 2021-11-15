@@ -85,8 +85,9 @@ def draw_frame(dict_obj):
     image_output_path = dict_obj['image_output_path']
     stream_sha256 = dict_obj['stream_sha256']
     save_statistics = dict_obj['save_statistics']
+    total_operations = dict_obj['total_operations']
 
-    percentage_string = f'{round(((frame_number / total_frames) * 100), 2):.2f}'
+    percentage_string = f'{round(((frame_number / total_operations) * 100), 2):.2f}'
     logging.info(f'Generating {frame_number} of {total_frames}... {percentage_string} %')
 
     image = numpy.zeros((pixel_width * block_height, pixel_width * block_width, 3), dtype='uint8')

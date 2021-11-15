@@ -84,7 +84,7 @@ class RenderHandler:
                                                  stream_header, metadata_header_bytes, palette_header_bytes,
                                                  stream_sha256, initializer_palette_dict, initializer_palette_dict_b,
                                                  stream_palette_dict, default_output_path, stream_name,
-                                                 save_statistics), chunksize=1):
+                                                 save_statistics, self.total_operations), chunksize=1):
                 pass
 
         logging.info('Rendering frames complete.')

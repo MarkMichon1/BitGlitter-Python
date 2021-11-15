@@ -378,6 +378,17 @@ it existed.
 
 `remove_all_blacklist_sha256()` Removes all SHA-256 hashes from the blacklist.
 
+`get_stream_frame_data(stream_sha256)` Returns a list of dict objects with data about all read/decoded frames.  Warning:
+depending on stream size, this may be a long/resource intensive function to perform.
+
+`get_stream_file_data(stream_sha256)` Returns a list of dict objects with data about all files read from the manifest.
+You'll get access to their name, file size, SHA-256 hash, whether they are eligible to be unpackaged, if they were already
+unpackaged, and other less user-friendly internal state data.
+
+`get_stream_progress_data(stream_sha256)` Returns a list of dict objects with data about current 'slices' of the stream
+you're able to unpackage.  These index numbers are 0-based and are for bits; this is the internal system BitGlitter uses
+to determine eligible files.
+
 ### Preset Functions
 
 Presets allow you to define `write()` behavior (geometry, palettes, etc) and save it with a nickname, so you can 

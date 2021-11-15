@@ -3,25 +3,26 @@ import os
 import shutil
 
 
-def refresh_working_folder(active_path):
-    """While the temporary folder after write gets automatically deleted, things such as abrupt stops can prevent that
-    from happening.  This removes the folder if it is present, and then creates a few one for the next write cycle.
-    This runs in the beginning of preProcess.
+def refresh_directory(active_path, delete=True):
+    """Used for working (temp) directory, and default directory for read/write.  Optionally removes directory if it
+    exists, otherwise it makes sure it is created.
     """
     active_folder = os.path.join(os.getcwd(), active_path)
 
-    if os.path.isdir(active_path):
-        shutil.rmtree(active_path)
-        logging.debug(f"active_path folder '{active_path}' already exists.  Deleting...")
+    if delete:
+        if os.path.isdir(active_path):
+            shutil.rmtree(active_path)
+            logging.debug(f"active_path folder '{active_path}' already exists.  Deleting...")
 
-    os.makedirs(active_path)
-    logging.debug(f"Temp folder '{active_path}' created.")
+    if not os.path.isdir(active_path):
+        os.makedirs(active_path)
+        logging.debug(f"Directory '{active_path}' created.")
     return active_folder
 
 
 def remove_working_folder(working_directory):
     if os.path.isdir(working_directory):
-        logging.debug('Deleting temporary working directory for task...')
+        logging.debug('Deleting temporary working directory...')
         shutil.rmtree(working_directory)
 
 

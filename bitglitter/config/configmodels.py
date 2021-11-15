@@ -9,10 +9,10 @@ from bitglitter.config.config import engine, session, SQLBaseClass
 class Config(SQLBaseClass):
     __abstract__ = False
     __tablename__ = 'config'
-    read_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Decoded Files'))
+    read_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Read Output'))
     read_bad_frame_strikes = Column(Integer, default=10)
     enable_bad_frame_strikes = Column(Boolean, default=True)
-    write_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'))
+    write_path = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Write Output'))
     log_txt_dir = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Logs'))
     log_output = Column(Boolean, default=False)
     logging_level = Column(Integer, default=1)
@@ -29,11 +29,13 @@ class Constants(SQLBaseClass):
     BG_VERSION = Column(String, default='2.0', nullable=False)  # Change as needed
     PROTOCOL_VERSION = Column(Integer, default=1, nullable=False)
     SUPPORTED_PROTOCOLS = Column(String, default='1', nullable=False)
-    WRITE_WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
-    DEFAULT_OUTPUT_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Render Output'),
-                                nullable=False)
-    DEFAULT_TEMP_SAVE_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent /
-                                                                'Partial Stream Data'), nullable=False)
+
+    WORKING_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Temp'), nullable=False)
+    DEFAULT_WRITE_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Write Output'),
+                               nullable=False)
+    DEFAULT_READ_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Read Output'),
+                               nullable=False)
+
     VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
     VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)
 

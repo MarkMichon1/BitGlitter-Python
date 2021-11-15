@@ -4,6 +4,7 @@ from pathlib import Path
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Config, Constants
 from bitglitter.read.process_state.framereadhandler import frame_read_handler
+from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 from bitglitter.utilities.read import flush_active_frames
 from bitglitter.validation.validateread import validate_read_parameters
@@ -46,13 +47,15 @@ def read(file_path,
     flush_active_frames()
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
-    temp_save_directory = Path(constants.DEFAULT_TEMP_SAVE_DIR)
+    working_directory = Path(constants.WORKING_DIR)
+    refresh_directory(working_directory)
 
     # Setting save path for stream
     if output_directory:
         output_directory = output_directory
     else:
-        output_directory = config.write_path
+        output_directory = config.read_path
+        refresh_directory(config.read_path, delete=False)
 
     # Logging initializing.
     logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_dir))
@@ -67,8 +70,11 @@ def read(file_path,
     # Pull valid frame data from the inputted file.
     frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                                             block_height_override, block_width_override, decryption_key, scrypt_n,
-                                            scrypt_r, scrypt_p, temp_save_directory, stop_at_metadata_load,
+                                            scrypt_r, scrypt_p, working_directory, stop_at_metadata_load,
                                             auto_unpackage_stream, auto_delete_finished_stream, save_statistics)
+
+    # Removing temporary directory
+    remove_working_folder(working_directory)
 
     # Return metadata if conditions are met
     if 'metadata' in frame_read_results:

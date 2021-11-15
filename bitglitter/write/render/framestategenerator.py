@@ -10,7 +10,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
                           stream_palette, output_mode, stream_output_path, stream_name_file_output, working_directory,
                           total_frames, stream_header, metadata_header, palette_header, stream_sha256,
                           initializer_palette_dict, initializer_palette_dict_b, stream_palette_dict,
-                          default_output_path, stream_name, save_statistics):
+                          default_output_path, stream_name, save_statistics, total_operations):
     """This function iterates over the pre-processed data, and assembles and renders the frames.  There are plenty of
     comments in this function that describe what each part is doing, to follow along.
     """
@@ -136,7 +136,7 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
             initializer_palette, 'output_mode': output_mode, 'stream_name_file_output': stream_name_file_output,
             'initializer_enabled': initializer_enabled, 'frame_number': frame_number, 'total_frames': total_frames,
             'image_output_path': image_output_path, 'stream_sha256': stream_sha256, 'stream_name': stream_name,
-            'save_statistics': save_statistics
+            'save_statistics': save_statistics, 'total_operations': total_operations
         }
 
         frame_number += 1

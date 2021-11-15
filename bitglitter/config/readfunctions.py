@@ -16,14 +16,14 @@ def unpackage(stream_sha256):
 
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
-        return None
+        return False
     results = stream_read.attempt_unpackage()
     stream_read.autodelete_attempt()
     return results
 
 
 def return_all_read_information(advanced=False):
-    stream_reads = []
+    stream_reads = StreamRead.query.all()
     returned_list = []
     for stream_read in stream_reads:
         returned_list.append(stream_read.return_state(advanced))
@@ -33,7 +33,7 @@ def return_all_read_information(advanced=False):
 def return_single_read_information(stream_sha256, advanced=False):
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
-        return None
+        return False
     else:
         return stream_read.return_state(advanced)
 
@@ -115,7 +115,7 @@ def remove_all_partial_save_data():
 def update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unpackage_stream=None):
     """Will get larger as more config options are added; general settings about the stream are changed with this."""
 
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256)
+    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     if auto_delete_finished_stream:
@@ -156,3 +156,47 @@ def remove_all_blacklist_sha256():
     session.query(StreamSHA256Blacklist).delete()
     session.commit()
     return True
+
+
+def return_stream_frame_data(stream_sha256):
+    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    if not stream_read:
+        return False
+
+    frames = stream_read.frames.all()
+    returned_list = []
+    for frame in frames:
+        returned_list.append({'is_complete': frame.is_complete, 'added_to_progress': frame.added_to_progress,
+                              'payload_bits': frame.payload_bits, 'frame_number': frame.frame_number})
+
+    return returned_list
+
+
+def return_stream_file_data(stream_sha256):
+    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    if not stream_read:
+        return False
+    files = stream_read.files.all()
+    returned_list = []
+    for file in files:
+        returned_list.append({'name': file.name, 'raw_file_size_bytes': file.raw_file_size_bytes, 'raw_file_hash':
+                              file.raw_file_hash, 'processed_file_size_bytes': file.processed_file_size_bytes,
+                              'processed_file_hash': file.processed_file_hash, 'sequence': file.sequence,
+                              'start_bit_position': file.start_bit_position, 'end_bit_position': file.end_bit_position,
+                              'is_processed': file.is_processed, 'is_eligible': file.is_eligible, 'save_path':
+                              file.save_path})
+
+    return returned_list
+
+
+def return_stream_progress_data(stream_sha256):
+    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    if not stream_read:
+        return False
+    progress = stream_read.progress.all()
+    returned_list = []
+    for progress_group in progress:
+       returned_list.append({'bit_start_position': progress_group.bit_start_position, 'bit_end_position':
+                            progress_group.bit_end_position})
+
+    return returned_list

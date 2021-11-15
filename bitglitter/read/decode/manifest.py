@@ -19,10 +19,10 @@ def manifest_unpack(manifest_dict, stream_id, save_directory, bit_index=0, file_
         save_path = save_directory / file_dict['fn']
 
         StreamFile.create(stream_id=stream_id, sequence=file_sequence, start_bit_position=start_bit_position,
-                          end_bit_position=end_bit_position, save_path=str(save_path), name=file_dict['fn'],
-                          raw_file_size_bytes=file_dict['rs'], raw_file_hash=file_dict['rh'],
-                          processed_file_size_bytes=file_dict['ps'] if 'ps' in file_dict else None,
-                          processed_file_hash=file_dict['ph'] if 'ph' in file_dict else None)
+                          end_bit_position=end_bit_position, save_path=str(save_path), raw_file_size_bytes=
+                          file_dict['rs'], raw_file_hash=file_dict['rh'], processed_file_size_bytes=
+                          file_dict['ps'] if 'ps' in file_dict else None, processed_file_hash=
+                          file_dict['ph'] if 'ph' in file_dict else None)
 
     file_sequence = file_sequence
     bit_index = bit_index

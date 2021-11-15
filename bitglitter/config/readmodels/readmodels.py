@@ -2,6 +2,10 @@ from bitstring import BitStream
 from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
+import logging
+from os.path import exists
+from pathlib import Path
+
 from bitglitter.config.config import session, SQLBaseClass
 
 
@@ -19,22 +23,31 @@ class StreamFrame(SQLBaseClass):
     added_to_progress = Column(Boolean, default=False)
 
 
-    def get_bit_index(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
+    def get_bit_index(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame,
+                      total_frames, payload_size_in_bytes):
         """Returns the start and ending index positions of the greater stream payload, used when calculating progress
         to tell what specific data is inside of a given frame.
         """
-        bit_start = 0
-        bit_end = 0
 
-        return bit_start, bit_end
+        if self.frame_number == payload_start_frame:
+            return 0, payload_first_frame_bits - 1
+        elif self.frame_number == total_frames:
+            padding = self.payload_bits - ((payload_size_in_bytes * 8) - (payload_bits_per_standard_frame *
+                                          (total_frames - (payload_start_frame + 1))) - payload_first_frame_bits)
+            bit_start = (payload_size_in_bytes * 8) - (self.payload_bits + 1)
+            return bit_start, bit_start + (self.payload_bits - padding)
+        else:
+            bit_start = (payload_bits_per_standard_frame * (self.frame_number - payload_start_frame + 1)) + \
+                        payload_first_frame_bits
+            return bit_start, bit_start + self.payload_bits
 
     def progress_calculated(self):
         """Was used with StreamDataProgress to calculate progress, and doesn't have to be used again."""
         self.added_to_progress = True
         self.save()
 
-    def return_partial_frame_payload(self):
-        pass
+    def return_partial_frame_payload(self, local_start_position, local_end_position):
+        bits = BitStream(self.payload).read(self.payload_bits)
 
     def return_full_frame_payload(self):
         return BitStream(self.payload).read(self.payload_bits)
@@ -65,14 +78,19 @@ class StreamFile(SQLBaseClass):
     is_eligible = Column(Boolean, default=False) # Eligible to be processed
     save_path = Column(String)
 
-    name = Column(String)
     raw_file_size_bytes = Column(Integer)
     raw_file_hash = Column(String)
     processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
 
     def extract(self):
-        # assess existing files (from previous sessions)
+        path = Path(self.save_path)
+        logging.info(f'Extracting {path.name} ...')
+
+        if exists(self.save_path):
+            logging.info(f'File with this name already exists at this location: {self.save_path}.\n Skipping...')
+            return {}
+
         pass
 
     def __str__(self):

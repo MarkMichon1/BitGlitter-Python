@@ -5,7 +5,7 @@ import string
 def is_valid_directory(argument, path):
     """Checks whether the inputted directory exists or not."""
     if not os.path.isdir(path):
-        raise ValueError(f'Folder path for {argument} does not exist.')
+        raise ValueError(f'Folder path "{path}" for {argument} does not exist.')
 
 
 def is_int_over_zero(argument, some_variable):
