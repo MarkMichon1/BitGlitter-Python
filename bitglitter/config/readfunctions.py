@@ -172,19 +172,14 @@ def return_stream_frame_data(stream_sha256):
     return returned_list
 
 
-def return_stream_file_data(stream_sha256):
+def return_stream_file_data(stream_sha256, advanced=False):
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     files = stream_read.files.all()
     returned_list = []
     for file in files:
-        returned_list.append({'name': file.name, 'raw_file_size_bytes': file.raw_file_size_bytes, 'raw_file_hash':
-                              file.raw_file_hash, 'processed_file_size_bytes': file.processed_file_size_bytes,
-                              'processed_file_hash': file.processed_file_hash, 'sequence': file.sequence,
-                              'start_bit_position': file.start_bit_position, 'end_bit_position': file.end_bit_position,
-                              'is_processed': file.is_processed, 'is_eligible': file.is_eligible, 'save_path':
-                              file.save_path})
+        returned_list.append(file.return_state(advanced))
 
     return returned_list
 

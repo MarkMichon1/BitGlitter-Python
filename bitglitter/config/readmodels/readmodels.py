@@ -3,6 +3,7 @@ from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 import logging
+import math
 from os.path import exists
 from pathlib import Path
 
@@ -48,6 +49,8 @@ class StreamFrame(SQLBaseClass):
 
     def return_partial_frame_payload(self, local_start_position, local_end_position):
         bits = BitStream(self.payload).read(self.payload_bits)
+        bits.pos = local_start_position
+        return bits.read(local_end_position - local_start_position + 1)
 
     def return_full_frame_payload(self):
         return BitStream(self.payload).read(self.payload_bits)
@@ -83,15 +86,71 @@ class StreamFile(SQLBaseClass):
     processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
 
-    def extract(self):
+    def _get_frame_positions(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
+        calculated_size = self.processed_file_size_bytes if self.processed_file_size_bytes else self.raw_file_size_bytes
+        calculated_size *= 8
+        last_file_frame = 0
+        last_file_frame_finish_position = 0
+
+        # Finding first frame position
+        if self.start_bit_position < payload_first_frame_bits:  # Starts on first payload frame
+            first_file_frame = payload_start_frame
+            first_file_frame_start_position = self.start_bit_position
+            total_frame_bits = payload_first_frame_bits
+        else:
+            bits_until_frame = self.start_bit_position - payload_first_frame_bits
+            first_file_frame = payload_start_frame + math.ceil(bits_until_frame / payload_bits_per_standard_frame)
+            frame_start_index = payload_first_frame_bits + ((first_file_frame - payload_start_frame - 1)
+                                                            * payload_bits_per_standard_frame)
+            first_file_frame_start_position = self.start_bit_position - frame_start_index
+            total_frame_bits = payload_bits_per_standard_frame
+
+        # Finding last frame position
+        if total_frame_bits - first_file_frame_start_position >= calculated_size:  # File terminates on same frame
+            last_file_frame = first_file_frame
+            last_file_frame_finish_position = first_file_frame_start_position + calculated_size
+        else: # File terminates on subsequent frames
+            bits_until_frame = calculated_size - #1
+            print(f'{bits_until_frame=}')
+            last_file_frame = first_file_frame + math.ceil()
+
+
+        return {'first_frame': first_file_frame, 'first_file_frame_start_position': first_file_frame_start_position,
+                'last_file_frame': last_file_frame, 'last_file_frame_finish_position': last_file_frame_finish_position}
+
+    def return_state(self, advanced):
+        save_path = Path(self.save_path)
+        basic_state = {'name': save_path.name, 'raw_file_size_bytes': self.raw_file_size_bytes, 'raw_file_hash':
+                       self.raw_file_hash, 'save_path': self.save_path}
+        advanced_state = {'stream_id': self.stream_id, 'sequence': self.sequence, 'start_bit_position':
+                          self.start_bit_position, 'end_bit_position': self.end_bit_position, 'is_processed':
+                          self.is_processed, 'is_eligible': self.is_eligible, 'processed_file_size_bytes':
+                          self.processed_file_size_bytes, 'processed_file_hash': self.processed_file_hash}
+
+        return basic_state | advanced_state if advanced else basic_state
+
+    def extract(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame, total_frames,
+                payload_size_in_bits):
         path = Path(self.save_path)
         logging.info(f'Extracting {path.name} ...')
+        returned_results = self.return_state(advanced=False)
 
         if exists(self.save_path):
             logging.info(f'File with this name already exists at this location: {self.save_path}.\n Skipping...')
-            return {}
+            returned_results['results'] = 'Already exists'
+            return returned_results
 
-        pass
+        positions = self._get_frame_positions(payload_start_frame, payload_first_frame_bits,
+                                              payload_bits_per_standard_frame, total_frames, payload_size_in_bits)
+        first_frame = positions['first_frame']
+        first_frame_start_position = positions['first_frame_start_position']
+        last_frame = positions['last_frame']
+        last_frame_finish_position = positions['last_frame_finish_position']
+
+        returned_results['results'] = 'Success'
+        return returned_results
+
+
 
     def __str__(self):
         return f'File {self.name} in {self.stream}'

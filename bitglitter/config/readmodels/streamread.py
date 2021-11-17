@@ -105,6 +105,13 @@ class StreamRead(SQLBaseClass):
         else:
             return self.stream_sha256
 
+    def _refresh_save_directory(self):
+        save_directory = Path(self.output_directory)
+        if not save_directory.exists():
+            logging.debug('Directory for read doesn\'t exist, creating...')
+            save_directory.mkdir()
+
+
     def return_state(self, advanced=False):
         palette_name = None
         if self.custom_palette_loaded and self.custom_palette_used or not self.custom_palette_used:
@@ -313,11 +320,20 @@ class StreamRead(SQLBaseClass):
         if 'failure' in elibility_results:
             return elibility_results
 
-        # File extract
-        pending_extraction = self.files #todo
+        self._refresh_save_directory()
 
+        # File extract
+        pending_extraction = self.files.filter(StreamFile.is_eligible == True).filter(StreamFile.is_processed == False)
+
+        returned_list = []
         for file in pending_extraction:
-            file.extract()
+            extract_results = file.extract(self.payload_start_frame, self.payload_first_frame_bits,
+                                           self.payload_bits_per_standard_frame, self.total_frames, self.size_in_bytes)
+            returned_list.append(extract_results)
+            if extract_results['results'] == 'Cannot decrypt':
+                logging.warning('Incorrect decryption values provided for stream.  Please change values and try again.'
+                                '  Aborting...')
+                break
 
         # Is stream complete?
         self.completed_files = self.files.filter(StreamFile.is_processed == True).count()
@@ -325,7 +341,7 @@ class StreamRead(SQLBaseClass):
             self.is_complete = True
         self.save()
 
-        return {} #todo results
+        return returned_list
 
     def autodelete_attempt(self):
         if self.auto_delete_finished_stream and self.is_complete:
