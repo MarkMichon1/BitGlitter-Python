@@ -1,3 +1,5 @@
+import os
+
 from bitstring import BitStream
 from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
@@ -8,6 +10,9 @@ from os.path import exists
 from pathlib import Path
 
 from bitglitter.config.config import session, SQLBaseClass
+from bitglitter.utilities.compression import decompress_file
+from bitglitter.utilities.encryption import decrypt_file, get_hash_from_file
+from bitglitter.utilities.filemanipulation import refresh_directory
 
 
 class StreamFrame(SQLBaseClass):
@@ -47,10 +52,13 @@ class StreamFrame(SQLBaseClass):
         self.added_to_progress = True
         self.save()
 
-    def return_partial_frame_payload(self, local_start_position, local_end_position):
+    def return_partial_frame_payload(self, local_start_position, local_end_position=None):
         bits = BitStream(self.payload).read(self.payload_bits)
         bits.pos = local_start_position
-        return bits.read(local_end_position - local_start_position + 1)
+        if local_end_position:
+            return bits.read(local_end_position - local_start_position + 1)
+        else:
+            return bits.read(bits.len - local_start_position)
 
     def return_full_frame_payload(self):
         return BitStream(self.payload).read(self.payload_bits)
@@ -77,7 +85,7 @@ class StreamFile(SQLBaseClass):
     sequence = Column(Integer)
     start_bit_position = Column(Integer)
     end_bit_position = Column(Integer)
-    is_processed = Column(Boolean, default=False)
+    is_processed = Column(Boolean, default=False) # Successfully unpackaged into raw file
     is_eligible = Column(Boolean, default=False) # Eligible to be processed
     save_path = Column(String)
 
@@ -86,18 +94,18 @@ class StreamFile(SQLBaseClass):
     processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
 
-    def _get_frame_positions(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
+    def _get_frame_indexes(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
+        """Get start and end frames for a given file, as well as each frame's local index positions"""
+
         calculated_size = self.processed_file_size_bytes if self.processed_file_size_bytes else self.raw_file_size_bytes
         calculated_size *= 8
-        last_file_frame = 0
-        last_file_frame_finish_position = 0
 
         # Finding first frame position
         if self.start_bit_position < payload_first_frame_bits:  # Starts on first payload frame
             first_file_frame = payload_start_frame
             first_file_frame_start_position = self.start_bit_position
             total_frame_bits = payload_first_frame_bits
-        else:
+        else:  # File starts on frame beyond the first frame containing a payload
             bits_until_frame = self.start_bit_position - payload_first_frame_bits
             first_file_frame = payload_start_frame + math.ceil(bits_until_frame / payload_bits_per_standard_frame)
             frame_start_index = payload_first_frame_bits + ((first_file_frame - payload_start_frame - 1)
@@ -109,14 +117,16 @@ class StreamFile(SQLBaseClass):
         if total_frame_bits - first_file_frame_start_position >= calculated_size:  # File terminates on same frame
             last_file_frame = first_file_frame
             last_file_frame_finish_position = first_file_frame_start_position + calculated_size
-        else: # File terminates on subsequent frames
-            bits_until_frame = calculated_size - #1
-            print(f'{bits_until_frame=}')
-            last_file_frame = first_file_frame + math.ceil()
+        else:  # File terminates on subsequent frames
+            bits_left = calculated_size - (total_frame_bits - first_file_frame_start_position)
+            frame_difference = math.ceil(bits_left / payload_bits_per_standard_frame)
+            last_file_frame = first_file_frame + frame_difference
+            bits_left = bits_left - (payload_bits_per_standard_frame * (frame_difference - 1))
+            last_file_frame_finish_position = bits_left - 1
 
 
-        return {'first_frame': first_file_frame, 'first_file_frame_start_position': first_file_frame_start_position,
-                'last_file_frame': last_file_frame, 'last_file_frame_finish_position': last_file_frame_finish_position}
+        return {'first_frame': first_file_frame, 'first_frame_index': first_file_frame_start_position, 'last_frame':
+                last_file_frame, 'last_frame_index': last_file_frame_finish_position}
 
     def return_state(self, advanced):
         save_path = Path(self.save_path)
@@ -129,24 +139,133 @@ class StreamFile(SQLBaseClass):
 
         return basic_state | advanced_state if advanced else basic_state
 
-    def extract(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame, total_frames,
-                payload_size_in_bits):
-        path = Path(self.save_path)
-        logging.info(f'Extracting {path.name} ...')
+    def _extract_frame_generator(self, first_frame, first_frame_index, last_frame, last_frame_index):
+
+        first_returned_frame = StreamFrame.query.filter(StreamFrame.stream_id == self.stream_id) \
+            .filter(StreamFrame.frame_number == first_frame).first()
+
+        # 1 frame
+        if first_frame == last_frame:
+            yield first_returned_frame.return_partial_frame_payload(first_frame_index, last_frame_index)
+
+        # 2+ frames
+        elif last_frame > first_frame:
+            # First frame
+            yield first_returned_frame.return_partial_frame_payload(first_frame_index)
+
+            # Middle frames
+            mid_frame_minimum = first_frame + 1
+            mid_frame_maximum = last_frame - 1
+            last_consecutive_frame_number = first_returned_frame.frame_number
+            # Getting groups of 100 frames
+            if last_frame - first_frame > 1:
+                for query_group in range(math.ceil((mid_frame_maximum - mid_frame_minimum + 1) / 100)):
+                    query_minimum = mid_frame_minimum + (query_group * 100)
+                    query_maximum = query_minimum + 99 if query_minimum + 99 <= mid_frame_maximum else mid_frame_maximum
+                    frames = StreamFrame.query.filter(StreamFrame.stream_id == self.stream_id) \
+                    .filter(StreamFrame.frame_number >= query_minimum)\
+                    .filter(StreamFrame.frame_number <= query_maximum) \
+                    .order_by(StreamFrame.frame_number.asc())
+
+                    for frame in frames:
+                        assert frame.frame_number - 1 == last_consecutive_frame_number
+                        last_consecutive_frame_number += 1
+
+                        yield frame.return_full_frame_payload()
+
+            # Last frame
+            last_returned_frame = StreamFrame.query.filter(StreamFrame.stream_id == self.stream_id) \
+                .filter(StreamFrame.frame_number == last_frame).first()
+            yield last_returned_frame.return_partial_frame_payload(0, last_frame_index)
+
+
+    def extract(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame,
+                encryption_enabled, compression_enabled, decryption_key, scrypt_n, scrypt_r, scrypt_p,
+                temp_save_directory):
+        raw_path = Path(self.save_path)
+        logging.info(f'Extracting {raw_path.name} ...')
         returned_results = self.return_state(advanced=False)
+        refresh_directory(temp_save_directory)  # Temp until a better logic system figured out for file names/temp files
 
         if exists(self.save_path):
             logging.info(f'File with this name already exists at this location: {self.save_path}.\n Skipping...')
             returned_results['results'] = 'Already exists'
+            self.is_processed = True
+            self.save()
             return returned_results
 
-        positions = self._get_frame_positions(payload_start_frame, payload_first_frame_bits,
-                                              payload_bits_per_standard_frame, total_frames, payload_size_in_bits)
+        # Getting
+        positions = self._get_frame_indexes(payload_start_frame, payload_first_frame_bits,
+                                            payload_bits_per_standard_frame)
+        logging.debug(positions)
         first_frame = positions['first_frame']
-        first_frame_start_position = positions['first_frame_start_position']
+        first_frame_index = positions['first_frame_index']
         last_frame = positions['last_frame']
-        last_frame_finish_position = positions['last_frame_finish_position']
+        last_frame_index = positions['last_frame_index']
 
+        # File assembly
+        os.makedirs(raw_path.parent, exist_ok=True)
+        assemble_path = raw_path if not self.processed_file_size_bytes else temp_save_directory / 'processing.bin'
+        with open(assemble_path, 'wb') as file_writer:
+            buffer = BitStream()
+            for frame_data in self._extract_frame_generator(first_frame, first_frame_index, last_frame,
+                                                            last_frame_index):
+                buffer += frame_data
+                max_allowable_read = (buffer.len // 8) * 8
+                to_write = buffer.read(max_allowable_read).tobytes()
+                file_writer.write(to_write)
+                buffer = buffer.read(buffer.len - max_allowable_read)
+
+        # Post-assembly integrity check if compression and/or encryption enabled on stream
+        if self.processed_file_size_bytes:
+            calculated_hash = get_hash_from_file(assemble_path)
+            if calculated_hash != self.processed_file_hash or \
+                    assemble_path.stat().st_size != self.processed_file_size_bytes:
+                logging.warning('Assembly mismatch, aborting...')
+                returned_results['results'] = 'Internal assembly error'
+                return returned_results
+
+        if encryption_enabled:
+            if compression_enabled:  # Decrypt + decompress
+                decrypt_path = assemble_path.parent / 'decrypted.bin'
+                try:
+                    decrypt_file(assemble_path, decrypt_path, decryption_key, scrypt_n, scrypt_r, scrypt_p)
+                    decompress_file(decrypt_path, self.save_path)
+                    calculated_hash = get_hash_from_file(self.save_path)
+                    if calculated_hash != self.raw_file_hash:
+                        logging.warning('Post-decryption/decompression SHA-256 failure, aborting...')
+                        returned_results['results'] = 'Internal assembly error'
+                        return returned_results
+
+                except ValueError:
+                    logging.warning('Incorrect decryption values, aborting unpackaging of this stream...')
+                    returned_results['results'] = 'Cannot decrypt'
+                    return returned_results
+            else:  # Decryption only
+                try:
+                    decrypt_file(assemble_path, self.save_path, decryption_key, scrypt_n, scrypt_r, scrypt_p)
+                except ValueError:
+                    logging.warning('Incorrect decryption values, aborting unpackaging of this stream...')
+                    returned_results['results'] = 'Cannot decrypt'
+                    return returned_results
+        elif compression_enabled:  # Just decompression
+            decompress_file(assemble_path, self.save_path)
+            calculated_hash = get_hash_from_file(self.save_path)
+            if calculated_hash != self.raw_file_hash:
+                logging.warning('Post-decompression SHA-256 failure, aborting...')
+                returned_results['results'] = 'Internal assembly error'
+                os.remove(self.save_path)
+                return returned_results
+        else:  # No compression, encryption
+            calculated_hash = get_hash_from_file(self.save_path)
+            if calculated_hash != self.raw_file_hash:
+                logging.warning('Assembly raw file mismatch, aborting...')
+                returned_results['results'] = 'Internal assembly error'
+                os.remove(self.save_path)
+                return returned_results
+
+        self.is_processed = True
+        self.save()
         returned_results['results'] = 'Success'
         return returned_results
 

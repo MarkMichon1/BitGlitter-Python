@@ -1,9 +1,12 @@
 import json
+from pathlib import Path
 
 from bitglitter.config.config import session
+from bitglitter.config.configmodels import Constants
 from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.read.decode.headerdecode import metadata_header_validate_decode
+from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 
 logging_setter('info', True, False)
@@ -17,8 +20,12 @@ def unpackage(stream_sha256):
     stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
-    results = stream_read.attempt_unpackage()
+    constants = session.query(Constants).first()
+    working_directory = Path(constants.WORKING_DIR)
+    refresh_directory(working_directory)
+    results = stream_read.attempt_unpackage(working_directory)
     stream_read.autodelete_attempt()
+    remove_working_folder(working_directory)
     return results
 
 

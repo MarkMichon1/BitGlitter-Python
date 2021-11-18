@@ -151,7 +151,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             stream_read.completed_frame_count_update()
             if stream_read.auto_unpackage_stream:
                 unpackaging_this_session = True
-                unpackage_results = stream_read.attempt_unpackage()
+                unpackage_results = stream_read.attempt_unpackage(temp_save_directory)
                 frame_read_results['unpackage_results'][stream_read.stream_sha256] = unpackage_results
                 stream_read.autodelete_attempt()
             else:

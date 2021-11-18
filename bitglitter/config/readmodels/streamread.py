@@ -73,7 +73,6 @@ class StreamRead(SQLBaseClass):
     # Unpackage State
     stop_at_metadata_load = Column(Boolean)
     auto_unpackage_stream = Column(Boolean)
-    auto_delete_frames = Column(Boolean) #todo
     auto_delete_finished_stream = Column(Boolean)
     metadata_checkpoint_ran = Column(Boolean, default=False)
     highest_processed_frame = Column(Integer)
@@ -285,7 +284,7 @@ class StreamRead(SQLBaseClass):
             for index_range in range(math.ceil(self.highest_processed_frame / 100)):
                 frame_group = StreamFrame.query.filter(StreamFrame.frame_number < (index_range + 1) * 100) \
                     .filter(StreamFrame.frame_number >= index_range * 100).filter(StreamFrame.stream_id == self.id)\
-                    .filter(StreamFrame.added_to_progress == False).all()
+                    .filter(StreamFrame.added_to_progress == False)
                 for frame in frame_group:
                     bit_start, bit_end = frame.get_bit_index(self.payload_start_frame, self.payload_first_frame_bits,
                                                              self.payload_bits_per_standard_frame)
@@ -307,11 +306,11 @@ class StreamRead(SQLBaseClass):
         self.toggle_eligibility_calculations(False)
         return {}
 
-    def attempt_unpackage(self):
+    def attempt_unpackage(self, temp_save_directory):
         """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
         summary of the results.
         """
-        logging.info(f'Unpackaging {str(self)}...')
+        logging.info(f'Unpackaging stream {str(self)}...')
 
         #metadata header/manifest logic here (unpackage -> check first)
         # return {'failure': }
@@ -328,9 +327,11 @@ class StreamRead(SQLBaseClass):
         returned_list = []
         for file in pending_extraction:
             extract_results = file.extract(self.payload_start_frame, self.payload_first_frame_bits,
-                                           self.payload_bits_per_standard_frame, self.total_frames, self.size_in_bytes)
+                                           self.payload_bits_per_standard_frame, self.encryption_enabled,
+                                           self.compression_enabled, self.decryption_key, self.scrypt_n, self.scrypt_r,
+                                           self.scrypt_p, temp_save_directory)
             returned_list.append(extract_results)
-            if extract_results['results'] == 'Cannot decrypt':
+            if extract_results['results'] == 'Cannot decrypt': #todo
                 logging.warning('Incorrect decryption values provided for stream.  Please change values and try again.'
                                 '  Aborting...')
                 break
