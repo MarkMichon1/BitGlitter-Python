@@ -1,3 +1,5 @@
+from sqlalchemy.exc import InvalidRequestError
+
 import logging
 from multiprocessing import cpu_count, Pool
 
@@ -70,7 +72,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
             # Errors
             if 'error' in video_frame_processor.frame_errors:
-                if 'fatal' in video_frame_processor.frame_errors:  # Session-ending error, such as a metadata frame being corrupted
+                # Session-ending error, such as a metadata frame being corrupted
+                if 'fatal' in video_frame_processor.frame_errors:
                     logging.warning('Cannot continue.')
                     return {'error': True}
                 if bad_frame_strikes:  # Corrupted frame, skipping to next one
@@ -156,7 +159,10 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 stream_read.autodelete_attempt()
             else:
                 stream_read.check_file_eligibility()
-            stream_read.session_activity(False)
+            try:
+                stream_read.session_activity(False)
+            except InvalidRequestError:
+                pass
         if unpackaging_this_session:
             logging.info('File unpackaging complete.')
 

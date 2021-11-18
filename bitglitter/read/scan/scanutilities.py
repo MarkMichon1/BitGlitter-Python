@@ -1,6 +1,6 @@
-import math
-
 import numpy
+
+import math
 
 
 def return_distance(raw_frame_rgb, expected_value):

@@ -1,7 +1,7 @@
+from bitstring import BitStream, ConstBitStream
+
 import logging
 from pathlib import Path
-
-from bitstring import BitStream, ConstBitStream
 
 from bitglitter.write.render.headerencode import initializer_header_encode, frame_header_encode
 
@@ -128,15 +128,13 @@ def frame_state_generator(block_height, block_width, pixel_width, protocol_versi
         merged_pieces = initializer_bits + frame_header_holder + setup_headers_bits + payload_bits + padding_bits
         frame_payload = ConstBitStream(merged_pieces)
 
-        yield {
-            'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
-            frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used, 'stream_palette_dict':
-            stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length, 'initializer_palette_dict':
-            initializer_palette_dict, 'initializer_palette_dict_b': initializer_palette_dict_b, 'initializer_palette':
-            initializer_palette, 'output_mode': output_mode, 'stream_name_file_output': stream_name_file_output,
-            'initializer_enabled': initializer_enabled, 'frame_number': frame_number, 'total_frames': total_frames,
-            'image_output_path': image_output_path, 'stream_sha256': stream_sha256, 'stream_name': stream_name,
-            'save_statistics': save_statistics, 'total_operations': total_operations
-        }
+        yield {'block_height': block_height, 'block_width': block_width, 'pixel_width': pixel_width, 'frame_payload':
+               frame_payload, 'initializer_palette_blocks_used': initializer_palette_blocks_used, 'stream_palette_dict':
+               stream_palette_dict, 'stream_palette_bit_length': stream_palette.bit_length, 'initializer_palette_dict':
+               initializer_palette_dict, 'initializer_palette_dict_b': initializer_palette_dict_b,
+               'initializer_palette': initializer_palette, 'output_mode': output_mode, 'stream_name_file_output':
+               stream_name_file_output, 'initializer_enabled': initializer_enabled, 'frame_number': frame_number,
+               'total_frames': total_frames, 'image_output_path': image_output_path, 'stream_sha256': stream_sha256,
+               'stream_name': stream_name, 'save_statistics': save_statistics, 'total_operations': total_operations}
 
         frame_number += 1

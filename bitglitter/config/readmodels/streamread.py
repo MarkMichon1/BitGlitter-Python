@@ -12,8 +12,8 @@ import time
 
 from bitglitter.config.config import engine, SQLBaseClass, session
 from bitglitter.config.palettemodels import Palette
-from bitglitter.read.decode.manifest import manifest_unpack
 from bitglitter.config.readmodels.readmodels import StreamFrame, StreamFile, StreamDataProgress
+from bitglitter.read.decode.manifest import manifest_unpack
 
 
 class StreamRead(SQLBaseClass):
@@ -43,9 +43,8 @@ class StreamRead(SQLBaseClass):
     manifest_string = Column(String)
 
     # Header Management
-    remaining_pre_payload_bits = Column(Integer)
     carry_over_header_bytes = Column(BLOB)
-    carry_over_padding_bits = Column(Integer)
+    carry_over_padding_bits = Column(Integer, default=0)
 
     # Read State
     payload_start_frame = Column(Integer)
@@ -64,7 +63,7 @@ class StreamRead(SQLBaseClass):
 
     # Operation State
     active_this_session = Column(Boolean, default=True)
-    recalculate_eligibility = Column(Boolean, default=True) # Toggles file eligibility stuff if new data (or not)
+    recalculate_eligibility = Column(Boolean, default=True)  # Toggles file eligibility stuff if new data (or not)
     all_frames_accounted_for = Column(Boolean, default=False)  # all frames are saved in DB
     total_files = Column(Integer)
     completed_files = Column(Integer, default=0)
@@ -91,12 +90,9 @@ class StreamRead(SQLBaseClass):
     metadata_is_decrypted = Column(Boolean, default=False)
 
     # Relationships
-    frames = relationship('StreamFrame', back_populates='stream', cascade='all, delete', passive_deletes=True,
-                          lazy='dynamic')
-    files = relationship('StreamFile', back_populates='stream', cascade='all, delete', passive_deletes=True,
-                         lazy='dynamic')
-    progress = relationship('StreamDataProgress', back_populates='stream', cascade='all, delete', passive_deletes=True,
-                            lazy='dynamic')
+    frames = relationship('StreamFrame', backref='stream', cascade='all,delete-orphan', lazy='dynamic')
+    files = relationship('StreamFile', backref='stream', cascade='all,delete-orphan', lazy='dynamic')
+    progress = relationship('StreamDataProgress', backref='stream', cascade='all,delete-orphan', lazy='dynamic')
 
     def __str__(self):
         if self.stream_name:
@@ -109,7 +105,6 @@ class StreamRead(SQLBaseClass):
         if not save_directory.exists():
             logging.debug('Directory for read doesn\'t exist, creating...')
             save_directory.mkdir()
-
 
     def return_state(self, advanced=False):
         palette_name = None
@@ -126,8 +121,26 @@ class StreamRead(SQLBaseClass):
                        'size_in_bytes': self.size_in_bytes, 'output_directory': self.output_directory, 'pixel_width':
                        self.pixel_width, 'block_height': self.block_height, 'block_width': self.block_width,
                        'scrypt_n': self.scrypt_n, 'scrypt_r': self.scrypt_r, 'scrypt_p': self.scrypt_p,
-                       'decryption_key': self.decryption_key, 'metadata_is_decrypted': self.metadata_is_decrypted}
-        advanced_state = {}  # everything else # todo
+                       'decryption_key': self.decryption_key, 'metadata_is_decrypted': self.metadata_is_decrypted,
+                       'total_files': self.total_files, 'completed_files': self.completed_files, 'is_complete':
+                       self.is_complete, 'stop_at_metadata_load': self.stop_at_metadata_load, 'auto_unpackage_stream':
+                       self.auto_unpackage_stream, 'auto_delete_finished_stream': self.auto_delete_finished_stream,
+                       }
+        advanced_state = {'custom_palette_loaded': self.custom_palette_loaded, 'manifest_string': self.manifest_string,
+                          'carry_over_padding_bits': self.carry_over_padding_bits, 'payload_start_frame':
+                          self.payload_start_frame, 'payload_first_frame_bits': self.payload_first_frame_bits,
+                          'payload_bits_per_standard_frame': self.payload_bits_per_standard_frame,
+                          'palette_header_size_bytes': self.palette_header_size_bytes, 'palette_header_hash':
+                          self.palette_header_hash, 'metadata_header_size_bytes': self.metadata_header_size_bytes,
+                          'metadata_header_sha256': self.metadata_header_sha256, 'stream_header_complete':
+                          self.stream_header_complete, 'metadata_header_complete': self.metadata_header_complete,
+                          'palette_header_complete': self.palette_header_complete, 'completed_frames':
+                          self.completed_frames, 'highest_consecutive_setup_frame_read':
+                          self.highest_consecutive_setup_frame_read, 'active_this_session': self.active_this_session,
+                          'recalculate_eligibility': self.recalculate_eligibility, 'all_frames_accounted_for':
+                          self.all_frames_accounted_for, 'metadata_checkpoint_ran': self.metadata_checkpoint_ran,
+                          'highest_processed_frame': self.highest_processed_frame, 'progress_complete':
+                          self.progress_complete}
         return basic_state | advanced_state if advanced else basic_state
 
     def return_pending_header_bits(self):
@@ -310,11 +323,8 @@ class StreamRead(SQLBaseClass):
         """Attempts to extract files from the partial or complete decoded data.  Returns a dictionary object giving a
         summary of the results.
         """
+
         logging.info(f'Unpackaging stream {str(self)}...')
-
-        #metadata header/manifest logic here (unpackage -> check first)
-        # return {'failure': }
-
         elibility_results = self.check_file_eligibility()
         if 'failure' in elibility_results:
             return elibility_results
@@ -331,7 +341,7 @@ class StreamRead(SQLBaseClass):
                                            self.compression_enabled, self.decryption_key, self.scrypt_n, self.scrypt_r,
                                            self.scrypt_p, temp_save_directory)
             returned_list.append(extract_results)
-            if extract_results['results'] == 'Cannot decrypt': #todo
+            if extract_results['results'] == 'Cannot decrypt':
                 logging.warning('Incorrect decryption values provided for stream.  Please change values and try again.'
                                 '  Aborting...')
                 break
@@ -346,6 +356,7 @@ class StreamRead(SQLBaseClass):
 
     def autodelete_attempt(self):
         if self.auto_delete_finished_stream and self.is_complete:
+            logging.info(f'All files have been extracted.  Deleting {self}...')
             self.delete()
 
     def set_payload_start_data(self, payload_start_frame, payload_first_frame_bits):

@@ -12,6 +12,7 @@ Session = scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
 session = Session()
 Base = declarative_base()
 
+
 class SQLBaseClass(Base):
     """Removing duplicate boilerplate to make the code less cluttered, and the database objects themselves easier to
     work with.

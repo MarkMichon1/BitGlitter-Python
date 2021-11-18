@@ -6,6 +6,7 @@ from bitglitter.config.presetmodels import Preset
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
 
+
 def remove_session():
     """Resets persistent data to factory default settings."""
     model_list = [Config, Constants, Palette, Preset, Statistics, StreamRead, StreamSHA256Blacklist]

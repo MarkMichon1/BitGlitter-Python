@@ -9,7 +9,7 @@ from bitglitter.read.decode.headerdecode import frame_header_decode, initializer
     metadata_header_validate_decode, stream_header_decode
 from bitglitter.read.scan.scanvalidate import frame_lock_on, geometry_override_checkpoint
 from bitglitter.read.scan.scanhandler import ScanHandler
-from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
+from bitglitter.utilities.cryptography import get_sha256_hash_from_bytes
 
 
 class VideoFrameProcessor:

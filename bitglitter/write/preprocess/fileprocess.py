@@ -2,7 +2,7 @@ import logging
 import os
 
 from bitglitter.utilities.compression import compress_file
-from bitglitter.utilities.encryption import encrypt_file, get_hash_from_file
+from bitglitter.utilities.cryptography import encrypt_file, get_hash_from_file
 
 
 def directory_crawler(directory_path, payload_directory, compression_enabled, crypto_key, scrypt_n,

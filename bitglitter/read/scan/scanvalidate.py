@@ -5,7 +5,6 @@ import hashlib
 import logging
 
 from bitglitter.read.scan.scanutilities import color_snap, return_distance, scan_block
-from bitglitter.utilities.palette import ColorsToBits
 
 
 def geometry_override_checkpoint(block_height_override, block_width_override, active_frame_size_height,
@@ -58,20 +57,20 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
                             'reliable lock.')
             return False
 
-        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
-                                                         combined_colors, initializer_palette_a_dict,
-                                                         initializer_palette_b_dict, frame_pixel_width, frame_pixel_height,
-                                                         width=True)
+        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set,
+                                                         initializer_palette_b_color_set, combined_colors,
+                                                         initializer_palette_a_dict, initializer_palette_b_dict,
+                                                         frame_pixel_width, frame_pixel_height, width=True)
         checkpoint = verify_blocks_x(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
         if not checkpoint:
             return False
 
         block_width = block_dimension_guess
-        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set, initializer_palette_b_color_set,
-                                                         combined_colors, initializer_palette_a_dict,
-                                                         initializer_palette_b_dict, frame_pixel_width, frame_pixel_height,
-                                                         width=False)
+        pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set,
+                                                         initializer_palette_b_color_set, combined_colors,
+                                                         initializer_palette_a_dict, initializer_palette_b_dict,
+                                                         frame_pixel_width, frame_pixel_height, width=False)
         checkpoint = verify_blocks_y(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
 

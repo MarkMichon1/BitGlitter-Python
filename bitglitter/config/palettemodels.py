@@ -1,13 +1,12 @@
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
-
-from bitglitter.config.config import engine, session, SQLBaseClass
-from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
-    get_palette_id_from_hash
+from sqlalchemy import Boolean, Column, Float, Integer, String, UniqueConstraint
 
 import base64
 import math
 import time
+
+from bitglitter.config.config import engine, SQLBaseClass
+from bitglitter.utilities.palette import BitsToColor, ColorsToBits, convert_hex_to_rgb, get_color_distance, \
+    get_palette_id_from_hash
 
 
 class Palette(SQLBaseClass):

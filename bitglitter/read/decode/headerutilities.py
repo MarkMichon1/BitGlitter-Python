@@ -1,6 +1,6 @@
 from zlib import crc32
 
-from bitglitter.utilities.encryption import get_sha256_hash_from_bytes
+from bitglitter.utilities.cryptography import get_sha256_hash_from_bytes
 
 
 def crc_verify(header):

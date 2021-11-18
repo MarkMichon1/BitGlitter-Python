@@ -7,7 +7,7 @@ from bitglitter.config.configmodels import Constants
 from bitglitter.config.palettemodels import Palette
 from bitglitter.read.decode.headerutilities import crc_verify
 from bitglitter.utilities.compression import decompress_bytes
-from bitglitter.utilities.encryption import decrypt_bytes, get_sha256_hash_from_bytes
+from bitglitter.utilities.cryptography import decrypt_bytes, get_sha256_hash_from_bytes
 
 
 def initializer_header_validate_decode(bit_stream, block_height_estimate, block_width_estimate):
@@ -143,7 +143,6 @@ def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encry
             logging.warning('Provided decryption values (key, scrypt_n, scrypt_r, scrypt_p) invalid.  Cannot extract'
                             ' files until correct parameters received.')
             return None
-
 
     decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled else header_bytes)
 

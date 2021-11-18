@@ -1,6 +1,5 @@
-from bitstring import BitStream, ConstBitStream
+from bitstring import BitStream
 
-import logging
 import math
 
 from bitglitter.read.scan.scanutilities import color_snap, scan_block

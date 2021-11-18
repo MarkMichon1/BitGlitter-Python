@@ -1,17 +1,14 @@
-import os
-
 from bitstring import BitStream
 from sqlalchemy import BLOB, Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
 
 import logging
 import math
-from os.path import exists
+import os
 from pathlib import Path
 
 from bitglitter.config.config import session, SQLBaseClass
 from bitglitter.utilities.compression import decompress_file
-from bitglitter.utilities.encryption import decrypt_file, get_hash_from_file
+from bitglitter.utilities.cryptography import decrypt_file, get_hash_from_file
 from bitglitter.utilities.filemanipulation import refresh_directory
 
 
@@ -20,14 +17,12 @@ class StreamFrame(SQLBaseClass):
     __abstract__ = False
 
     # note- sha256 not included as its only verification prior to addition
-    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead', back_populates='frames')
+    stream_id = Column(Integer, ForeignKey('stream_reads.id', ondelete='CASCADE'))
     payload_bits = Column(Integer)  # Length of stream payload bits within this frame, tracked to ensure padding removed
     payload = Column(BLOB)
     frame_number = Column(Integer)
     is_complete = Column(Boolean, default=False)
     added_to_progress = Column(Boolean, default=False)
-
 
     def get_bit_index(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame,
                       total_frames, payload_size_in_bytes):
@@ -80,19 +75,21 @@ class StreamFile(SQLBaseClass):
     __tablename__ = 'stream_files'
     __abstract__ = False
 
-    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead')
+    stream_id = Column(Integer, ForeignKey('stream_reads.id', ondelete='CASCADE'))
     sequence = Column(Integer)
     start_bit_position = Column(Integer)
     end_bit_position = Column(Integer)
-    is_processed = Column(Boolean, default=False) # Successfully unpackaged into raw file
-    is_eligible = Column(Boolean, default=False) # Eligible to be processed
+    is_processed = Column(Boolean, default=False)  # Successfully unpackaged into raw file
+    is_eligible = Column(Boolean, default=False)  # Eligible to be processed
     save_path = Column(String)
 
     raw_file_size_bytes = Column(Integer)
     raw_file_hash = Column(String)
     processed_file_size_bytes = Column(Integer)
     processed_file_hash = Column(String)
+
+    def __str__(self):
+        return f'File {self.name} in {self.stream}'
 
     def _get_frame_indexes(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame):
         """Get start and end frames for a given file, as well as each frame's local index positions"""
@@ -124,9 +121,8 @@ class StreamFile(SQLBaseClass):
             bits_left = bits_left - (payload_bits_per_standard_frame * (frame_difference - 1))
             last_file_frame_finish_position = bits_left - 1
 
-
         return {'first_frame': first_file_frame, 'first_frame_index': first_file_frame_start_position, 'last_frame':
-                last_file_frame, 'last_frame_index': last_file_frame_finish_position}
+            last_file_frame, 'last_frame_index': last_file_frame_finish_position}
 
     def return_state(self, advanced):
         save_path = Path(self.save_path)
@@ -163,9 +159,9 @@ class StreamFile(SQLBaseClass):
                     query_minimum = mid_frame_minimum + (query_group * 100)
                     query_maximum = query_minimum + 99 if query_minimum + 99 <= mid_frame_maximum else mid_frame_maximum
                     frames = StreamFrame.query.filter(StreamFrame.stream_id == self.stream_id) \
-                    .filter(StreamFrame.frame_number >= query_minimum)\
-                    .filter(StreamFrame.frame_number <= query_maximum) \
-                    .order_by(StreamFrame.frame_number.asc())
+                        .filter(StreamFrame.frame_number >= query_minimum) \
+                        .filter(StreamFrame.frame_number <= query_maximum) \
+                        .order_by(StreamFrame.frame_number.asc())
 
                     for frame in frames:
                         assert frame.frame_number - 1 == last_consecutive_frame_number
@@ -178,7 +174,6 @@ class StreamFile(SQLBaseClass):
                 .filter(StreamFrame.frame_number == last_frame).first()
             yield last_returned_frame.return_partial_frame_payload(0, last_frame_index)
 
-
     def extract(self, payload_start_frame, payload_first_frame_bits, payload_bits_per_standard_frame,
                 encryption_enabled, compression_enabled, decryption_key, scrypt_n, scrypt_r, scrypt_p,
                 temp_save_directory):
@@ -187,14 +182,21 @@ class StreamFile(SQLBaseClass):
         returned_results = self.return_state(advanced=False)
         refresh_directory(temp_save_directory)  # Temp until a better logic system figured out for file names/temp files
 
-        if exists(self.save_path):
-            logging.info(f'File with this name already exists at this location: {self.save_path}.\n Skipping...')
-            returned_results['results'] = 'Already exists'
-            self.is_processed = True
-            self.save()
-            return returned_results
+        if os.path.exists(self.save_path):
+            calculated_hash = get_hash_from_file(self.save_path)
+            if self.raw_file_hash == calculated_hash:
+                logging.info(f'File already exists at location with correct SHA-256.  Marking as complete...')
+                returned_results['results'] = 'Success- already exists'
+                self.is_processed = True
+                self.save()
+                return returned_results
+            else:
+                logging.info(f'File with this name already exists at this location: {self.save_path}.  '
+                             f'Cannot extract until removed.  Skipping...')
+                returned_results['results'] = 'Failure- file exists in path'
+                return returned_results
 
-        # Getting
+        # Which frame(s) the file resides in as well as their local start and finish bit indexes
         positions = self._get_frame_indexes(payload_start_frame, payload_first_frame_bits,
                                             payload_bits_per_standard_frame)
         logging.debug(positions)
@@ -236,11 +238,11 @@ class StreamFile(SQLBaseClass):
                         logging.warning('Post-decryption/decompression SHA-256 failure, aborting...')
                         returned_results['results'] = 'Internal assembly error'
                         return returned_results
-
                 except ValueError:
                     logging.warning('Incorrect decryption values, aborting unpackaging of this stream...')
                     returned_results['results'] = 'Cannot decrypt'
                     return returned_results
+
             else:  # Decryption only
                 try:
                     decrypt_file(assemble_path, self.save_path, decryption_key, scrypt_n, scrypt_r, scrypt_p)
@@ -248,6 +250,7 @@ class StreamFile(SQLBaseClass):
                     logging.warning('Incorrect decryption values, aborting unpackaging of this stream...')
                     returned_results['results'] = 'Cannot decrypt'
                     return returned_results
+
         elif compression_enabled:  # Just decompression
             decompress_file(assemble_path, self.save_path)
             calculated_hash = get_hash_from_file(self.save_path)
@@ -256,6 +259,7 @@ class StreamFile(SQLBaseClass):
                 returned_results['results'] = 'Internal assembly error'
                 os.remove(self.save_path)
                 return returned_results
+
         else:  # No compression, encryption
             calculated_hash = get_hash_from_file(self.save_path)
             if calculated_hash != self.raw_file_hash:
@@ -270,11 +274,6 @@ class StreamFile(SQLBaseClass):
         return returned_results
 
 
-
-    def __str__(self):
-        return f'File {self.name} in {self.stream}'
-
-
 class StreamDataProgress(SQLBaseClass):
     """Aside from tracking progress of frames, we also need to account for what index slices of the overall payload we
     have saved/processed.  This is because files can be extracted from incomplete streams; this is the mechanism to
@@ -284,8 +283,7 @@ class StreamDataProgress(SQLBaseClass):
     __tablename__ = 'stream_data_progress'
     __abstract__ = False
 
-    stream_id = Column(Integer, ForeignKey('stream_reads.id'))
-    stream = relationship('StreamRead', back_populates='progress')
+    stream_id = Column(Integer, ForeignKey('stream_reads.id', ondelete='CASCADE'))
     bit_start_position = Column(Integer)
     bit_end_position = Column(Integer)
 
@@ -298,6 +296,7 @@ class StreamDataProgress(SQLBaseClass):
         """Before an object is created, checking to see if an adjacent payload frame has already been read.  Rather than
         making a new object, the old instance will 'pool' the new edges together.
         """
+
         identical_progress = session.query(StreamDataProgress).filter(StreamDataProgress.stream_id == stream_id) \
             .filter(StreamDataProgress.bit_end_position == bit_end_position) \
             .filter(StreamDataProgress.bit_start_position == bit_start_position).first()

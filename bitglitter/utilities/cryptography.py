@@ -1,12 +1,12 @@
-import hashlib
-from io import BytesIO
-import os
-
 from cryptography.hazmat.primitives.ciphers import Cipher, modes
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+import hashlib
+from io import BytesIO
+import os
 
 
 def encrypt_file(input_file, output_file, write_mode, encryption_key, scrypt_n=14, scrypt_r=8, scrypt_p=1,

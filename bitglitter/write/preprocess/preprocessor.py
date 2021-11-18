@@ -1,11 +1,10 @@
-from pathlib import Path
-
 import logging
+from pathlib import Path
 import time
 
 from bitglitter.config.configmodels import CurrentJobState
 from bitglitter.utilities.display import humanize_file_size
-from bitglitter.utilities.encryption import get_hash_from_file
+from bitglitter.utilities.cryptography import get_hash_from_file
 from bitglitter.utilities.filemanipulation import refresh_directory, return_file_size
 from bitglitter.write.preprocess.fileprocess import directory_crawler, process_file
 

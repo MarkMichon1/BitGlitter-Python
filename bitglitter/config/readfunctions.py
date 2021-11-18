@@ -198,7 +198,7 @@ def return_stream_progress_data(stream_sha256):
     progress = stream_read.progress.all()
     returned_list = []
     for progress_group in progress:
-       returned_list.append({'bit_start_position': progress_group.bit_start_position, 'bit_end_position':
-                            progress_group.bit_end_position})
+        returned_list.append({'bit_start_position': progress_group.bit_start_position, 'bit_end_position':
+                             progress_group.bit_end_position})
 
     return returned_list
