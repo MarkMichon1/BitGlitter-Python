@@ -26,6 +26,7 @@ class Palette(SQLBaseClass):
     bit_length = Column(Integer, default=0, nullable=False)
     time_created = Column(Integer, default=time.time)
     base64_string = Column(String)
+    is_valid = Column(Boolean)
 
     @classmethod
     def create(cls, color_set, **kwargs):

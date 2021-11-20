@@ -49,20 +49,21 @@ def initializer_header_validate_decode(bit_stream, block_height_estimate, block_
     bit_stream.pos += 192
     stream_palette_id = bit_stream.read('uint : 64')
 
-    #  custom palette used
+    #  Custom palette used
     if stream_palette_id > 100:
+        custom_palette_used = True
         bit_stream.pos -= 256
         stream_palette_id = bit_stream.read('hex : 256')
         stream_palette_id.lower()
         palette = session.query(Palette).filter(Palette.palette_id == stream_palette_id).first()
         if palette is None:
             logging.debug('Unknown custom palette detected, will receive palette data in several headers from now.')
-            return {'protocol_version': protocol_version}
         else:
             logging.info(f'Known custom palette \'{palette.name}\' detected.')
 
-    #  default palette used
+    #  Default palette used
     else:
+        custom_palette_used = False
         palette = session.query(Palette).filter(Palette.palette_id == stream_palette_id).first()
         if palette is None:
             logging.warning('This default palette is unknown by this version of BitGlitter.  This could be the case '
@@ -75,7 +76,8 @@ def initializer_header_validate_decode(bit_stream, block_height_estimate, block_
     # Get Stream SHA-256
     stream_sha256 = bit_stream.read('hex : 256')
 
-    return {'palette': palette, 'stream_sha256': stream_sha256, 'protocol_version': protocol_version}
+    return {'palette': palette, 'stream_sha256': stream_sha256, 'protocol_version': protocol_version,
+            'stream_palette_id': stream_palette_id, 'custom_palette_used': custom_palette_used}
 
 
 def frame_header_decode(bit_stream):
@@ -144,7 +146,7 @@ def metadata_header_validate_decode(header_bytes, read_sha256, crypto_key, encry
                             ' files until correct parameters received.')
             return None
 
-    decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled else header_bytes)
+    decompressed_bytes = decompress_bytes(decrypted_bytes if encryption_enabled and file_mask_enabled else header_bytes)
 
     #  Integrity check
     if frame_processor:

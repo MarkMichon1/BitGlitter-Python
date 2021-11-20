@@ -6,7 +6,7 @@ from bitglitter.config.configmodels import Config, Constants
 from bitglitter.read.process_state.framereadhandler import frame_read_handler
 from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
-from bitglitter.utilities.read import flush_active_frames
+from bitglitter.utilities.read import flush_inactive_frames
 from bitglitter.validation.validateread import validate_read_parameters
 
 
@@ -44,7 +44,7 @@ def read(file_path,
     constants = session.query(Constants).first()
 
     # Cleanup from previous session if crash:
-    flush_active_frames()
+    flush_inactive_frames()
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
     working_directory = Path(constants.WORKING_DIR)

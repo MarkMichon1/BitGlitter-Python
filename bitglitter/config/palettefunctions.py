@@ -1,5 +1,6 @@
 import ast
 import base64
+import logging
 import time
 
 from bitglitter.config.config import session
@@ -195,3 +196,13 @@ def export_palette_base64(palette_id=None, palette_nickname=None):
         raise ValueError('Cannot export invalid palettes')
 
     return palette.base64_string
+
+
+def import_custom_palette_from_header(palette_id, stream_header_palette_id, palette_name, palette_description,
+                                      time_created, number_of_colors, color_list):
+    if palette_id != stream_header_palette_id:
+        logging.warning('Corrupted data in palette header, cannot continue.  Aborting...')
+        return False
+
+    #end
+    return {'palette': None} #todo

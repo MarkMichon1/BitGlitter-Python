@@ -44,16 +44,16 @@ class StreamRead(SQLBaseClass):
 
     # Header Management
     carry_over_header_bytes = Column(BLOB)
-    carry_over_padding_bits = Column(Integer, default=0)
+    carry_over_header_bits = Column(Integer, default=0)
 
     # Read State
     payload_start_frame = Column(Integer)
     payload_first_frame_bits = Column(Integer)
     payload_bits_per_standard_frame = Column(Integer)
     palette_header_size_bytes = Column(Integer)
-    palette_header_hash = Column(String)
+    palette_header_sha256 = Column(String)
     metadata_header_size_bytes = Column(Integer)
-    metadata_header_sha256 = Column(String)
+    metadata_header_sha256_raw = Column(String)
     stream_header_complete = Column(Boolean, default=False)
     metadata_header_complete = Column(Boolean, default=False)
     palette_header_complete = Column(Boolean, default=False)
@@ -127,12 +127,12 @@ class StreamRead(SQLBaseClass):
                        self.auto_unpackage_stream, 'auto_delete_finished_stream': self.auto_delete_finished_stream,
                        }
         advanced_state = {'custom_palette_loaded': self.custom_palette_loaded, 'manifest_string': self.manifest_string,
-                          'carry_over_padding_bits': self.carry_over_padding_bits, 'payload_start_frame':
+                          'carry_over_header_bits': self.carry_over_header_bits, 'payload_start_frame':
                           self.payload_start_frame, 'payload_first_frame_bits': self.payload_first_frame_bits,
                           'payload_bits_per_standard_frame': self.payload_bits_per_standard_frame,
                           'palette_header_size_bytes': self.palette_header_size_bytes, 'palette_header_hash':
-                          self.palette_header_hash, 'metadata_header_size_bytes': self.metadata_header_size_bytes,
-                          'metadata_header_sha256': self.metadata_header_sha256, 'stream_header_complete':
+                          self.palette_header_sha256, 'metadata_header_size_bytes': self.metadata_header_size_bytes,
+                          'metadata_header_sha256': self.metadata_header_sha256_raw, 'stream_header_complete':
                           self.stream_header_complete, 'metadata_header_complete': self.metadata_header_complete,
                           'palette_header_complete': self.palette_header_complete, 'completed_frames':
                           self.completed_frames, 'highest_consecutive_setup_frame_read':
@@ -143,11 +143,17 @@ class StreamRead(SQLBaseClass):
                           self.progress_complete}
         return basic_state | advanced_state if advanced else basic_state
 
+    def set_pending_header_bits(self, bits=None):
+        if bits:
+            self.carry_over_header_bits = bits.len
+            self.carry_over_header_bytes = bits.tobytes()
+        else:
+            self.carry_over_header_bits = 0
+            self.carry_over_header_bytes = None
+        self.save()
+
     def return_pending_header_bits(self):
-        header_bytes = self.carry_over_header_bytes
-        header_bits = BitStream(header_bytes)
-        trimmed_bits = header_bits.read(header_bits.len - self.carry_over_padding_bits)
-        return trimmed_bits
+        return BitStream(self.carry_over_header_bytes).read(self.carry_over_header_bits)
 
     def session_activity(self, state: bool, save=True):
         self.active_this_session = state
@@ -184,11 +190,11 @@ class StreamRead(SQLBaseClass):
         if not encryption_enabled or encryption_enabled and not file_masking_enabled:
             self.metadata_is_decrypted = True
         self.metadata_header_size_bytes = metadata_header_length
-        self.metadata_header_sha256 = metadata_header_hash
+        self.metadata_header_sha256_raw = metadata_header_hash
         self.palette_header_size_bytes = custom_palette_header_length
         if not custom_palette_header_length:
             self.palette_header_complete = True
-        self.palette_header_hash = custom_palette_header_hash
+        self.palette_header_sha256 = custom_palette_header_hash
         self.stream_header_complete = True
 
         if not encryption_enabled:  # Purging password in DB if not needed
@@ -245,8 +251,13 @@ class StreamRead(SQLBaseClass):
 
     def accept_encrypted_metadata_bytes(self, encrypted_metadata_bytes):
         """If file masking is enabled on the stream and incorrect decryption values are used, this adds the encrypted
-        header to the database until it is decrypted"""
+        header to the database until it is decrypted.  It is also triggered if no decryption key is provided at all
+        when masking is enabled.  Running this flags the metadata header as complete (fully read)
+        """
+
+        assert self.metadata_header_size_bytes == len(encrypted_metadata_bytes)
         self.encrypted_metadata_header_bytes = encrypted_metadata_bytes
+        self.metadata_header_complete = True
         self.save()
 
     def new_setup_frame(self, frame_number):

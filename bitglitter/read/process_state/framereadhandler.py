@@ -9,7 +9,7 @@ from bitglitter.read.process_state.videoframegenerator import video_frame_genera
 from bitglitter.read.process_state.imageframeprocessor import ImageFrameProcessor
 from bitglitter.read.process_state.multiprocess_state_generator import image_state_generator, video_state_generator
 from bitglitter.read.process_state.videoframeprocessor import VideoFrameProcessor
-from bitglitter.utilities.read import flush_active_frames
+from bitglitter.utilities.read import flush_inactive_frames
 
 
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
@@ -83,7 +83,9 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                         logging.warning('Reached frame strike limit.  Aborting...')
                         return {'error': True}
 
-            stream_read = video_frame_processor.stream_read
+            if frame_data['current_frame_position'] == 1:
+                stream_read = video_frame_processor.stream_read
+                initial_state_dict['stream_read'] = stream_read
 
             # Metadata return
             if video_frame_processor.metadata and stream_read.stop_at_metadata_load:
@@ -142,7 +144,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     logging.info('Frame scanning complete.')
 
     #  Remove incomplete frames from db
-    flush_active_frames()
+    flush_inactive_frames()
 
     # Closing active sessions and unpackaging streams if its set to:
     active_reads_this_session = StreamRead.query.filter(StreamRead.active_this_session == True).all()

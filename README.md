@@ -2,10 +2,62 @@
 
 Latest: `v1.0.3`
 
-**11/1/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
+**11/19/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
 using the library until that point... countless bugs are fixed, as well as major additions, optimizations, and 
 improvements across the board.  2.0 is a complete rebuild of the original 1.0 library.  I think you will like it. Stay
 tuned... :)
+
+**Things left to do before launch:**
+
+**(Library)**
+
+☑️  video frame processing, edge cases not yet addressed
+
+☑️  finish unpackaging main logic
+
+🟦  wrap up video frame processing logic, specifically handling of setup headers if they cover 2+ frames
+
+☑️  test and finish external read functions (configuring reads, unpackaging, decrypting, etc)
+
+🟦  manifest/metadata state management when contents are encrypted
+
+🔲  throw various edge cases at read(), try to break it, fix it
+
+🔲  final test of all functionality, discover and fix any new bugs
+
+🟦  image frame processing (largely copy/paste from video decoding minus some metadata management)
+
+☑️  final cleanup of code- spacing, line limits, etc
+
+**(App / App Backend / Final Packaging)**
+
+🔲  move read code from library -> backend, fix imports
+
+🔲  requests- add in existing functions for comms back to express server in app in read to display progress at various steps
+
+🔲  fill in API routes with new functionality, check if any new/recent additions are missing
+
+🔲  if new/recent additions are missing, integrate into app
+
+🔲  read final test of functionality/bidirectional message sending
+
+🔲  stream read window, integration with backend
+
+🔲  final features test, fix bugs as needed
+
+🔲  final code cleanup
+
+🔲  final check of app, backend, library readme
+
+🔲  release v2.0 of library vs PyPI
+
+🔲  package windows version, functionality test
+
+🔲  package linux version, functionality test
+
+🔲  release windows/linux builds on github, possibly other places (need to figure this out)
+
+🔲  public announcement
 
 ### Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
