@@ -204,5 +204,5 @@ def import_custom_palette_from_header(palette_id, stream_header_palette_id, pale
         logging.warning('Corrupted data in palette header, cannot continue.  Aborting...')
         return False
 
-    #end
-    return {'palette': None} #todo
+    palette = None
+    return {'palette': palette} #todo
