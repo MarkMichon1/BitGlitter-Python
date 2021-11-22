@@ -33,9 +33,9 @@ def manifest_unpack(manifest_dict, stream_id, save_directory, bit_index=0, file_
                 file_process(file, file_sequence, bit_index, save_directory, stream_id)
                 file_sequence += 1
                 if 'ps' in file:
-                    bit_index += file['ps']
+                    bit_index += file['ps'] * 8
                 else:
-                    bit_index += file['rs']
+                    bit_index += file['rs'] * 8
         if 's' in manifest_dict:
             for subdirectory_dict in manifest_dict['s']:
                 bit_index, file_sequence = manifest_unpack(subdirectory_dict, stream_id, save_directory=save_directory /

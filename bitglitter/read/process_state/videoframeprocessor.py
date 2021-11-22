@@ -30,7 +30,6 @@ class VideoFrameProcessor:
         self.frame = self.dict_obj['frame']
         self.frame_pixel_height = self.frame.shape[0]
         self.frame_pixel_width = self.frame.shape[1]
-
         self.initializer_palette_a = self.dict_obj['initializer_palette_a']
         self.initializer_palette_a_color_set = self.dict_obj['initializer_palette_a_color_set']
         self.initializer_palette_a_dict = self.dict_obj['initializer_palette_a_dict']
@@ -195,8 +194,10 @@ class VideoFrameProcessor:
                                                  self.stream_palette_color_set)
             self.palette_header_complete = not custom_palette_used
             self.stream_palette_loaded_this_frame = True
+            custom_palette_loaded = True
         else:
             self.stream_palette_id = initializer_decode_results['stream_palette_id']
+            custom_palette_loaded = False
 
         # Blacklist check
         blacklisted_hash = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist == self.stream_sha256).first()
@@ -232,7 +233,8 @@ class VideoFrameProcessor:
                                                  auto_unpackage_stream=self.auto_unpackage_stream, block_height=
                                                  self.block_height, block_width=self.block_width, pixel_width=
                                                  self.pixel_width, stream_palette_id=self.stream_palette_id,
-                                                 custom_palette_used=custom_palette_used)
+                                                 custom_palette_used=custom_palette_used, custom_palette_loaded=
+                                                 custom_palette_loaded)
             if self.stream_palette:
                 self.stream_read.stream_palette_load(self.stream_palette)
 
@@ -345,7 +347,7 @@ class VideoFrameProcessor:
                     self.metadata_header_bytes = metadata_header_bits.tobytes()
                     self.frame_hashable_bits += metadata_scan_results['bits']
                     if self.stream_read.decryption_key and self.stream_read.file_masking_enabled or \
-                        not self.stream_read.file_masking_enabled:
+                            not self.stream_read.file_masking_enabled:
                         _metadata_header_decode()
                         self.stream_read.set_pending_header_bits()
                     else:
@@ -362,8 +364,8 @@ class VideoFrameProcessor:
 
             else:  # First frame
                 metadata_scan_results = self.scan_handler.return_bits(self.stream_read.metadata_header_size_bytes,
-                                                                        is_initializer_palette=True, is_payload=True,
-                                                                        byte_input=True)
+                                                                      is_initializer_palette=True, is_payload=True,
+                                                                      byte_input=True)
                 metadata_header_bits = metadata_scan_results['bits']
                 if not metadata_scan_results['complete_request']:
                     logging.debug('Metadata header rolling over to next frame...')
@@ -372,14 +374,20 @@ class VideoFrameProcessor:
                     self.frame_hashable_bits += metadata_header_bits
                     return
                 self.metadata_header_bytes = metadata_header_bits.tobytes()
-                self.frame_hashable_bits += self.metadata_header_bytes.metadata_header_bytes
+                self.frame_hashable_bits += self.metadata_header_bytes
                 _metadata_header_decode()
 
     def _palette_header_process_attempt(self):
         def _palette_header_decode():
             """Actual header processing once all bytes are accounted for."""
+            self.stream_read.palette_header_complete = True
+            self.stream_read.save()
+
+            if self.stream_read.custom_palette_loaded or not self.stream_read.custom_palette_used:
+                return
+
             palette_header_decode_results = custom_palette_header_validate_decode(self.palette_header_bytes,
-                                                                              self.stream_read.palette_header_sha256)
+                                                                                  self.stream_read.palette_header_sha256)
 
             # Header integrity error
             if palette_header_decode_results == False:
@@ -388,7 +396,6 @@ class VideoFrameProcessor:
 
             # Successfully decoded
             elif 'palette_id' in palette_header_decode_results:
-                logging.debug(f'{palette_header_decode_results=}')
                 palette_id = palette_header_decode_results['palette_id']
                 palette_name = palette_header_decode_results['palette_name']
                 palette_description = palette_header_decode_results['palette_description']
@@ -405,15 +412,13 @@ class VideoFrameProcessor:
                     self.frame_errors = self.ERROR_FATAL
                     return
 
-                #todo skip processing if palette ID is in DB
-                self.stream_read.stream_palette_load()
                 self.stream_palette = results['palette']
+                self.stream_read.stream_palette_load(self.stream_palette)
                 self.stream_palette_dict = self.stream_palette.return_decoder()
                 self.stream_palette_color_set = self.stream_palette.convert_colors_to_tuple()
-                # load palette into scan handler
-                self.scan_handler.set_stream_palette()
+                self.scan_handler.set_stream_palette(self.stream_palette, self.stream_palette_dict,
+                                                     self.stream_palette_color_set)
                 self.stream_palette_loaded_this_frame = True
-
 
         if self.frame_errors:
             return
@@ -431,6 +436,7 @@ class VideoFrameProcessor:
                     self.palette_header_bytes = palette_header_bits.tobytes()
                     self.frame_hashable_bits += palette_scan_results['bits']
                     _palette_header_decode()
+
                     self.stream_read.set_pending_header_bits()
 
                 else:
@@ -454,6 +460,7 @@ class VideoFrameProcessor:
                 self.palette_header_bytes = palette_header_bits.tobytes()
                 self.frame_hashable_bits += self.palette_header_bytes
                 _palette_header_decode()
+
 
     def _payload_process(self):
         if self.frame_errors:
@@ -500,4 +507,4 @@ class VideoFrameProcessor:
 
         if 'stream_palette' in self.dict_obj:
             self.scan_handler.set_stream_palette(self.dict_obj['stream_palette'], self.dict_obj['stream_palette_dict'],
-                                            self.dict_obj['stream_palette_color_set'])
+                                                 self.dict_obj['stream_palette_color_set'])

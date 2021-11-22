@@ -43,6 +43,8 @@ def read(file_path,
     config = session.query(Config).first()
     constants = session.query(Constants).first()
 
+    valid_image_formats = constants.return_valid_image_formats(glob_format=True)
+
     # Cleanup from previous session if crash:
     flush_inactive_frames()
 
@@ -71,7 +73,8 @@ def read(file_path,
     frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                                             block_height_override, block_width_override, decryption_key, scrypt_n,
                                             scrypt_r, scrypt_p, working_directory, stop_at_metadata_load,
-                                            auto_unpackage_stream, auto_delete_finished_stream, save_statistics)
+                                            auto_unpackage_stream, auto_delete_finished_stream, save_statistics,
+                                            valid_image_formats)
 
     # Removing temporary directory
     remove_working_folder(working_directory)

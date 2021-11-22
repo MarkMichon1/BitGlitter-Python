@@ -271,6 +271,7 @@ class StreamFile(SQLBaseClass):
         self.is_processed = True
         self.save()
         returned_results['results'] = 'Success'
+        logging.debug('Extraction successful')
         return returned_results
 
 

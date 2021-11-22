@@ -200,9 +200,21 @@ def export_palette_base64(palette_id=None, palette_nickname=None):
 
 def import_custom_palette_from_header(palette_id, stream_header_palette_id, palette_name, palette_description,
                                       time_created, number_of_colors, color_list):
+    """Validates values, and creates and returns palette."""
     if palette_id != stream_header_palette_id:
         logging.warning('Corrupted data in palette header, cannot continue.  Aborting...')
         return False
 
-    palette = None
-    return {'palette': palette} #todo
+    calculated_id = get_palette_id_from_hash(palette_name, palette_description, time_created, str(color_list))
+    if calculated_id != stream_header_palette_id:
+        logging.warning('Calculated palette ID / Stream header palette ID mismatch, cannot continue.  Aborting...')
+        return False
+
+    if custom_palette_values_validate(palette_name, palette_description, color_list) == False or \
+            len(color_list) != number_of_colors:
+        logging.warning('Corrupted palette header values, cannot continue.  Aborting...')
+        return False
+
+    palette = Palette.create(palette_id=palette_id, is_valid=True, is_custom=True, name=palette_name,
+                             description=palette_description, time_created=time_created, color_set=color_list)
+    return {'palette': palette}

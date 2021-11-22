@@ -4,7 +4,6 @@ from bitglitter.config.palettemodels import Palette
 
 
 def load_default_db_data():
-    """Populates config.db with required models as well as some default palettes"""
     if session.query(Config).first():
         return
 

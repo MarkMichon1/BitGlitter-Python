@@ -45,8 +45,12 @@ class Constants(SQLBaseClass):
     def return_valid_video_formats(self):
         return self.VALID_VIDEO_FORMATS.split('|')
 
-    def return_valid_image_formats(self):
-        return self.VALID_IMAGE_FORMATS.split('|')
+    def return_valid_image_formats(self, glob_format=False):
+        if not glob_format:
+            return self.VALID_IMAGE_FORMATS.split('|')
+        else:
+            format_list = self.VALID_IMAGE_FORMATS.split('|')
+            return [item.replace('.', '*.') for item in format_list]
 
 
 class Statistics(SQLBaseClass):

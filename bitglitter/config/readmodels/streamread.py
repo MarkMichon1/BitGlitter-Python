@@ -96,7 +96,7 @@ class StreamRead(SQLBaseClass):
 
     def __str__(self):
         if self.stream_name:
-            return f'{self.stream_name} | {self.stream_sha256}'
+            return f'"{self.stream_name}" | {self.stream_sha256}'
         else:
             return self.stream_sha256
 
@@ -223,7 +223,6 @@ class StreamRead(SQLBaseClass):
 
         # Purging encrypted header bytes and decryption key from DB (if applicable)
         self.encrypted_metadata_header_bytes = None
-        self.decryption_key = None
 
         self.save()
 
@@ -267,6 +266,7 @@ class StreamRead(SQLBaseClass):
 
     def completed_frame_count_update(self):
         self.completed_frames = self.frames.filter(StreamFrame.is_complete == True).count()
+        logging.debug(f'{self.completed_frames=}')
         if self.completed_frames == self.total_frames:
             logging.info(f'All {self.total_frames} frame(s) have been decoded and are accounted for in stream'
                          f' {self.stream_name}')

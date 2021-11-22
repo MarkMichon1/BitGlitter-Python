@@ -17,7 +17,7 @@ def unpackage(stream_sha256):
     there is a decryption error.
     """
 
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     constants = session.query(Constants).first()
@@ -38,7 +38,7 @@ def return_all_read_information(advanced=False):
 
 
 def return_single_read_information(stream_sha256, advanced=False):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     else:
@@ -46,7 +46,7 @@ def return_single_read_information(stream_sha256, advanced=False):
 
 
 def update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scrypt_r=None, scrypt_p=None):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     if not stream_read.encryption_enabled:
@@ -65,7 +65,7 @@ def update_decrypt_values(stream_sha256, decryption_key=None, scrypt_n=None, scr
 
 
 def attempt_metadata_decrypt(stream_sha256):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     if not stream_read.decryption_key:
@@ -91,7 +91,7 @@ def attempt_metadata_decrypt(stream_sha256):
 
 
 def return_stream_manifest(stream_sha256, return_as_json=False):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     if not stream_read.encrypted_metadata_header_bytes:
@@ -105,7 +105,7 @@ def return_stream_manifest(stream_sha256, return_as_json=False):
 
 
 def remove_partial_save(stream_sha256):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256)
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     stream_read.delete()
@@ -122,7 +122,7 @@ def remove_all_partial_save_data():
 def update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unpackage_stream=None):
     """Will get larger as more config options are added; general settings about the stream are changed with this."""
 
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     if auto_delete_finished_stream:
@@ -134,7 +134,7 @@ def update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unp
 
 
 def blacklist_stream_sha256(stream_sha256):
-    stream_read = session.query(StreamRead).filter(StreamRead.stream_sha256 == stream_sha256).all()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     stream_read.delete()
@@ -144,14 +144,14 @@ def blacklist_stream_sha256(stream_sha256):
 
 def return_all_blacklist_sha256():
     returned_list = []
-    blacklisted_streams = session.query(StreamSHA256Blacklist).all()
+    blacklisted_streams = StreamSHA256Blacklist.query.all()
     for blacklisted_item in blacklisted_streams:
         returned_list.append(blacklisted_item.stream_sha256)
     return returned_list
 
 
 def remove_blacklist_sha256(stream_sha256):
-    blacklist = session.query(StreamSHA256Blacklist).filter(StreamSHA256Blacklist.stream_sha256 == stream_sha256) \
+    blacklist = StreamSHA256Blacklist.query.filter(StreamSHA256Blacklist.stream_sha256 == stream_sha256) \
         .first()
     if not blacklist:
         return False
@@ -166,7 +166,7 @@ def remove_all_blacklist_sha256():
 
 
 def return_stream_frame_data(stream_sha256):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
 
@@ -180,7 +180,7 @@ def return_stream_frame_data(stream_sha256):
 
 
 def return_stream_file_data(stream_sha256, advanced=False):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     files = stream_read.files.all()
@@ -192,7 +192,7 @@ def return_stream_file_data(stream_sha256, advanced=False):
 
 
 def return_stream_progress_data(stream_sha256):
-    stream_read = StreamRead.query(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
     progress = stream_read.progress.all()

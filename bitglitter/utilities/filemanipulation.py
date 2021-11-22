@@ -12,11 +12,9 @@ def refresh_directory(active_path, delete=True):
     if delete:
         if os.path.isdir(active_path):
             shutil.rmtree(active_path)
-            logging.debug(f"active_path folder '{active_path}' already exists.  Deleting...")
 
     if not os.path.isdir(active_path):
         os.makedirs(active_path)
-        logging.debug(f"Directory '{active_path}' created.")
     return active_folder
 
 

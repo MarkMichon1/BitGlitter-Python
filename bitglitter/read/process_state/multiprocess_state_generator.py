@@ -15,11 +15,11 @@ def video_state_generator(video_frame_generator, stream_read, save_statistics, i
 
     for returned_state in video_frame_generator:
         yield {'mode': 'video', 'stream_read': stream_read, 'frame': returned_state['frame'], 'save_statistics':
-                save_statistics, 'initializer_palette': initializer_palette, 'initializer_palette_dict':
-                initializer_palette_dict, 'initializer_color_set': initializer_color_set, 'current_frame_position':
-                returned_state['current_frame_position'], 'total_frames': total_video_frames, 'stream_palette':
-                stream_palette, 'stream_palette_dict': stream_palette_dict, 'stream_palette_color_set':
-                stream_palette_color_set, 'sequential': False}
+                save_statistics, 'initializer_palette_a': initializer_palette, 'initializer_palette_a_dict':
+                initializer_palette_dict, 'initializer_palette_a_color_set': initializer_color_set,
+                'current_frame_position': returned_state['current_frame_position'], 'total_frames': total_video_frames,
+                'stream_palette': stream_palette, 'stream_palette_dict': stream_palette_dict,
+                'stream_palette_color_set': stream_palette_color_set, 'sequential': False}
 
 
 def image_state_generator(input_list, initial_state_dict):
@@ -31,5 +31,6 @@ def image_state_generator(input_list, initial_state_dict):
     count = 1
     for image_path in input_list:
         frame = cv2.imread(image_path)
-        yield {'mode': 'image', 'frame': frame, 'current_frame_position': count, 'total_frames': total_frames}
+        yield {'mode': 'image', 'frame': frame, 'current_frame_position': count, 'total_frames': total_frames,
+               'dict_obj': initial_state_dict}
         count += 1

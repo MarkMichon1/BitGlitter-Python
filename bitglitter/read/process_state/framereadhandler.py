@@ -2,6 +2,7 @@ from sqlalchemy.exc import InvalidRequestError
 
 import logging
 from multiprocessing import cpu_count, Pool
+from pathlib import Path
 
 from bitglitter.config.palettemodels import Palette
 from bitglitter.config.readmodels.streamread import StreamRead
@@ -15,7 +16,7 @@ from bitglitter.utilities.read import flush_inactive_frames
 def frame_read_handler(input_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
                        block_height_override, block_width_override, decryption_key, scrypt_n, scrypt_r, scrypt_p,
                        temp_save_directory, stop_at_metadata_load, auto_unpackage_stream, auto_delete_finished_stream,
-                       save_statistics):
+                       save_statistics, valid_image_formats):
     logging.info(f'Processing {input_path}...')
 
     #  Initializing variables that will be in all frame_process() calls
@@ -102,7 +103,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
             # Headers are decoded, can switch to multiprocessing
             if stream_read.palette_header_complete and stream_read.metadata_header_complete:
-                frame_read_results['active_sessions_this_stream'].append(video_frame_processor.stream_sha256)
+                frame_read_results['active_sessions_this_stream']\
+                    .append(video_frame_processor.stream_read.stream_sha256)
                 break
 
         # Begin multicore frame decode
@@ -126,7 +128,18 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
 
     elif input_type == 'image':
 
-        input_list = [input_path] if isinstance(input_path, str) else input_path
+        # Normalizing the different forms of input path into a common list format format
+        if isinstance(input_path, list):
+            input_list = input_path
+        elif isinstance(input_path, str):
+            path = Path(input_path)
+            if path.is_dir():
+                input_list = []
+                for file_format in valid_image_formats:
+                    for whitelisted_file in path.rglob(file_format):
+                        input_list.append(str(whitelisted_file))
+            else:
+                input_list = [input_path]
 
         # Begin multicore frame decode
         with Pool(processes=cpu_pool_size) as worker_pool:
