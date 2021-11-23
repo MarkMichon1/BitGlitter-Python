@@ -86,7 +86,7 @@ class StreamRead(SQLBaseClass):
     scrypt_n = Column(Integer)
     scrypt_r = Column(Integer)
     scrypt_p = Column(Integer)
-    decryption_key = Column(String)
+    decryption_key = Column(String) # Save as
     metadata_is_decrypted = Column(Boolean, default=False)
 
     # Relationships
@@ -121,9 +121,9 @@ class StreamRead(SQLBaseClass):
                        'size_in_bytes': self.size_in_bytes, 'output_directory': self.output_directory, 'pixel_width':
                        self.pixel_width, 'block_height': self.block_height, 'block_width': self.block_width,
                        'scrypt_n': self.scrypt_n, 'scrypt_r': self.scrypt_r, 'scrypt_p': self.scrypt_p,
-                       'decryption_key': self.decryption_key, 'metadata_is_decrypted': self.metadata_is_decrypted,
-                       'total_files': self.total_files, 'completed_files': self.completed_files, 'is_complete':
-                       self.is_complete, 'stop_at_metadata_load': self.stop_at_metadata_load, 'auto_unpackage_stream':
+                       'metadata_is_decrypted': self.metadata_is_decrypted, 'total_files': self.total_files,
+                       'completed_files': self.completed_files, 'is_complete': self.is_complete,
+                       'stop_at_metadata_load': self.stop_at_metadata_load, 'auto_unpackage_stream':
                        self.auto_unpackage_stream, 'auto_delete_finished_stream': self.auto_delete_finished_stream,
                        }
         advanced_state = {'custom_palette_loaded': self.custom_palette_loaded, 'manifest_string': self.manifest_string,
@@ -142,6 +142,12 @@ class StreamRead(SQLBaseClass):
                           'highest_processed_frame': self.highest_processed_frame, 'progress_complete':
                           self.progress_complete}
         return basic_state | advanced_state if advanced else basic_state
+
+    def is_payload_ready(self):
+        """Returns a boolean if the setup headers have been processed, and there are strictly payload-only frames left
+        in the stream
+        """
+        return self.stream_header_complete and self.metadata_header_complete and self.palette_header_complete
 
     def set_pending_header_bits(self, bits=None):
         if bits:
@@ -266,7 +272,7 @@ class StreamRead(SQLBaseClass):
 
     def completed_frame_count_update(self):
         self.completed_frames = self.frames.filter(StreamFrame.is_complete == True).count()
-        logging.debug(f'{self.completed_frames=}')
+        logging.debug(f'Completed frames: {self.completed_frames}/{self.total_frames if self.total_files else "?"}')
         if self.completed_frames == self.total_frames:
             logging.info(f'All {self.total_frames} frame(s) have been decoded and are accounted for in stream'
                          f' {self.stream_name}')
@@ -304,14 +310,16 @@ class StreamRead(SQLBaseClass):
                 self.progress_complete = True
 
         # Incomplete stream, calculating progress
-        else:
+        elif self.highest_processed_frame:
+            logging.info('Calculating progress... this might take some time for longer streams with high frame counts.')
             for index_range in range(math.ceil(self.highest_processed_frame / 100)):
                 frame_group = StreamFrame.query.filter(StreamFrame.frame_number < (index_range + 1) * 100) \
-                    .filter(StreamFrame.frame_number >= index_range * 100).filter(StreamFrame.stream_id == self.id)\
+                    .filter(StreamFrame.frame_number >= index_range * 100).filter(StreamFrame.stream_id == self.id) \
                     .filter(StreamFrame.added_to_progress == False)
                 for frame in frame_group:
                     bit_start, bit_end = frame.get_bit_index(self.payload_start_frame, self.payload_first_frame_bits,
-                                                             self.payload_bits_per_standard_frame)
+                                                             self.payload_bits_per_standard_frame, self.total_frames,
+                                                             self.size_in_bytes)
                     StreamDataProgress.create(self.id, bit_start, bit_end)
                     frame.progress_calculated()
 

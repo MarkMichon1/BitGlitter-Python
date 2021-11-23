@@ -24,6 +24,7 @@ class VideoFrameProcessor:
 
         self.ERROR_SOFT = {'error': True}  # Only this frame is cancelled, decoding can continue on next frame
         self.ERROR_FATAL = {'error': True, 'fatal': True}  # Entire session is cancelled
+        self.ERROR_BREAK = {'break': True}  # Not corruption related, some condition that requires skipping instead
         self.frame_errors = {}
         self.skip_process = False  # Stream has all frames, pending unpackaging
 
@@ -105,7 +106,7 @@ class VideoFrameProcessor:
                         self._frame_validation()
 
                 if not self.stream_read.stream_header_complete:
-                    self._stream_header_process_attempt()
+                    self._stream_header_process()
 
             # Multiprocessing
             else:
@@ -116,7 +117,7 @@ class VideoFrameProcessor:
         else:
             self._initial_frame_setup()
             self._frame_header_process(first_frame=True)
-            self._stream_header_process_attempt()
+            self._stream_header_process()
             self._metadata_header_process_attempt()
             self._palette_header_process_attempt()
             self._payload_process()
@@ -184,7 +185,6 @@ class VideoFrameProcessor:
         custom_palette_used = initializer_decode_results['custom_palette_used']
         self.stream_sha256 = initializer_decode_results['stream_sha256']
 
-        self.stream_palette = None
         self.palette_header_complete = False
         if initializer_decode_results['palette']:  # Palette already stored in db, not pending in future header
             self.stream_palette = initializer_decode_results['palette']
@@ -220,6 +220,7 @@ class VideoFrameProcessor:
             if self.stream_read.all_frames_accounted_for:
                 logging.info('All frames accounted for, skipping video frame processing...')
                 self.skip_process = True
+                self.frame_errors = self.ERROR_BREAK
 
         else:
             logging.info(f'New stream: {self.stream_sha256}')
@@ -272,7 +273,7 @@ class VideoFrameProcessor:
             logging.debug(f'New frame: #{self.frame_number}')
             self.is_unique_frame = True
 
-    def _stream_header_process_attempt(self):
+    def _stream_header_process(self):
         if self.frame_errors:
             return
         if self.frame_blocks_left:

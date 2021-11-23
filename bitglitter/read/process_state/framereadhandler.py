@@ -118,7 +118,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                                                            total_video_frames, stream_palette, stream_palette_dict,
                                                            stream_palette_color_set)):
 
-                    if multicore_read_results.frame_errors:
+                    if 'error' in multicore_read_results.frame_errors:
                         if bad_frame_strikes:  # Corrupted frame, skipping to next one
                             frame_strikes_this_session += 1
                             logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
@@ -142,17 +142,34 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 input_list = [input_path]
 
         # Begin multicore frame decode
+        metadata_checkpoint_data = None
+        strike_limit_hit = False
         with Pool(processes=cpu_pool_size) as worker_pool:
             logging.info(f'Decoding on {cpu_pool_size} CPU core(s)...')
             for multicore_read_results in worker_pool.imap(ImageFrameProcessor, image_state_generator(input_list,
                                                                                                   initial_state_dict)):
-                if multicore_read_results.frame_errors:
+                if 'error' in multicore_read_results.frame_errors:
                     if bad_frame_strikes:  # Corrupted frame, skipping to next one
                         frame_strikes_this_session += 1
                         logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
                         if frame_strikes_this_session >= bad_frame_strikes:
                             logging.warning('Reached frame strike limit.  Aborting...')
-                            return {'error': True}
+                            strike_limit_hit = True
+                            break
+
+                if multicore_read_results.stream_sha256:
+                    if multicore_read_results.stream_sha256 not in frame_read_results['active_sessions_this_stream']:
+                        frame_read_results['active_sessions_this_stream'].append(multicore_read_results.stream_sha256)
+
+                if multicore_read_results.metadata and multicore_read_results.stream_read.stop_at_metadata_load:
+                    metadata_checkpoint_data = multicore_read_results.metadata
+                    break
+
+    if strike_limit_hit:
+        return {'error': True}
+
+    if metadata_checkpoint_data:
+        return {'metadata': metadata_checkpoint_data}
 
     logging.info('Frame scanning complete.')
 
@@ -181,7 +198,4 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
         if unpackaging_this_session:
             logging.info('File unpackaging complete.')
 
-    # Returns active sessions and unpackaging results (if applicable)
-    if not frame_read_results['unpackage_results']:
-        del frame_read_results['unpackage_results']
     return {'frame_read_results': frame_read_results}

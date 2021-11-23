@@ -2,6 +2,7 @@ import cv2
 
 from bitglitter.config.palettemodels import Palette
 
+from pathlib import Path
 
 def video_state_generator(video_frame_generator, stream_read, save_statistics, initializer_palette,
                           initializer_palette_dict, initializer_color_set, total_video_frames, stream_palette=None,
@@ -31,6 +32,8 @@ def image_state_generator(input_list, initial_state_dict):
     count = 1
     for image_path in input_list:
         frame = cv2.imread(image_path)
+        path = Path(image_path)
+        file_name = path.name
         yield {'mode': 'image', 'frame': frame, 'current_frame_position': count, 'total_frames': total_frames,
-               'dict_obj': initial_state_dict}
+               'starting_state': initial_state_dict, 'file_name': file_name}
         count += 1

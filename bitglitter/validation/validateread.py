@@ -52,12 +52,17 @@ def validate_read_parameters(file_path, output_path, encryption_key, scrypt_n, s
     valid_image_formats = constants.return_valid_image_formats()
 
     if isinstance(file_path, str):  # Single video or image file to decode
-        input_type = _file_path_validate(file_path, 'all', valid_video_formats, valid_image_formats)
+        path = Path(file_path)
+        if not path.is_dir():
+            input_type = _file_path_validate(file_path, 'all', valid_video_formats, valid_image_formats)
+        else:
+            input_type = 'image'
     elif isinstance(file_path, list):  # Multiple images
         for path in file_path:
             input_type = _file_path_validate(path, 'image', valid_video_formats, valid_image_formats)
     else:
-        raise ValueError('file_path can only accept strings for single video file, or list of string for image frames.')
+        raise ValueError('file_path can only accept strings for single video file or a directory (with images inside), '
+                         'or list of string for image frames.')
 
     if output_path:
         is_valid_directory('file_to_input', output_path)
