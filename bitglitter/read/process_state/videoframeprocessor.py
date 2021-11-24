@@ -489,7 +489,7 @@ class VideoFrameProcessor:
             else:
                 self.stream_frame.finalize_frame()
             if self.is_sequential:
-                self.stream_read.new_setup_frame(self.frame_number)
+                self.stream_read.new_consecutive_frame(self.frame_number)
 
     def _metadata_checkpoint(self):
         if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran:

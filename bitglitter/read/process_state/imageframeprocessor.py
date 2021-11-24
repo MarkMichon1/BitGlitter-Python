@@ -17,9 +17,9 @@ class ImageFrameProcessor:
     def __init__(self, dict_obj):
         frame_position = dict_obj['current_frame_position']
         total_frames = dict_obj['total_frames']
-        file_name = dict_obj['file_name']
+        self.file_name = dict_obj['file_name']
         percentage_string = f'{round(((frame_position / total_frames) * 100), 2):.2f}'
-        logging.info(f"Processing \"{file_name}\" - {frame_position} of {total_frames}... {percentage_string} %")
+        logging.info(f"Processing \"{self.file_name}\" - {frame_position} of {total_frames}... {percentage_string} %")
 
         self.starting_state = dict_obj['starting_state']
 
@@ -37,7 +37,7 @@ class ImageFrameProcessor:
         self.save_statistics = self.starting_state['save_statistics']
 
         self.stream_read = None
-        self.scan_handler = None #setup when
+        self.scan_handler = None
         self.stream_frame = None
         self.stream_sha256 = None
         self.frame_sha256 = None
@@ -210,8 +210,18 @@ class ImageFrameProcessor:
                                                                            is_initializer_palette)['bits']
         frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
         if not frame_header_decode_results:
-            self.frame_errors = self.ERROR_SOFT
-            return
+            if is_initializer_palette:
+                logging.debug('Falling back to stream palette to attempt to read')
+                frame_header_bits_raw = self.scan_handler.return_frame_header_bits(is_initializer_palette=False,
+                                                                                   redo=True)['bits']
+                frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
+
+                if not frame_header_decode_results:
+                    self.frame_errors = self.ERROR_SOFT
+                    return
+            else:
+                self.frame_errors = self.ERROR_SOFT
+                return
         self.frame_sha256 = frame_header_decode_results['frame_sha256']
         self.frame_number = frame_header_decode_results['frame_number']
         self.bits_to_read = frame_header_decode_results['bits_to_read']
@@ -234,7 +244,9 @@ class ImageFrameProcessor:
                 logging.info(f'Frame {self.frame_number} is already complete')
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {self.frame_number}')
+            self.frame_errors = self.ERROR_BREAK
             self.frame_blocks_left = False
+            return
         else:  # New frame
             self.stream_frame = StreamFrame.create(stream_id=self.stream_read.id, frame_number=self.frame_number)
             logging.debug(f'New frame: #{self.frame_number}')
@@ -253,7 +265,7 @@ class ImageFrameProcessor:
             if not stream_header_decode_results:
                 self.frame_errors = self.ERROR_SOFT
                 return
-            logging.info(stream_header_decode_results)
+            logging.debug(f'{stream_header_decode_results=}')
             size_in_bytes = stream_header_decode_results['size_in_bytes']
             total_frames = stream_header_decode_results['total_frames']
             compression_enabled = stream_header_decode_results['compression_enabled']
@@ -280,6 +292,7 @@ class ImageFrameProcessor:
                                                                              self.stream_read.scrypt_n,
                                                                              self.stream_read.scrypt_r,
                                                                              self.stream_read.scrypt_p)
+            logging.debug(f'{metadata_header_decode_results=}')
 
             # Incorrect decryption key, storing header bytes in stream read
             if metadata_header_decode_results == None:
@@ -358,7 +371,8 @@ class ImageFrameProcessor:
                 return
 
             palette_header_decode_results = custom_palette_header_validate_decode(self.palette_header_bytes,
-                                                                                  self.stream_read.palette_header_sha256)
+                                                                              self.stream_read.palette_header_sha256)
+            logging.debug(f'{palette_header_decode_results=}')
 
             # Header integrity error
             if palette_header_decode_results == False:
@@ -456,12 +470,10 @@ class ImageFrameProcessor:
 
                 # First frame with payload in it
                 if self.setup_headers_end_this_frame:
-                    print('HERE')
                     self.stream_read.set_payload_start_data(self.frame_number, self.stream_payload_bits.len)
             else:
                 self.stream_frame.finalize_frame()
-            if self.frame_number - 1 == self.stream_read.highest_consecutive_setup_frame_read:
-                self.stream_read.new_setup_frame(self.frame_number)
+            self.stream_read.new_consecutive_frame(self.frame_number)
 
     def _metadata_checkpoint(self):
         if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran:

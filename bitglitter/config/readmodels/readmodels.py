@@ -38,9 +38,9 @@ class StreamFrame(SQLBaseClass):
             bit_start = (payload_size_in_bytes * 8) - (self.payload_bits + 1)
             return bit_start, bit_start + (self.payload_bits - padding)
         else:
-            bit_start = (payload_bits_per_standard_frame * (self.frame_number - payload_start_frame + 1)) + \
+            bit_start = (payload_bits_per_standard_frame * (self.frame_number - payload_start_frame - 1)) + \
                         payload_first_frame_bits
-            return bit_start, bit_start + self.payload_bits
+            return bit_start, bit_start + self.payload_bits - 1
 
     def progress_calculated(self):
         """Was used with StreamDataProgress to calculate progress, and doesn't have to be used again."""
@@ -102,9 +102,7 @@ class StreamFile(SQLBaseClass):
             first_file_frame = payload_start_frame
             first_file_frame_start_position = self.start_bit_position
             total_frame_bits = payload_first_frame_bits
-            logging.info('AAA')
         else:  # File starts on frame beyond the first frame containing a payload
-            logging.info('BBB')
             bits_until_frame = self.start_bit_position - payload_first_frame_bits
             first_file_frame = payload_start_frame + math.ceil(bits_until_frame / payload_bits_per_standard_frame)
             frame_start_index = payload_first_frame_bits + ((first_file_frame - payload_start_frame - 1)
@@ -114,11 +112,9 @@ class StreamFile(SQLBaseClass):
 
         # Finding last frame position
         if total_frame_bits - first_file_frame_start_position >= calculated_size:  # File terminates on same frame
-            logging.info('CCC')
             last_file_frame = first_file_frame
             last_file_frame_finish_position = first_file_frame_start_position + calculated_size
         else:  # File terminates on subsequent frames
-            logging.info('DDD')
             bits_left = calculated_size - (total_frame_bits - first_file_frame_start_position)
             frame_difference = math.ceil(bits_left / payload_bits_per_standard_frame)
             last_file_frame = first_file_frame + frame_difference

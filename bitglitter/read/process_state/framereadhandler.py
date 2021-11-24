@@ -151,7 +151,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 if 'error' in multicore_read_results.frame_errors:
                     if bad_frame_strikes:  # Corrupted frame, skipping to next one
                         frame_strikes_this_session += 1
-                        logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}')
+                        logging.warning(f'Bad frame strike {frame_strikes_this_session}/{bad_frame_strikes}'
+                                        f' ({multicore_read_results.file_name})')
                         if frame_strikes_this_session >= bad_frame_strikes:
                             logging.warning('Reached frame strike limit.  Aborting...')
                             strike_limit_hit = True

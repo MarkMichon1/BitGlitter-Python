@@ -89,9 +89,8 @@ def frame_header_decode(bit_stream):
     assert len(bit_stream.bin) == 352
 
     if not crc_verify(bit_stream):
-        logging.warning('Frame header checksum failure!  Aborting frame...')
+        logging.warning(f'Frame header checksum failure.  Aborting frame...')
         return False
-
     bit_stream.pos = 0
     bits_to_read = bit_stream.read('uint : 32')
     frame_number = bit_stream.read('uint : 32')
@@ -180,7 +179,7 @@ def custom_palette_header_validate_decode(header_bytes, read_sha256):
         decompressed_bytes.decode().split('\\\\')
     time_created = int(time_created)
     number_of_colors = int(number_of_colors)
-    color_list = ast.literal_eval(color_list) # Revisit in future.  Safer way?
+    color_list = ast.literal_eval(color_list)  # Revisit in future.  Safer way?
     if isinstance(color_list, list) or isinstance(color_list, tuple):
         return {'palette_id': palette_id, 'palette_name': palette_name, 'palette_description': palette_description,
                 'time_created': time_created, 'number_of_colors': number_of_colors, 'color_list': color_list}

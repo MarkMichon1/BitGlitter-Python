@@ -97,7 +97,7 @@ def write(
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
     pre_processor = PreProcessor(working_directory, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,
-                                 scrypt_p, stream_name)
+                                 scrypt_p)
 
     # This is where the final steps leading up to frame generation as well as generation itself takes place.
     render_handler = RenderHandler(stream_name, stream_description, working_directory, output_directory, encryption_key,

@@ -9,7 +9,7 @@ from bitglitter.read.decode.headerdecode import metadata_header_validate_decode
 from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 
-logging_setter('info', True, False)
+logging_setter(logging_level='info', logging_stdout_output=True, logging_txt_output=False)
 
 
 def unpackage(stream_sha256):

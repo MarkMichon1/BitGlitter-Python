@@ -20,7 +20,7 @@ def _convert_palette_to_dict(palette):
 
 
 def _return_palette(palette_id=None, palette_nickname=None):
-    """Internal method for returning the actual palette model.  The function below is to return an end-user friendly
+    """Internal function for returning the actual palette model.  The function below is to return an end-user friendly
     dictionary model.
     """
     if not palette_id and not palette_nickname:

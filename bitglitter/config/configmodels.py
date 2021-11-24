@@ -19,11 +19,10 @@ class Config(SQLBaseClass):
     maximum_cpu_cores = Column(Integer, default=cpu_count())
     MAX_SUPPORTED_CPU_CORES = Column(Integer, default=cpu_count())
     save_statistics = Column(Boolean, default=True)
-    output_stream_title = Column(Boolean, default=True) # App version
+    output_stream_title = Column(Boolean, default=True)  # App version
 
 
 class Constants(SQLBaseClass):
-
     __abstract__ = False
     __tablename__ = 'constants'
     BG_VERSION = Column(String, default='2.0', nullable=False)  # Change as needed
@@ -34,7 +33,7 @@ class Constants(SQLBaseClass):
     DEFAULT_WRITE_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Write Output'),
                                nullable=False)
     DEFAULT_READ_DIR = Column(String, default=str(Path(__file__).resolve().parent.parent / 'Read Output'),
-                               nullable=False)
+                              nullable=False)
 
     VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
     VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)
@@ -78,8 +77,8 @@ class Statistics(SQLBaseClass):
     def return_stats(self):
         return {
             'blocks_wrote': round(self.data_wrote_bits / 8), 'frames_wrote': self.frames_wrote, 'data_wrote':
-            self.data_wrote_bits, 'blocks_read': self.blocks_read, 'frames_read': self.frames_read, 'data_read':
-            round(self.data_read_bits),
+                self.data_wrote_bits, 'blocks_read': self.blocks_read, 'frames_read': self.frames_read, 'data_read':
+                round(self.data_read_bits),
         }
 
     def clear_stats(self):

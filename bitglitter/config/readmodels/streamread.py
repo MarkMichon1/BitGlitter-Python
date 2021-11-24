@@ -86,7 +86,7 @@ class StreamRead(SQLBaseClass):
     scrypt_n = Column(Integer)
     scrypt_r = Column(Integer)
     scrypt_p = Column(Integer)
-    decryption_key = Column(String) # Save as
+    decryption_key = Column(String)
     metadata_is_decrypted = Column(Boolean, default=False)
 
     # Relationships
@@ -149,6 +149,8 @@ class StreamRead(SQLBaseClass):
         """
         return self.stream_header_complete and self.metadata_header_complete and self.palette_header_complete
 
+
+
     def set_pending_header_bits(self, bits=None):
         if bits:
             self.carry_over_header_bits = bits.len
@@ -173,9 +175,13 @@ class StreamRead(SQLBaseClass):
 
     def _calculate_payload_bits_per_frame(self, stream_palette_bit_length):
         FRAME_HEADER_LENGTH_BITS = 352
-        self.payload_bits_per_standard_frame = ((self.block_width - int(not self.stream_is_video)) *
-                                                (self.block_height - int(not self.stream_is_video))) \
-                                               * stream_palette_bit_length - FRAME_HEADER_LENGTH_BITS
+        INITIALIZER_LENGTH_BLOCKS = 580
+        total_blocks = ((self.block_width - int(not self.stream_is_video)) *
+                        (self.block_height - int(not self.stream_is_video)))
+
+        self.payload_bits_per_standard_frame = (total_blocks - (INITIALIZER_LENGTH_BLOCKS *
+                                int(not self.stream_is_video))) * stream_palette_bit_length - FRAME_HEADER_LENGTH_BITS
+        self.save()
 
     def stream_palette_load(self, stream_palette):
         self.stream_palette_id = stream_palette.palette_id
@@ -265,7 +271,7 @@ class StreamRead(SQLBaseClass):
         self.metadata_header_complete = True
         self.save()
 
-    def new_setup_frame(self, frame_number):
+    def new_consecutive_frame(self, frame_number):
         if frame_number == self.highest_consecutive_setup_frame_read + 1:
             self.highest_consecutive_setup_frame_read += 1
             self.save()
@@ -310,7 +316,7 @@ class StreamRead(SQLBaseClass):
                 self.progress_complete = True
 
         # Incomplete stream, calculating progress
-        elif self.highest_processed_frame:
+        elif self.highest_processed_frame and self.manifest_string:
             logging.info('Calculating progress... this might take some time for longer streams with high frame counts.')
             for index_range in range(math.ceil(self.highest_processed_frame / 100)):
                 frame_group = StreamFrame.query.filter(StreamFrame.frame_number < (index_range + 1) * 100) \

@@ -1,5 +1,3 @@
-import logging
-
 from bitglitter.utilities.palette import get_color_distance
 from bitglitter.validation.utilities import proper_string_syntax
 

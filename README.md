@@ -2,62 +2,10 @@
 
 Latest: `v1.0.3`
 
-**11/19/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
+**11/23/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
 using the library until that point... countless bugs are fixed, as well as major additions, optimizations, and 
 improvements across the board.  2.0 is a complete rebuild of the original 1.0 library.  I think you will like it. Stay
 tuned... :)
-
-**Things left to do before launch:**
-
-**(Library)**
-
-☑️  video frame processing, edge cases not yet addressed
-
-☑️  finish unpackaging main logic
-
-🟦  wrap up video frame processing logic, specifically handling of setup headers if they cover 2+ frames
-
-☑️  test and finish external read functions (configuring reads, unpackaging, decrypting, etc)
-
-🟦  manifest/metadata state management when contents are encrypted
-
-🔲  throw various edge cases at read(), try to break it, fix it
-
-🔲  final test of all functionality, discover and fix any new bugs
-
-🟦  image frame processing (largely copy/paste from video decoding minus some metadata management)
-
-☑️  final cleanup of code- spacing, line limits, etc
-
-**(App / App Backend / Final Packaging)**
-
-🔲  move read code from library -> backend, fix imports
-
-🔲  requests- add in existing functions for comms back to express server in app in read to display progress at various steps
-
-🔲  fill in API routes with new functionality, check if any new/recent additions are missing
-
-🔲  if new/recent additions are missing, integrate into app
-
-🔲  read final test of functionality/bidirectional message sending
-
-🔲  stream read window, integration with backend
-
-🔲  final features test, fix bugs as needed
-
-🔲  final code cleanup
-
-🔲  final check of app, backend, library readme
-
-🔲  release v2.0 of library vs PyPI
-
-🔲  package windows version, functionality test
-
-🔲  package linux version, functionality test
-
-🔲  release windows/linux builds on github, possibly other places (need to figure this out)
-
-🔲  public announcement
 
 ### Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
@@ -520,13 +468,15 @@ There are a few points worth bringing up on using this library:
 
 + **Output sizes can be huge.** At the end of the day, we're using far less dense storage mediums (color data in image and video 
 frames) to hold and transmit good amounts of data.  The payback, however, is giving you much greater portability in how
-or where you can store, host, and transmit it.  Depending on the settings, stream size can be 1.1x-100x+ the size of the
+or where you can store, host, and transmit it.  Depending on the settings, stream size can be 1.01x-100x+ the size of the
 payload itself.  Start with relatively smaller files when starting out with this library to get a better feel for this.  
-For now until we get a better feel for how people are using it and how things can be fine tuned, its a fair assumption that
+For now until we get a better feel for how people are using it and how things can be fine-tuned, its a fair assumption that
 BitGlitter is best suited for payloads less than 50-100MB.
 + **This library is completely experimental:** In its current state, BitGlitter is merely a proof of concept to see if
 doing this was possible and if there is interest.  It started as one of my first projects learning Python and programming
-as a whole.  I am one person doing my best to create a well-rounded product that accomplishes what it is designed to do.
+as a whole.  There is made by one person, but I'm doing my best to create a well-rounded product that accomplishes what 
+its designed to do.
+
 Please use the issues page or let me know on Discord if there is something not working.
 
 ### Acknowledgements
