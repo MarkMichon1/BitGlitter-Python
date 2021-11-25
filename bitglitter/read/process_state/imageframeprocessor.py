@@ -481,8 +481,13 @@ class ImageFrameProcessor:
             self.stream_read.new_consecutive_frame(self.frame_number)
 
     def _metadata_checkpoint(self):
-        if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran:
-            logging.info(f'Returning metadata from {self.stream_read}')
+        if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran and \
+                self.stream_read.metadata_header_complete:
+            if self.stream_read.encrypted_metadata_header_bytes:
+                logging.info(f'Returning limited metadata from {self.stream_read}, as the encrypted metadata header'
+                             f' has not yet been decrypted.')
+            else:
+                logging.info(f'Returning metadata from {self.stream_read}')
             self.metadata = self.stream_read.metadata_checkpoint_return()
 
     def _run_statistics(self):

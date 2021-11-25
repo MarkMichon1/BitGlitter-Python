@@ -68,13 +68,15 @@ def attempt_metadata_decrypt(stream_sha256):
     stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
+    if not stream_read.file_masking_enabled:
+        return {'error': 'File masking not enabled'}
     if not stream_read.decryption_key:
         return {'error': 'No decryption key '}
     if stream_read.manifest_string:
         return {'error': 'Metadata has already been decrypted'}
 
     results = metadata_header_validate_decode(stream_read.encrypted_metadata_header_bytes, None,
-                                              stream_read.decryption_key, stream_read.file_masking_enabled,
+                                              stream_read.decryption_key, True, stream_read.file_masking_enabled,
                                               stream_read.scrypt_n, stream_read.scrypt_r, stream_read.scrypt_p,
                                               frame_processor=False)
 
@@ -85,7 +87,7 @@ def attempt_metadata_decrypt(stream_sha256):
         time_created = results['time_created']
         manifest_string = results['manifest_string']
         stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created, manifest_string)
-        return {'success': True}
+        return {'metadata': stream_read.metadata_checkpoint_return()}
     else:
         return {'error': 'Incorrect decryption value(s)'}
 

@@ -85,7 +85,7 @@ class VideoFrameProcessor:
             self._frame_header_process(first_frame=False)
 
             # Still grabbing setup headers in this frame
-            if self.is_sequential:
+            if self.is_sequential and 'break' not in self.frame_errors:
 
                 if self.frame_number - 1 == self.stream_read.highest_consecutive_setup_frame_read:
                     if not self.stream_read.metadata_header_complete:
@@ -268,6 +268,7 @@ class VideoFrameProcessor:
             else:  # Current frame is being actively processed by another process
                 logging.debug(f'Pending active frame in another process: {self.frame_number}')
             self.frame_blocks_left = False
+            self.frame_errors = self.ERROR_BREAK
         else:  # New frame
             self.stream_frame = StreamFrame.create(stream_id=self.stream_read.id, frame_number=self.frame_number)
             logging.debug(f'New frame: #{self.frame_number}')
@@ -331,7 +332,6 @@ class VideoFrameProcessor:
                 manifest_string = metadata_header_decode_results['manifest_string']
                 self.stream_read.metadata_header_load(bg_version, stream_name, stream_description, time_created,
                                                       manifest_string)
-
         if self.frame_errors:
             return
         if self.frame_blocks_left:
@@ -492,8 +492,13 @@ class VideoFrameProcessor:
                 self.stream_read.new_consecutive_frame(self.frame_number)
 
     def _metadata_checkpoint(self):
-        if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran:
-            logging.info(f'Returning metadata from {self.stream_read}')
+        if self.stream_read.stop_at_metadata_load and not self.stream_read.metadata_checkpoint_ran and \
+                self.stream_read.metadata_header_complete:
+            if self.stream_read.encrypted_metadata_header_bytes:
+                logging.info(f'Returning limited metadata from {self.stream_read}, as the encrypted metadata header'
+                             f' has not yet been decrypted.')
+            else:
+                logging.info(f'Returning metadata from {self.stream_read}')
             self.metadata = self.stream_read.metadata_checkpoint_return()
 
     def _run_statistics(self):

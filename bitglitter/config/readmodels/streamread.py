@@ -297,8 +297,8 @@ class StreamRead(SQLBaseClass):
 
         # Header has been decoded but not decrypted
         if not self.metadata_is_decrypted and self.file_masking_enabled:
-            logging.info('Cannot unpackage, correct decryption key has\'nt been provided.')
-            return {'failure': 'Metadata '}
+            logging.info('Cannot unpackage, correct decryption key hasn\'t been provided.')
+            return {'failure': 'Metadata not decrypted yet'}
 
         if not self.recalculate_eligibility:
             return {}

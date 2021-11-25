@@ -343,7 +343,7 @@ to unpacking.
 
 `attempt_metadata_decrypt(stream_sha256)` will attempt to decrypt the metadata from your read stream (if it is
 encrypted with file masking enabled), using your supplied decryption parameters (decryption key, scrypt N, scrypt R,
-scrypt P).  Returns a dictionary object explaining the result.
+scrypt P).  Returns a dictionary object with the decoded metadata; if there is any error, it will return a brief explanation.
 
 `return_stream_manifest(stream_sha256, return_as_json=False)` Returns an overview of all files included in the given 
 stream, as well as their file size, and SHA-256 hash.  Nested directory structures (if applicable) and file data are 
