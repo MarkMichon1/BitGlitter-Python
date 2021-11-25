@@ -19,7 +19,7 @@ class Palette(SQLBaseClass):
     palette_id = Column(String, unique=True, nullable=False)
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
-    nickname = Column(String, unique=True)
+    nickname = Column(String, nullable=True, unique=True)
     color_set = Column(String)
     color_distance = Column(Float, default=0, nullable=False)
     number_of_colors = Column(Integer, default=0, nullable=False)

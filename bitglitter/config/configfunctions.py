@@ -4,12 +4,13 @@ from bitglitter.config.defaultdbdata import load_default_db_data
 from bitglitter.config.palettemodels import Palette
 from bitglitter.config.presetmodels import Preset
 from bitglitter.config.readmodels.streamread import StreamRead
-from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
+from bitglitter.config.readmodels.readmodels import StreamDataProgress, StreamFile, StreamFrame, StreamSHA256Blacklist
 
 
 def remove_session():
     """Resets persistent data to factory default settings."""
-    model_list = [Config, Constants, Palette, Preset, Statistics, StreamRead, StreamSHA256Blacklist]
+    model_list = [Config, Constants, Palette, Preset, Statistics, StreamDataProgress, StreamFile, StreamFrame,
+                  StreamRead, StreamSHA256Blacklist]
     for model in model_list:
         session.query(model).delete()
     session.commit()

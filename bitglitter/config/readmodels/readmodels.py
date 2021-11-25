@@ -33,8 +33,8 @@ class StreamFrame(SQLBaseClass):
         if self.frame_number == payload_start_frame:
             return 0, payload_first_frame_bits - 1
         elif self.frame_number == total_frames:
-            padding = self.payload_bits - ((payload_size_in_bytes * 8) - (payload_bits_per_standard_frame *
-                                          (total_frames - (payload_start_frame + 1))) - payload_first_frame_bits)
+            padding = -1 * ((payload_size_in_bytes * 8) - payload_first_frame_bits - self.payload_bits -
+                            (payload_bits_per_standard_frame * (total_frames - payload_start_frame - 1)))
             bit_start = (payload_size_in_bytes * 8) - (self.payload_bits + 1)
             return bit_start, bit_start + (self.payload_bits - padding)
         else:

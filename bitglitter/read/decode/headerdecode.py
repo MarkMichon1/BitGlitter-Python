@@ -89,8 +89,9 @@ def frame_header_decode(bit_stream):
     assert len(bit_stream.bin) == 352
 
     if not crc_verify(bit_stream):
-        logging.warning(f'Frame header checksum failure.  Aborting frame...')
+        logging.debug(f'Frame header checksum failure.')
         return False
+
     bit_stream.pos = 0
     bits_to_read = bit_stream.read('uint : 32')
     frame_number = bit_stream.read('uint : 32')

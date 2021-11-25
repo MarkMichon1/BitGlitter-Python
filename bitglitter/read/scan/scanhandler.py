@@ -78,26 +78,22 @@ class ScanHandler:
                 self.x_position = 0
                 self.y_position += 1
 
-    def return_bits(self, number_of_bits, is_initializer_palette, is_payload, byte_input=False, redo=False, test=False):
+    def return_bits(self, number_of_bits, is_initializer_palette, is_payload, byte_input=False, redo=False):
 
         # Saving state before execution
-        self.prior_leftover_bits = self.leftover_bits
-        self.prior_x_position = self.x_position
-        self.prior_y_position = self.y_position
-        self.prior_remaining_blocks = self.remaining_blocks
-
         if redo:
             self._undo_last_task()
+        else:
+            self.prior_leftover_bits = self.leftover_bits
+            self.prior_x_position = self.x_position
+            self.prior_y_position = self.y_position
+            self.prior_remaining_blocks = self.remaining_blocks
 
         if byte_input:
             number_of_bits = number_of_bits * 8
 
         if is_payload:
             self.payload_bits_read += number_of_bits
-
-        if test:
-            pass
-            # print(f'{self.leftover_bits=} {self.x_position=} {self.y_position=} {self.bits_to_read=} {self.remaining_blocks=} {self.payload_bits_read=}')
 
         if is_initializer_palette:
             active_color_set = self.initializer_color_set
@@ -164,7 +160,7 @@ class ScanHandler:
         return self.return_bits(580, True, is_payload=False)
 
     def return_frame_header_bits(self, is_initializer_palette, redo=False):
-        return self.return_bits(352, is_initializer_palette, is_payload=False, redo=redo, test=True)
+        return self.return_bits(352, is_initializer_palette, is_payload=False, redo=redo)
 
     def return_stream_header_bits(self, is_initializer_palette):
         return self.return_bits(685, is_initializer_palette, is_payload=True)
@@ -172,5 +168,4 @@ class ScanHandler:
     def return_payload_bits(self):
         """Returns the remainder payload bits on the frame."""
         remainder_bits = self.bits_to_read - self.payload_bits_read
-        ding = self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)
-        return ding
+        return self.return_bits(remainder_bits, is_initializer_palette=False, is_payload=True)

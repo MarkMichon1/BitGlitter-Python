@@ -211,14 +211,19 @@ class ImageFrameProcessor:
         frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
         if not frame_header_decode_results:
             if is_initializer_palette:
-                logging.debug('Falling back to stream palette to attempt to read')
+                if not self.stream_palette:
+                    logging.info('Frame header not read yet, cannot read this frame.  Aborting frame...')
+                logging.info('Frame header fail, falling back to stream palette to attempt to read...')
                 frame_header_bits_raw = self.scan_handler.return_frame_header_bits(is_initializer_palette=False,
                                                                                    redo=True)['bits']
                 frame_header_decode_results = frame_header_decode(frame_header_bits_raw)
 
                 if not frame_header_decode_results:
+                    logging.info('That didn\'t work, aborting frame...')
                     self.frame_errors = self.ERROR_SOFT
                     return
+                else:
+                    logging.info('That worked.')
             else:
                 self.frame_errors = self.ERROR_SOFT
                 return

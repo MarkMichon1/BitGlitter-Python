@@ -3,7 +3,7 @@ from pathlib import Path
 
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Constants
-from bitglitter.config.readmodels.readmodels import StreamSHA256Blacklist
+from bitglitter.config.readmodels.readmodels import StreamFrame, StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
 from bitglitter.read.decode.headerdecode import metadata_header_validate_decode
 from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
@@ -94,9 +94,9 @@ def return_stream_manifest(stream_sha256, return_as_json=False):
     stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
-    if not stream_read.encrypted_metadata_header_bytes:
-        return {'error': 'Metadata header not decoded yet'}
     if not stream_read.manifest_string:
+        return {'error': 'Metadata header not decoded yet'}
+    if stream_read.encrypted_metadata_header_bytes:
         return {'error': 'Metadata not decrypted yet'}
     if return_as_json:
         return stream_read.manifest_string
@@ -125,19 +125,31 @@ def update_stream_read(stream_sha256, auto_delete_finished_stream=None, auto_unp
     stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
     if not stream_read:
         return False
-    if auto_delete_finished_stream:
+    if isinstance(auto_delete_finished_stream, bool):
         stream_read.auto_delete_finished_stream = auto_delete_finished_stream
-    if auto_unpackage_stream:
+    if isinstance(auto_unpackage_stream, bool):
         stream_read.auto_unpackage_stream = auto_unpackage_stream
     stream_read.save()
     return True
 
 
 def blacklist_stream_sha256(stream_sha256):
+    if not isinstance(stream_sha256, str):
+        raise ValueError('Must be type str')
+    if len(stream_sha256) != 64:
+        raise ValueError('Stream IDs are 64 characters long')
+    hex_characters = '1234567890abcdef'
+    for character in stream_sha256:
+        if character.lower() not in hex_characters:
+            raise ValueError('Not a valid stream ID')
+    existing_blacklist = StreamSHA256Blacklist.query\
+        .filter(StreamSHA256Blacklist.stream_sha256 == stream_sha256).first()
+    if existing_blacklist:
+        raise ValueError('Blacklisted stream is already in database')
+
     stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
-    if not stream_read:
-        return False
-    stream_read.delete()
+    if stream_read:
+        stream_read.delete()
     StreamSHA256Blacklist.create(stream_sha256=stream_sha256)
     return True
 
@@ -170,7 +182,7 @@ def return_stream_frame_data(stream_sha256):
     if not stream_read:
         return False
 
-    frames = stream_read.frames.all()
+    frames = stream_read.frames.order_by(StreamFrame.frame_number.asc()).all()
     returned_list = []
     for frame in frames:
         returned_list.append({'is_complete': frame.is_complete, 'added_to_progress': frame.added_to_progress,

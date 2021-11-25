@@ -109,7 +109,7 @@ class StreamRead(SQLBaseClass):
     def return_state(self, advanced=False):
         palette_name = None
         if self.custom_palette_loaded and self.custom_palette_used or not self.custom_palette_used:
-            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id)
+            palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id).first()
             palette_name = palette.name
         basic_state = {'time_started': self.time_started, 'bg_version': self.bg_version, 'protocol_version':
                        self.protocol_version, 'stream_sha256': self.stream_sha256, 'stream_is_video':

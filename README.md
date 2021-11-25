@@ -2,7 +2,7 @@
 
 Latest: `v1.0.3`
 
-**11/23/21 Note:** This library is actively being pushed to v2.0.  It is mostly complete.  It is recommended to avoid
+**11/24/21 Note:** This library is actively being pushed to v2.0.  It is practically complete.  It is recommended to avoid
 using the library until that point... countless bugs are fixed, as well as major additions, optimizations, and 
 improvements across the board.  2.0 is a complete rebuild of the original 1.0 library.  I think you will like it. Stay
 tuned... :)

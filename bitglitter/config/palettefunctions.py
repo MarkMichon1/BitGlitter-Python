@@ -43,7 +43,7 @@ def return_palette(palette_id=None, palette_nickname=None):
         return None
 
 
-def add_custom_palette(palette_name, color_set, nickname='', palette_description=''):
+def add_custom_palette(palette_name, color_set, nickname=None, palette_description=''):
     custom_palette_values_validate(palette_name, palette_description, color_set)
 
     proper_string_syntax(palette_name)
@@ -66,15 +66,18 @@ def add_custom_palette(palette_name, color_set, nickname='', palette_description
     return new_palette.palette_id
 
 
-def remove_custom_palette(palette_id, nickname):
+def remove_custom_palette(palette_id=None, nickname=None):
     """Removes custom palette completely from the database."""
 
     palette = _return_palette(palette_id, nickname)
     palette.delete()
 
 
-def edit_nickname_to_custom_palette(palette_id, existing_nickname, new_nickname):
+def edit_nickname_to_custom_palette(palette_id=None, existing_nickname=None, new_nickname=None):
     """This changes the nickname of the given palette to something new, first checking if its valid."""
+
+    if not new_nickname:
+        raise ValueError('Must include a new nickname')
 
     palette = _return_palette(palette_id, existing_nickname)
     already_existing_with_nickname = session.query(Palette).filter(Palette.nickname == new_nickname).first()
@@ -85,7 +88,7 @@ def edit_nickname_to_custom_palette(palette_id, existing_nickname, new_nickname)
         palette.save()
 
 
-def remove_custom_palette_nickname(palette_id, existing_nickname):
+def remove_custom_palette_nickname(palette_id=None, existing_nickname=None):
     """Removes the palette nickname.  This does not delete the palette, only the nickname."""
 
     palette = _return_palette(palette_id, existing_nickname)
@@ -113,7 +116,7 @@ def return_all_palettes():
 
 
 def return_default_palettes():
-    palettes = session.query(Palette).filter(Palette.is_custom)
+    palettes = session.query(Palette).filter(Palette.is_custom == False)
     returned_list = []
     for palette in palettes:
         returned_list.append(_convert_palette_to_dict(palette))
@@ -121,7 +124,7 @@ def return_default_palettes():
 
 
 def return_custom_palettes():
-    palettes = session.query(Palette).filter(Palette.is_custom)
+    palettes = session.query(Palette).filter(Palette.is_custom == True)
     returned_list = []
     for palette in palettes:
         returned_list.append(_convert_palette_to_dict(palette))
@@ -132,6 +135,7 @@ def return_custom_palettes():
 def remove_all_custom_palettes():
     """Removes all custom palettes from the database."""
     session.query(Palette).filter(Palette.is_custom).delete()
+    session.commit()
     return True
 
 
@@ -187,7 +191,7 @@ def import_palette_base64(base64_string):
     palette = Palette.create(palette_id=palette_id, is_valid=True, is_custom=True, name=palette_name,
                              description=palette_description, time_created=time_created, color_set=color_set_list)
 
-    return palette.id
+    return palette.palette_id
 
 
 def export_palette_base64(palette_id=None, palette_nickname=None):
