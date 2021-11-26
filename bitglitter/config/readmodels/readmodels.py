@@ -332,7 +332,7 @@ class StreamDataProgress(SQLBaseClass):
 
 
 class StreamSHA256Blacklist(SQLBaseClass):
-    """When metadata is loaded and you """
+    """This model holds the SHA-256 of a stream you want to avoid reading and decoding."""
     __tablename__ = 'stream_sha256_blacklists'
     __abstract__ = False
 

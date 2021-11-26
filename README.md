@@ -1,11 +1,6 @@
 ![BitGlitter Logo](https://i.imgur.com/pX8b4Dy.png)
 
-Latest: `v1.0.3`
-
-**11/24/21 Note:** This library is actively being pushed to v2.0.  It is practically complete.  It is recommended to avoid
-using the library until that point... countless bugs are fixed, as well as major additions, optimizations, and 
-improvements across the board.  2.0 is a complete rebuild of the original 1.0 library.  I think you will like it. Stay
-tuned... :)
+Latest: `v2.0.0`
 
 ### Python Library (you are here) | [Electron Desktop App](https://github.com/MarkMichon1/BitGlitter) | [Python Backend For App](https://github.com/MarkMichon1/BitGlitter-Backend)
 
@@ -378,16 +373,20 @@ it existed.
 
 `remove_all_blacklist_sha256()` Removes all SHA-256 hashes from the blacklist.
 
-`get_stream_frame_data(stream_sha256)` Returns a list of dict objects with data about all read/decoded frames.  Warning:
+`return_stream_frame_data(stream_sha256)` Returns a list of dict objects with data about all read/decoded frames.  Warning:
 depending on stream size, this may be a long/resource intensive function to perform.
 
-`get_stream_file_data(stream_sha256)` Returns a list of dict objects with data about all files read from the manifest.
+`return_stream_file_data(stream_sha256)` Returns a list of dict objects with data about all files read from the manifest.
 You'll get access to their name, file size, SHA-256 hash, whether they are eligible to be unpackaged, if they were already
 unpackaged, and other less user-friendly internal state data.
 
-`get_stream_progress_data(stream_sha256)` Returns a list of dict objects with data about current 'slices' of the stream
+`return_stream_progress_data(stream_sha256)` Returns a list of dict objects with data about current 'slices' of the stream
 you're able to unpackage.  These index numbers are 0-based and are for bits; this is the internal system BitGlitter uses
 to determine eligible files.
+
+`verify_is_bitglitter_file(file_path)` Allows you to quickly test whether a given image or video is a valid BitGlitter 
+stream or not, without relying on `read()` and possibly saving anything to the database.  Attempts to lock onto the 
+frame and read/decode the initializer header; it will return a boolean value whether that was successful or not.
 
 ### Preset Functions
 

@@ -1,11 +1,17 @@
 import json
+import logging
 from pathlib import Path
+
+import cv2
 
 from bitglitter.config.config import session
 from bitglitter.config.configmodels import Constants
+from bitglitter.config.palettemodels import Palette
 from bitglitter.config.readmodels.readmodels import StreamFrame, StreamSHA256Blacklist
 from bitglitter.config.readmodels.streamread import StreamRead
-from bitglitter.read.decode.headerdecode import metadata_header_validate_decode
+from bitglitter.read.decode.headerdecode import initializer_header_validate_decode, metadata_header_validate_decode
+from bitglitter.read.scan.scanhandler import ScanHandler
+from bitglitter.read.scan.scanvalidate import frame_lock_on
 from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
 from bitglitter.utilities.loggingset import logging_setter
 
@@ -141,18 +147,19 @@ def blacklist_stream_sha256(stream_sha256):
     if len(stream_sha256) != 64:
         raise ValueError('Stream IDs are 64 characters long')
     hex_characters = '1234567890abcdef'
-    for character in stream_sha256:
-        if character.lower() not in hex_characters:
+    sha256_lowercase = stream_sha256.lower()
+    for character in sha256_lowercase:
+        if character not in hex_characters:
             raise ValueError('Not a valid stream ID')
-    existing_blacklist = StreamSHA256Blacklist.query\
-        .filter(StreamSHA256Blacklist.stream_sha256 == stream_sha256).first()
+    existing_blacklist = StreamSHA256Blacklist.query \
+        .filter(StreamSHA256Blacklist.stream_sha256 == sha256_lowercase).first()
     if existing_blacklist:
         raise ValueError('Blacklisted stream is already in database')
 
-    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == stream_sha256).first()
+    stream_read = StreamRead.query.filter(StreamRead.stream_sha256 == sha256_lowercase).first()
     if stream_read:
         stream_read.delete()
-    StreamSHA256Blacklist.create(stream_sha256=stream_sha256)
+    StreamSHA256Blacklist.create(stream_sha256=sha256_lowercase)
     return True
 
 
@@ -216,3 +223,55 @@ def return_stream_progress_data(stream_sha256):
                              progress_group.bit_end_position})
 
     return returned_list
+
+
+def verify_is_bitglitter_file(file_path: str):
+    """Returns True or False depending on if the image or first video frame is detected as valid.  It does this through
+    testing if it can lock onto the frame, and read the initializer."""
+
+    # Disabling log messages in the other functions; we just want a simple True or False returned.
+    logger = logging.getLogger()
+    logger.disabled = True
+
+    constants = session.query(Constants).first()
+    valid_image_formats = constants.return_valid_image_formats()
+    valid_video_formats = constants.return_valid_video_formats()
+    path = Path(file_path)
+    if path.suffix not in valid_image_formats + valid_video_formats:
+        return False
+
+    if path.suffix in valid_image_formats:
+        frame = cv2.imread(file_path)
+    else:
+        active_video = cv2.VideoCapture(file_path)
+        frame = active_video.read()[1]
+
+    frame_pixel_width = frame.shape[1]
+    frame_pixel_height = frame.shape[0]
+
+    initializer_palette_a = Palette.query.filter(Palette.nickname == '1').first()
+    initializer_palette_b = Palette.query.filter(Palette.nickname == '11').first()
+    initializer_palette_a_color_set = initializer_palette_a.convert_colors_to_tuple()
+    initializer_palette_b_color_set = initializer_palette_b.convert_colors_to_tuple()
+    initializer_palette_a_dict = initializer_palette_a.return_decoder()
+    initializer_palette_b_dict = initializer_palette_b.return_decoder()
+
+    lock_on_results = frame_lock_on(frame, None, None, frame_pixel_height, frame_pixel_width,
+                                    initializer_palette_a_color_set, initializer_palette_b_color_set,
+                                    initializer_palette_a_dict, initializer_palette_b_dict)
+    if not lock_on_results:
+        return False
+    block_height = lock_on_results['block_height']
+    block_width = lock_on_results['block_width']
+    pixel_width = lock_on_results['pixel_width']
+
+
+    scan_handler = ScanHandler(frame, True, initializer_palette_a, initializer_palette_a_dict,
+                               initializer_palette_a_color_set, block_height, block_width, pixel_width)
+
+    initializer_bits = scan_handler.return_initializer_bits()['bits']
+
+    if not initializer_header_validate_decode(initializer_bits, block_height, block_width):
+        return False
+
+    return True

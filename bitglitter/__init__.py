@@ -14,7 +14,7 @@ from bitglitter.config.readfunctions import attempt_metadata_decrypt, blacklist_
     remove_all_blacklist_sha256, remove_all_partial_save_data, remove_blacklist_sha256, remove_partial_save, \
     return_all_blacklist_sha256, return_all_read_information, return_single_read_information, return_stream_file_data, \
     return_stream_frame_data, return_stream_manifest, return_stream_progress_data, unpackage, update_decrypt_values, \
-    update_stream_read
+    update_stream_read, verify_is_bitglitter_file
 
 # Palette Config
 from bitglitter.config.palettefunctions import add_custom_palette, edit_nickname_to_custom_palette, \

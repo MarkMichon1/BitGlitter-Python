@@ -36,7 +36,7 @@ class Constants(SQLBaseClass):
                               nullable=False)
 
     VALID_VIDEO_FORMATS = Column(String, default='.avi|.flv|.mov|.mp4|.wmv', nullable=False)
-    VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.png', nullable=False)
+    VALID_IMAGE_FORMATS = Column(String, default='.bmp|.jpg|.jpeg|.png|.webp', nullable=False)
 
     def return_supported_protocols(self):
         return self.SUPPORTED_PROTOCOLS.split('|')
