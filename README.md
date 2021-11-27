@@ -189,9 +189,9 @@ them.  There are several other functions included to interact with these streams
 the stream, removing one or all streams, changing its save path, etc).  Check out **Read Functions** below to learn more.
 
 Like with `write()`, the only argument required is the input path (`file_path`), except in this case it only accepts 
-files.  Supported video formats are `.avi, .flv, .mov, .mp4, .wmv` and supported image formats are `.bmp, .jpg, .png`.
-Can accept a string with a single absolute file path (image or video), or a list of strings of absolute file paths.
-Lists can only contain image files, videos must be one at a time.  **Important:**  When inputting image
+files.  Supported video formats are `.avi, .flv, .mov, .mp4, .wmv` and supported image formats are `.bmp, .jpeg, .jpg, 
+.png, .webp`.  Can accept a string with a single absolute file path (image or video), or a list of strings of absolute 
+file paths.  Lists can only contain image files, videos must be one at a time.  **Important:**  When inputting image
 files, it is important to add the first few frames containing metadata FIRST, before adding the rest of the standard
 payload type frames.  This metadata gives the reader important data on palettes, stream configuration, and on the payload
 itself.  Some frames may be recognized as corrupted when this data is lacking.  Once metadata is received, the order of
