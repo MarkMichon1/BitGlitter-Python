@@ -60,7 +60,9 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
         pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set,
                                                          initializer_palette_b_color_set, combined_colors,
                                                          initializer_palette_a_dict, initializer_palette_b_dict,
-                                                         frame_pixel_width, frame_pixel_height, width=True)
+                                                         frame_pixel_width, frame_pixel_height, width_axis=True)
+        if not pixel_width:
+            return False
         checkpoint = verify_blocks_x(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
         if not checkpoint:
@@ -70,7 +72,9 @@ def frame_lock_on(frame, block_height_override, block_width_override, frame_pixe
         pixel_width, block_dimension_guess = pixel_creep(frame, initializer_palette_a_color_set,
                                                          initializer_palette_b_color_set, combined_colors,
                                                          initializer_palette_a_dict, initializer_palette_b_dict,
-                                                         frame_pixel_width, frame_pixel_height, width=False)
+                                                         frame_pixel_width, frame_pixel_height, width_axis=False)
+        if not pixel_width:
+            return False
         checkpoint = verify_blocks_y(frame, pixel_width, block_dimension_guess, combined_colors,
                                      initializer_palette_a_dict, initializer_palette_b_dict)
 
@@ -164,39 +168,30 @@ def verify_blocks_y(image, pixel_width, block_height_estimate, combined_colors, 
 
 
 def pixel_creep(image, initializer_palette_a_color_set, initializer_palette_b_color_set, combined_colors,
-                initializer_palette_a_dict, initializer_palette_b_dict, image_width, image_height, width):
+                initializer_palette_a_dict, initializer_palette_b_dict, image_width, image_height, width_axis):
     """This function moves across the calibrator on the top and left of the frame one pixel at a time, and after
     'snapping' the colors, decodes an unsigned integer from each axis, which if read correctly, is the block width and
     block height of the frame.
     """
-
     calibrator_bits = BitArray()
     snapped_values = []
     active_color = (0, 0, 0)
     pixel_on_dimension = 1
     palette_a_is_active = False
 
-    if width:
-        axis_analyzed = image_width
-
-    else:
-        axis_analyzed = image_height
+    axis_analyzed = image_width if width_axis else image_height
+    scan_limit = axis_analyzed // 2
 
     for value in range(16):
         while True:
-            if width:
-                axis_on_image = 0, pixel_on_dimension
-                axis_analyzed = image_width
-
-            else:
-                axis_on_image = pixel_on_dimension, 0
-                axis_analyzed = image_height
-
+            axis_on_image = (0, pixel_on_dimension) if width_axis else (pixel_on_dimension, 0)
             new_palette_locked = False
             active_scan = flip(image[axis_on_image])
             active_distance = return_distance(active_scan, active_color)
 
             pixel_on_dimension += 1
+            if pixel_on_dimension >= scan_limit:
+                return 0, 0
             if active_distance < 100:  # Iterating over same colored blocks, until distance exceeds 100.
                 continue
 

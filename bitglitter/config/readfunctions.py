@@ -249,8 +249,8 @@ def verify_is_bitglitter_file(file_path: str):
     frame_pixel_width = frame.shape[1]
     frame_pixel_height = frame.shape[0]
 
-    initializer_palette_a = Palette.query.filter(Palette.nickname == '1').first()
-    initializer_palette_b = Palette.query.filter(Palette.nickname == '11').first()
+    initializer_palette_a = Palette.query.filter(Palette.palette_id == '1').first()
+    initializer_palette_b = Palette.query.filter(Palette.palette_id == '11').first()
     initializer_palette_a_color_set = initializer_palette_a.convert_colors_to_tuple()
     initializer_palette_b_color_set = initializer_palette_b.convert_colors_to_tuple()
     initializer_palette_a_dict = initializer_palette_a.return_decoder()
