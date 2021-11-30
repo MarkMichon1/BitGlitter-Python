@@ -250,9 +250,10 @@ class StreamRead(SQLBaseClass):
             palette = Palette.query.filter(Palette.palette_id == self.stream_palette_id).first()
             palette_name = palette.name
         manifest_decrypt_success = True if self.manifest_string else False
+        manifest = self.manifest_string if self.manifest_string else None
         returned_dict = {'stream_name': self.stream_name, 'stream_sha256': self.stream_sha256, 'bg_version':
                         self.bg_version, 'stream_description': self.stream_description, 'time_created':
-                        self.time_created, 'manifest': None, 'size_in_bytes': self.size_in_bytes, 'total_frames':
+                        self.time_created, 'manifest': manifest, 'size_in_bytes': self.size_in_bytes, 'total_frames':
                         self.total_frames, 'compression_enabled': self.compression_enabled, 'encryption_enabled':
                         self.encryption_enabled, 'file_masking_enabled': self.file_masking_enabled, 'protocol_version':
                         self.protocol_version, 'block_width': self.block_width, 'block_height': self.block_height,
