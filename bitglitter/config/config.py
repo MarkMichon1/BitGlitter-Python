@@ -31,11 +31,12 @@ class SQLBaseClass(Base):
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        return session.commit()
 
     def save(self):
-        session.add(self)
-        session.commit()
+        if self.id == None:
+            session.add(self)
+            return session.commit()
 
 
 SQLBaseClass.metadata.create_all(engine)

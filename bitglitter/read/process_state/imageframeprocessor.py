@@ -491,5 +491,5 @@ class ImageFrameProcessor:
             self.metadata = self.stream_read.metadata_checkpoint_return()
 
     def _run_statistics(self):
-        if self.save_statistics:
+        if self.save_statistics and self.is_unique_frame:
             read_stats_update(self.scan_handler.block_position, 1, self.scan_handler.payload_bits_read)

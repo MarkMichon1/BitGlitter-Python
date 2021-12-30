@@ -20,8 +20,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     logging.info(f'Processing {input_path}...')
 
     #  Initializing variables that will be in all frame_process() calls
-    initializer_palette_a = Palette.query.filter(Palette.nickname == '1').first()
-    initializer_palette_b = Palette.query.filter(Palette.nickname == '11').first()
+    initializer_palette_a = Palette.query.filter(Palette.palette_id == '1').first()
+    initializer_palette_b = Palette.query.filter(Palette.palette_id == '11').first()
     initializer_palette_a_color_set = initializer_palette_a.convert_colors_to_tuple()
     initializer_palette_b_color_set = initializer_palette_b.convert_colors_to_tuple()
     initializer_palette_a_dict = initializer_palette_a.return_decoder()
@@ -180,6 +180,7 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
     flush_inactive_frames()
 
     # Closing active sessions and unpackaging streams if its set to:
+    extracted_file_count = 0
     active_reads_this_session = StreamRead.query.filter(StreamRead.active_this_session == True).all()
     unpackaging_this_session = False
     if active_reads_this_session:
@@ -189,7 +190,8 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
             stream_read.completed_frame_count_update()
             if stream_read.auto_unpackage_stream:
                 unpackaging_this_session = True
-                unpackage_results = stream_read.attempt_unpackage(temp_save_directory)
+                unpackage_results, total_unpackaged = stream_read.attempt_unpackage(temp_save_directory)
+                extracted_file_count += total_unpackaged
                 frame_read_results['unpackage_results'][stream_read.stream_sha256] = unpackage_results
                 stream_read.autodelete_attempt()
             else:
@@ -200,5 +202,6 @@ def frame_read_handler(input_path, output_directory, input_type, bad_frame_strik
                 pass
         if unpackaging_this_session:
             logging.info('File unpackaging complete.')
+    frame_read_results['extracted_file_count'] = extracted_file_count
 
     return {'frame_read_results': frame_read_results}

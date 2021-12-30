@@ -360,13 +360,16 @@ class StreamRead(SQLBaseClass):
         pending_extraction = self.files.filter(StreamFile.is_eligible == True).filter(StreamFile.is_processed == False)
 
         returned_list = []
+        extracted_file_count = 0
         for file in pending_extraction:
             extract_results = file.extract(self.payload_start_frame, self.payload_first_frame_bits,
                                            self.payload_bits_per_standard_frame, self.encryption_enabled,
                                            self.compression_enabled, self.decryption_key, self.scrypt_n, self.scrypt_r,
                                            self.scrypt_p, temp_save_directory)
             returned_list.append(extract_results)
-            if extract_results['results'] == 'Cannot decrypt':
+            if extract_results['results'] == 'Success':
+                extracted_file_count += 1
+            elif extract_results['results'] == 'Cannot decrypt':
                 logging.warning('Incorrect decryption values provided for stream.  Please change values and try again.'
                                 '  Aborting...')
                 break
@@ -377,7 +380,7 @@ class StreamRead(SQLBaseClass):
             self.is_complete = True
         self.save()
 
-        return returned_list
+        return returned_list, extracted_file_count
 
     def autodelete_attempt(self):
         if self.auto_delete_finished_stream and self.is_complete:
