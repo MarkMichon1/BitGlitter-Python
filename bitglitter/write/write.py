@@ -1,76 +1,120 @@
-from bitglitter.config.constants import BG_VERSION, WRITE_PATH, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, SCRYPT_P_DEFAULT, \
-    HEADER_PALETTE_ID, STREAM_PALETTE_ID, PIXEL_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH, FRAMES_PER_SECOND
-from bitglitter.config.loggingset import logging_setter
-from bitglitter.write.renderhandler import RenderHandler
+from pathlib import Path
+
+from bitglitter.config.config import session
+from bitglitter.config.configmodels import Config, Constants
+from bitglitter.config.presetfunctions import return_preset
+from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
+from bitglitter.utilities.loggingset import logging_setter
+from bitglitter.validation.validatewrite import write_parameter_validate
+from bitglitter.write.preprocess.preprocessor import PreProcessor
+from bitglitter.write.render.renderhandler import RenderHandler
+from bitglitter.write.render.videorender import render_video
 
 
-def write(   # Basic setup
-             file_list,
-             stream_name ="",
-             stream_description ="",
-             output_path = False,
-             output_mode ="video",
+def write(
 
-             # Stream configuration
-             compression_enabled = True,
-             file_mask_enabled = False,
+        # Basic setup
+        input_path,
+        preset_nickname=None,
+        stream_name="",
+        stream_description="",
+        output_directory=None,
+        output_mode="video",
+        stream_name_file_output=False,
+        max_cpu_cores=0,
 
-             # Encryption
-             encryption_key ="",
-             scrypt_override_n = SCRYPT_N_DEFAULT,
-             scrypt_override_r = SCRYPT_R_DEFAULT,
-             scrypt_override_p = SCRYPT_P_DEFAULT,
+        # Stream configuration
+        compression_enabled=True,
+        # error_correction=False, -> Pending further research for viability
 
-             # Stream geometry, color
-             #protocol_version = '1' # Currently disabled, will enable once multiple choices of protocols are available.
-             header_palette_id = HEADER_PALETTE_ID,
-             stream_palette_id = STREAM_PALETTE_ID,
-             pixel_width = PIXEL_WIDTH,
-             block_height = BLOCK_HEIGHT,
-             block_width = BLOCK_WIDTH,
+        # Encryption
+        encryption_key="",
+        file_mask_enabled=False,
+        scrypt_n=14,
+        scrypt_r=8,
+        scrypt_p=1,
 
-             # Video rendering
-             frames_per_second = FRAMES_PER_SECOND,
+        # Stream geometry, color, general config
+        stream_palette_id='6',
+        stream_palette_nickname=None,
+        pixel_width=24,
+        block_height=45,
+        block_width=80,
 
-             # Logging
-             logging_level ='info',
-             logging_screen_output = True,
-             logging_save_output = False,
-             ):
-    '''This is the primary function in creating BitGlitter streams from files.  Please see Wiki page for more
-    information.
-    '''
+        # Video rendering
+        frames_per_second=30,
 
-    # Logging initializing.
-    logging_setter(logging_level, logging_screen_output, logging_save_output)
+        # Logging
+        logging_level='info',
+        logging_stdout_output=True,
+        logging_txt_output=False,
 
-    # Loading write protocol.  This import function is here deliberately because of logging.
-    from bitglitter.protocols.protocolhandler import protocol_handler
-    write_protocol = protocol_handler.return_write_protocol('1')
+        # Session Data
+        save_statistics=False,
+):
+    """Creates BitGlitter streams from files/directories.  See repo readme for more information."""
 
-    # Are all parameters acceptable?
-    write_protocol.verify_write_parameters(file_list, stream_name, stream_description, output_path, output_mode,
-                                           compression_enabled, file_mask_enabled, scrypt_override_n, scrypt_override_r,
-                                           scrypt_override_p, stream_palette_id, header_palette_id, pixel_width,
-                                           block_height, block_width, frames_per_second)
+    config = session.query(Config).first()
+    constants = session.query(Constants).first()
 
-    # This sets the name of the temporary folder while the file is being written.
-    active_path = WRITE_PATH
+    # This sets the name of the temporary folder while the file is being written, as well as the default output path.
+    working_directory = Path(constants.WORKING_DIR)
+    refresh_directory(working_directory)
+
+    # Setting save path for stream
+    if output_directory:
+        output_directory = Path(output_directory)
+    else:
+        output_directory = Path(config.write_path)
+        refresh_directory(output_directory, delete=False)
+
+    print(output_directory)
+
+    # Initializing logging, must be up front for logging to work properly.
+    logging_setter(logging_level, logging_stdout_output, logging_txt_output, Path(config.log_txt_dir))
+
+    # Loading preset (if given), and validating any other parameters before continuing with the rendering process.
+    if preset_nickname:
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, stream_name_file_output,
+                                 file_mask_enabled, encryption_key, preset_used=True)
+        preset = return_preset(preset_nickname)
+        output_mode = preset.output_mode
+        compression_enabled = preset.compression_enabled
+        scrypt_n = preset.scrypt_n
+        scrypt_r = preset.scrypt_r
+        scrypt_p = preset.scrypt_p
+        max_cpu_cores = preset.max_cpu_cores
+        stream_palette_id = preset.stream_palette_id
+        pixel_width = preset.pixel_width
+        block_height = preset.block_height
+        block_width = preset.block_width
+        frames_per_second = preset.frames_per_second
+    else:
+        write_parameter_validate(input_path, stream_name, stream_description, output_directory, stream_name_file_output,
+                                 file_mask_enabled, encryption_key, max_cpu_cores, output_mode, compression_enabled,
+                                 scrypt_n, scrypt_r, scrypt_p, stream_palette_id, stream_palette_nickname, pixel_width,
+                                 block_height, block_width, frames_per_second, preset_used=False)
 
     # This is what takes the raw input files and runs them through several processes in preparation for rendering.
-    pre_process = write_protocol.pre_processing(active_path, file_list, encryption_key, file_mask_enabled,
-                                                compression_enabled, scrypt_override_n, scrypt_override_r,
-                                                scrypt_override_p)
+    pre_processor = PreProcessor(working_directory, input_path, encryption_key, compression_enabled, scrypt_n, scrypt_r,
+                                 scrypt_p)
 
-    # After the data is prepared, this is what renders the data into images.
-    frame_processor = write_protocol.frame_processor()
+    # This is where the final steps leading up to frame generation as well as generation itself takes place.
+    render_handler = RenderHandler(stream_name, stream_description, working_directory, output_directory, encryption_key,
+                                   scrypt_n, scrypt_r, scrypt_p, block_height, block_width, pixel_width,
+                                   stream_palette_id, max_cpu_cores, pre_processor.stream_sha256,
+                                   pre_processor.size_in_bytes, compression_enabled, pre_processor.encryption_enabled,
+                                   file_mask_enabled, pre_processor.datetime_started, constants.BG_VERSION,
+                                   pre_processor.manifest, constants.PROTOCOL_VERSION, output_mode, output_directory,
+                                   stream_name_file_output, save_statistics)
 
-    renderHandler = RenderHandler(frame_processor, block_height, block_width, header_palette_id, pre_process.stream_sha,
-                                  pre_process.size_in_bytes, compression_enabled, encryption_key != "",
-                                  file_mask_enabled, pre_process.date_created, stream_palette_id, BG_VERSION,
-                                  stream_name, stream_description, pre_process.post_encryption_hash, pixel_width,
-                                  output_mode, output_path, frames_per_second, active_path, pre_process.pass_through)
+    # Video render
+    if output_mode == 'video':
+        render_video(output_directory, stream_name_file_output, working_directory, render_handler.total_frames,
+                     frames_per_second, pre_processor.stream_sha256, block_width, block_height, pixel_width,
+                     stream_name, render_handler.total_operations)
 
+    # Removing temporary files
+    remove_working_folder(working_directory)
 
-    # Returns the SHA of the preprocessed file in string format for optional storage of it.
-    return pre_process.stream_sha
+    return pre_processor.stream_sha256

@@ -1,53 +1,87 @@
-from bitglitter.config.constants import READ_PATH, BAD_FRAME_STRIKES, SCRYPT_N_DEFAULT, SCRYPT_R_DEFAULT, \
-    SCRYPT_P_DEFAULT
-from bitglitter.config.loggingset import logging_setter
-from bitglitter.read.verifyreadparameters import verify_read_parameters
+import logging
+from pathlib import Path
 
-def read(file_to_input,
-         output_path = None,
-         bad_frame_strikes = BAD_FRAME_STRIKES,
-         assemble_hold = False,
+from bitglitter.config.config import session
+from bitglitter.config.configmodels import Config, Constants
+from bitglitter.read.process_state.framereadhandler import frame_read_handler
+from bitglitter.utilities.filemanipulation import refresh_directory, remove_working_folder
+from bitglitter.utilities.loggingset import logging_setter
+from bitglitter.utilities.read import flush_inactive_frames
+from bitglitter.validation.validateread import validate_read_parameters
 
-         # Geometry Overrides
-         block_height_override = False,
-         block_width_override = False,
+
+def read(file_path,
+         stop_at_metadata_load=True,
+         auto_unpackage_stream=True,
+         auto_delete_finished_stream=True,
+         output_directory=None,
+         bad_frame_strikes=25,
+         max_cpu_cores=0,
+
+         # Overrides
+         block_height_override=False,
+         block_width_override=False,
 
          # Crypto Input
-         encryption_key = None,
-         scrypt_n = SCRYPT_N_DEFAULT,
-         scrypt_r = SCRYPT_R_DEFAULT,
-         scrypt_p = SCRYPT_P_DEFAULT,
+         decryption_key=None,
+         scrypt_n=14,
+         scrypt_r=8,
+         scrypt_p=1,
 
          # Logging Settings
-         logging_level ='info',
-         logging_screen_output = True,
-         logging_save_output = False
+         logging_level='info',
+         logging_screen_output=True,
+         logging_save_output=False,
+
+         # Session Data
+         save_statistics=False,
          ):
-    '''This is the high level function that decodes BitGlitter encoded images and video back into the files/folders
+    """This is the high level function that decodes BitGlitter encoded images and video back into the files/folders
     contained within them.  This along with write() are the two primary functions of this library.
-    '''
+    """
 
-    # Logging initializing.
-    logging_setter(logging_level, logging_screen_output, logging_save_output)
-    from bitglitter.read.fileslicer import file_slicer
-    from bitglitter.config.config import config
+    config = session.query(Config).first()
+    constants = session.query(Constants).first()
 
-    # Are all parameters acceptable?
-    verify_read_parameters(file_to_input, output_path, encryption_key, scrypt_n, scrypt_r, scrypt_p,
-                           block_width_override, block_width_override, assemble_hold)
+    valid_image_formats = constants.return_valid_image_formats(glob_format=True)
+
+    # Cleanup from previous session if crash:
+    flush_inactive_frames()
 
     # This sets the name of the temporary folder while screened data from partial saves is being written.
-    active_path = READ_PATH
+    working_directory = Path(constants.WORKING_DIR)
+    refresh_directory(working_directory)
+
+    # Setting save path for stream
+    if output_directory:
+        output_directory = output_directory
+    else:
+        output_directory = config.read_path
+        refresh_directory(config.read_path, delete=False)
+
+    # Logging initializing.
+    logging_setter(logging_level, logging_screen_output, logging_save_output, Path(config.log_txt_dir))
+    logging.info('Starting read...')
+
+    # Are all parameters acceptable?
+    input_type = validate_read_parameters(file_path, output_directory, decryption_key, scrypt_n, scrypt_r, scrypt_p,
+                                          block_height_override, block_width_override, max_cpu_cores, save_statistics,
+                                          bad_frame_strikes, stop_at_metadata_load, auto_unpackage_stream,
+                                          auto_delete_finished_stream)
 
     # Pull valid frame data from the inputted file.
-    checkpoint_passed = file_slicer(file_to_input, active_path, output_path, block_height_override,
-                                    block_width_override, encryption_key, scrypt_n, scrypt_r, scrypt_p, config,
-                                    bad_frame_strikes, assemble_hold)
-    if checkpoint_passed == False:
-        return False
+    frame_read_results = frame_read_handler(file_path, output_directory, input_type, bad_frame_strikes, max_cpu_cores,
+                                            block_height_override, block_width_override, decryption_key, scrypt_n,
+                                            scrypt_r, scrypt_p, working_directory, stop_at_metadata_load,
+                                            auto_unpackage_stream, auto_delete_finished_stream, save_statistics,
+                                            valid_image_formats)
 
-    # Now that all frames have been scanned, we'll have the config object check to see if any files are ready for
-    # assembly.  If there are, they will be put together and outputted, as well as removed/flushed from partialSaves.
-    config.assembler.review_active_sessions()
-    config.save_session()
-    return True
+    # Removing temporary directory
+    remove_working_folder(working_directory)
+
+    # Return metadata if conditions are met
+    if 'metadata' in frame_read_results:
+        return frame_read_results['metadata']
+
+    logging.info('Read cycle complete.')
+    return frame_read_results
