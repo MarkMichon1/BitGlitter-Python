@@ -492,7 +492,7 @@ wisdom.
 + `SQLAlchemy` - Managing all persistent data
 
 # MIT License
-© 2021 - ∞ Mark Michon
+© 2022 - ∞ Mark Michon
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
