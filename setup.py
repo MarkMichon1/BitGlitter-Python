@@ -15,7 +15,7 @@ setup(
     packages=find_namespace_packages(),
     install_requires=[
         "bitstring==3.1.9",
-        "cryptography==3.4.8",
+        "cryptography==39.0.1",
         "opencv-python==4.5.3.56",
         "SQLAlchemy==1.4.25"
     ],
